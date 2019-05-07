@@ -7,14 +7,19 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.test.InstrumentationRegistry;
 
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
+import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
 
@@ -437,4 +442,25 @@ public class IntegrationTests {
         }
     }
 
+    @Test
+    public void testTIOModelBundleValidator() {
+        Context context = InstrumentationRegistry.getTargetContext();
+        try {
+            String[] assets = context.getAssets().list("");
+            for(String s: assets){
+                if (s.endsWith(".tfbundle")){
+                    InputStream inputStream = context.getAssets().open(s + "/model.json");
+                    int size = inputStream.available();
+                    byte[] buffer = new byte[size];
+                    inputStream.read(buffer);
+                    inputStream.close();
+                    String modelJSON = new String(buffer, "UTF-8");
+                    assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
+                }
+            }
+        } catch(IOException  | ProcessingException ex) {
+            ex.printStackTrace();
+            fail();
+        }
+    }
 }
