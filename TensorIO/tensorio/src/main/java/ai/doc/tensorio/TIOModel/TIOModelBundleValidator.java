@@ -1,7 +1,6 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
