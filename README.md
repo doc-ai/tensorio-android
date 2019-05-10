@@ -10,14 +10,14 @@ This implementation is part of the [TensorIO project](https://doc-ai.github.io/t
 
 With TensorIO you can perform inference in just a few lines of code:
 
-```Java
+```java
 
 // Load the image
 InputStream bitmap = getAssets().open("picture2.jpg");
 Bitmap bMap = BitmapFactory.decodeStream(bitmap);
 
 // load the model
-TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), "");
+TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), path);
 TIOModelBundle bundle = manager.bundleWithId(bundleId);
 TIOModel model = bundle.newModel();
 model.load();
@@ -27,6 +27,25 @@ float[] result =  (float[]) model.runOn(bMap);
 
 // Show the most likely predictions
 String[] labels = ((TIOVectorLayerDescription) model.descriptionOfOutputAtIndex(0)).getLabels();
+```
+
+
+And in Kotlin:
+
+```kotlin
+
+// Load the image
+val bitmap = assets.open("picture2.jpg")
+val bMap = BitmapFactory.decodeStream(bitmap)
+
+// load the model
+val manager = TIOModelBundleManager(applicationContext, path)
+val bundle = manager.bundleWithId(bundleId)
+val model = bundle.newModel()
+model.load()
+
+// Run the model on the input
+val result = model.runOn(bMap) as FloatArray
 ```
 
 * [ Overview ](#overview)
@@ -76,6 +95,14 @@ implementation 'com.github.doc-ai:tensorio-android:master'
 
 For instructions on how to add dependencies using Jitpack please follow:
 https://jitpack.io/#doc-ai/tensorio-android/master
+
+The .tflite files are compressed by default. Please add the following to the build.gradle file so that the tflite files are not stored compressed in the APK.
+
+```build.gradle
+aaptOptions {
+    noCompress "tflite"
+}
+```
 
 <a name="license"></a>
 ## License

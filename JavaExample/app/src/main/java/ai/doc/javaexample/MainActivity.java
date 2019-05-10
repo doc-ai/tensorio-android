@@ -15,6 +15,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
@@ -33,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), "");
+            Set<String> ids = manager.getBundleIds();
+            System.out.println(ids);
 
             // load the model
             TIOModelBundle bundle = manager.bundleWithId("mobilenet-v2-100-224-unquantized");
