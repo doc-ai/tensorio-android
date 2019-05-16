@@ -10,6 +10,7 @@ This implementation is part of the [TensorIO project](https://doc-ai.github.io/t
 
 With TensorIO you can perform inference in just a few lines of code:
 
+> Java
 ```java
 
 // Load the image
@@ -30,7 +31,7 @@ String[] labels = ((TIOVectorLayerDescription) model.descriptionOfOutputAtIndex(
 ```
 
 
-And in Kotlin:
+> Kotlin
 
 ```kotlin
 
@@ -90,11 +91,11 @@ TensorIO requires Android 5.1(Lollipop)+ or minSdkVersion 22 or higher
 TensorIO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android). Add the following to your build.gradle file:
 
 ``` build.gradle
-implementation 'com.github.doc-ai:tensorio-android:master'
+implementation 'com.github.doc-ai:tensorio-android:0.1.0'
 ```
 
 For instructions on how to add dependencies using Jitpack please follow:
-https://jitpack.io/#doc-ai/tensorio-android/master
+https://jitpack.io/#doc-ai/tensorio-android/0.1.0
 
 The .tflite files are compressed by default. Please add the following to the build.gradle file so that the tflite files are not stored compressed in the APK.
 
@@ -103,6 +104,12 @@ aaptOptions {
     noCompress "tflite"
 }
 ```
+
+<a name="author"></a>
+## Author
+
+[doc.ai](https://doc.ai/)
+
 
 <a name="license"></a>
 ## License
@@ -117,11 +124,12 @@ TensorIO is available under the Apache 2 license. See the LICENSE file for more 
 ### Adding TensorIO to Your Project
 
 You can import individual class from the tensorio directory. For importing a bundle:
-``` Java
+
+> Java
+```java
 import ai.doc.tensorio.TIOModel.TIOModelBundleManager;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 
-...
 
 TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), "");
 
@@ -134,3 +142,10 @@ float[] result =  (float[]) model.runOn(bMap);
 
 
 
+> Kotlin
+
+```kotlin
+import ai.doc.tensorio.TIOModel.TIOModelBundleManager
+
+
+```
