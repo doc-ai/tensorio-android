@@ -29,6 +29,20 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    packagingOptions {
+        pickFirst 'META-INF/ASL-2.0.txt'
+        pickFirst 'draftv4/schema'
+        pickFirst 'draftv3/schema'
+        pickFirst 'META-INF/LICENSE'
+        pickFirst 'META-INF/LGPL-3.0.txt'
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
 }
 
 dependencies {
@@ -39,9 +53,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
+    implementation 'com.github.doc-ai:tensorio-android:master'
 
     // Tensorflow dependency
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-gpu-experimental'
-    implementation project(path: ':tensorio-debug')
+
 }

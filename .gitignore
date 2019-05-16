@@ -8,12 +8,16 @@
 .DS_Store
 
 
-#Example 
+#JavaExample
+JavaExample/.idea
+JavaExample/.project
+JavaExample/.settings
 
-Example/.idea
-Example/.project
-Example/.settings
 
+#KotlinExample
+KotlinExample/.idea
+KotlinExample/.project
+KotlinExample/.settings
 
 
 #TensorIO
