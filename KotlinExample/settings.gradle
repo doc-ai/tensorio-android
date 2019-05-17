@@ -1,1 +1,1 @@
-include ':app',  ':tensorio-debug'
+include ':app'
