@@ -8,32 +8,63 @@ import java.util.Map;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 
 /**
- * This is the primary API provided by the TensorIO framework.
- * <p>
- * A TIOModel is built from a bundle folder that contains the underlying model, a json description of the model’s input and output layers, and any additional assets required by the model, for example, output labels.
- * <p>
- * A conforming TIOModel begins by parsing a json description of the model’s input and output layers, producing a TIOLayerInterface for each layer. Each layer is fully described by a conforming TIOLayerDescription, which describes the data the layer expects or produces, for example, whether it is quantized, any transformations that should be applied to it, and the number of bytes the layer expects.
- * <p>
- * To perform inference with the underlying model, call runOn: with a conforming TIOData object. TIOData objects simply know how to copy bytes to and receive bytes from a model’s input and output layers. Internally, this method matches TIOData objects with their corresponding layers and ensures that bytes are copied to the right place. The runOn: method then returns a conforming TIOData object, which is the result of performing inference with the model. Objects that conform to the TIOData protocol include NSNumber, NSArray, NSData, NSDictionary, and TIOPixelBuffer, which wraps a CVPixelBuffer for computer vision models.
- * <p>
- * For more information about a model’s interface, refer to the TIOLayerInterface and TIOLayerDescription classes. For more information about the kinds of Objective-C data a TIOModel can work with, refer to the TIOData protocol and its conforming classes.
- * <p>
+ * A Java wrapper around lower level, usually C++ model implementations. This is the primary
+ * API provided by the TensorIO framework.
+ *
+ * A `TIOModel` is built from a bundle folder that contains the underlying model, a json description
+ * of the model's input and output layers, and any additional assets required by the model, for
+ * example, output labels.
+ *
+ * A conforming `TIOModel` begins by parsing a json description of the model's input and output
+ * layers, producing a `TIOLayerInterface` for each layer. Each layer is fully described by a
+ * conforming `TIOLayerDescription`, which describes the data the layer expects or produces, for
+ * example, whether it is quantized, any transformations that should be applied to it, and the
+ * number of bytes the layer expects.
+ *
+ * To perform inference with the underlying model, call `runOn:` with a conforming `TIOData` object.
+ * `TIOData` objects simply know how to copy bytes to and receive bytes from a model's input
+ * and output layers. Internally, this method matches `TIOData` objects with their corresponding
+ * layers and ensures that bytes are copied to the right place. The `runOn:` method then returns a
+ * conforming `TIOData` object, which is the result of performing inference with the model.
+ * Objects that conform to the `TIOData` protocol include `NSNumber`, `NSArray`, `NSData`,
+ * `NSDictionary`, and `TIOPixelBuffer`, which wraps a `CVPixelBuffer` for computer vision models.
+ *
+ * For more information about a model's interface, refer to the `TIOLayerInterface` and
+ * `TIOLayerDescription` classes. For more information about the kinds of Objective-C data a
+ * `TIOModel` can work with, refer to the `TIOData` protocol and its conforming classes. For more
+ * information about the JSON file which describes a model, see TIOModelBundleJSONSchema.h
+ *
  * Note that, currently, only TensorFlow Lite (TFLite) models are supported.
- * <p>
- * WARNING: Models are not thread safe. Models may be used on separate threads, so that you can perform inference off the main thread, but you should not use the same model from multiple threads.
+ *
+ * @warning
+ * Models are not thread safe. Models may be used on separate threads, so that you can perform
+ * inference off the main thread, but you should not use the same model from multiple threads.
  */
+
 public abstract class TIOModel {
+
+    /**
+     * The application or activity context
+     */
+
+    private final Context context;
+
+    /**
+     * The `TIOModelBundle` object from which this model was instantiated.
+     */
 
     private TIOModelBundle bundle;
 
     /**
      * Options associated with this model.
      */
+
     private TIOModelOptions options;
 
     /**
      * A string uniquely identifying this model, taken from the model bundle.
      */
+
     private String identifier;
 
     /**
@@ -109,18 +140,19 @@ public abstract class TIOModel {
 
     private TIOModelIO io;
 
-    private Context context;
-
     /**
      * The designated initializer for conforming classes.
-     * <p>
+     *
      * You should not need to call this method directly. Instead, acquire an instance of a `TIOModelBundle`
      * associated with this model by way of the model's identifier. Then the `TIOModelBundle` class
      * calls this `initWithBundle:` factory initialization method, which conforming classes may override
      * to support custom initialization.
      *
+     * @param context The application or activity context
      * @param bundle `TIOModelBundle` containing information about the model and its path
+     * @return instancetype An instance of the conforming class, may be `nil`.
      */
+
     public TIOModel(Context context, TIOModelBundle bundle) {
         this.context = context;
         this.bundle = bundle;
@@ -137,74 +169,10 @@ public abstract class TIOModel {
         this.io = bundle.getIO();
     }
 
-    /**
-     * Loads a model into memory.
-     * <p>
-     * A model should load itself prior to running on any input, but consumers of the model may want
-     * more control over when a model is loaded in order to avoid placing parameters into memory
-     * before they are needed.
-     * <p>
-     */
-    public void load() throws TIOModelException {
-        loaded = true;
-    }
+    //region Getters and Setters
 
-    /**
-     * Unloads a model from memory
-     * <p>
-     * A model will unload its resources automatically when it is deallocated, but the unload function
-     * may do this as well in order to provide finer grained control to consumers.
-     * <p>
-     */
-    public void unload() {
-        loaded = false;
-    }
-
-    /**
-     * Performs inference on the provided input and returns the results. The primary interface to a
-     * conforming class.
-     */
-    public Object runOn(Object input) throws TIOModelException {
-
-        if (input instanceof Map) {
-            Map<String, Object> inputMap = (Map<String, Object>) input;
-            if (io.getInputs().size() != inputMap.size()) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
-            }
-
-            if (!inputMap.keySet().equals(io.getInputs().keys())) {
-                for (TIOLayerInterface layer : io.getInputs().all()) {
-                    if (!inputMap.containsKey(layer.getName())) {
-                        throw new TIOModelException("The model received no input for layer \"" + layer.getName() + "\"");
-                    }
-                }
-            }
-        } else {
-            if (io.getInputs().size() != 1) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but only received one input");
-            }
-        }
-
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "TIOModel{" +
-                " options=" + options +
-                ", identifier='" + identifier + '\'' +
-                ", name='" + name + '\'' +
-                ", details='" + details + '\'' +
-                ", author='" + author + '\'' +
-                ", license='" + license + '\'' +
-                ", placeholder=" + placeholder +
-                ", quantized=" + quantized +
-                ", type='" + type + '\'' +
-                ", loaded=" + loaded +
-                ", inputs=" + io.getInputs().toString() +
-                ", outputs=" + io.getOutputs().toString() +
-                '}';
+    public Context getContext() {
+        return context;
     }
 
     public TIOModelBundle getBundle() {
@@ -255,7 +223,95 @@ public abstract class TIOModel {
         return io;
     }
 
-    public Context getContext() {
-        return context;
+    //endRegion
+
+    //region Lifecycle
+
+    /**
+     * Loads a model into memory.
+     *
+     * A model should load itself prior to running on any input, but consumers of the model may want
+     * more control over when a model is loaded in order to avoid placing parameters into memory
+     * before they are needed.
+     *
+     * Conforming classes should override this method to perform custom loading and set loaded=YES.
+     *
+     * @@throws TIOModelException
+     */
+
+    public void load() throws TIOModelException {
+        loaded = true;
     }
+
+    /**
+     * Unloads a model from memory
+     *
+     * A model will unload its resources automatically when it is deallocated, but the unload function
+     * may do this as well in order to provide finer grained control to consumers.
+     *
+     * Conforming classes should override this method to perform custom unloading and set `loaded=NO`.
+     */
+
+    public void unload() {
+        loaded = false;
+    }
+
+    //endRegion
+
+    //region Run
+
+    /**
+     * Performs inference on the provided input and returns the results. The primary interface to a
+     * conforming class.
+     */
+
+    public Object runOn(Object input) throws TIOModelException {
+
+        if (input instanceof Map) {
+            Map<String, Object> inputMap = (Map<String, Object>) input;
+            if (io.getInputs().size() != inputMap.size()) {
+                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
+            }
+
+            if (!inputMap.keySet().equals(io.getInputs().keys())) {
+                for (TIOLayerInterface layer : io.getInputs().all()) {
+                    if (!inputMap.containsKey(layer.getName())) {
+                        throw new TIOModelException("The model received no input for layer \"" + layer.getName() + "\"");
+                    }
+                }
+            }
+        } else {
+            if (io.getInputs().size() != 1) {
+                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but only received one input");
+            }
+        }
+
+        return null;
+    }
+
+    //endRegion
+
+    //region Utilities
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "TIOModel{" +
+                " options=" + options +
+                ", identifier='" + identifier + '\'' +
+                ", name='" + name + '\'' +
+                ", details='" + details + '\'' +
+                ", author='" + author + '\'' +
+                ", license='" + license + '\'' +
+                ", placeholder=" + placeholder +
+                ", quantized=" + quantized +
+                ", type='" + type + '\'' +
+                ", loaded=" + loaded +
+                ", inputs=" + io.getInputs().toString() +
+                ", outputs=" + io.getOutputs().toString() +
+                '}';
+    }
+
+    //endRegion
+
 }

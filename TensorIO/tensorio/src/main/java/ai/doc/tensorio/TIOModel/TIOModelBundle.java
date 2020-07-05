@@ -15,82 +15,112 @@ import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.utils.FileIO;
 
 /**
- * Encapsulates information about a @see TIOModel without actually loading the model.
- * <p>
- * A TIOModelBundle is used by the UI to show model details and is used to instantiate model instances as a model factory. There is currently a one-to-one correspondence between a TIOModelBundle and a .mobilenet_V1_0.25_128.tfbundle folder in the models directory.
- * <p>
- * A model bundle folder must contain at least a model.json file, which contains information about the model. Some information is required, such as the identifier and name field, while other information may be added as needed by your use case.
+ * Encapsulates information about a `TIOModel` without actually loading the model.
+ *
+ * A `TIOModelBundle` is used by the UI to show model details and is used to instantiate model
+ * instances as a model factory. There is currently a one-to-one correspondence between a
+ * `TIOModelBundle` and a .tiobundle folder in the models directory.
+ *
+ * A model bundle folder must contain at least a model.json file, which contains information
+ * about the model. Some information is required, such as the identifier and name field,
+ * while other information may be added as needed by your use case.
  */
 
 public class TIOModelBundle {
 
+    /**
+     * The name of the file inside a TensorIO bundle that contains the model spec, currently 'model.json'.
+     */
+
     private static final String TFMODEL_INFO_FILE = "model.json";
+
+    /**
+     * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
+     */
+
     private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
+
+    /**
+     * The application or activity context
+     */
 
     private final Context context;
 
     /**
      * The deserialized information contained in the model.json file.
      */
+
     private String info;
 
     /**
      * The full path to the model bundle folder.
      */
+
     private String path;
 
     /**
      * A string uniquely identifying the model represented by this bundle.
      */
+
     private String identifier;
 
     /**
      * Human readable name of the model represented by this bundle
      */
+
     private String name;
 
     /**
-     * The version of the model reprsented by this bundle.
-     * <p>
-     * A model’s unique identifier may remain the same as the version is incremented.
+     * The version of the model represented by this bundle.
+     *
+     * A model's unique identifier may remain the same as the version is incremented.
      */
+
     private String version;
 
     /**
      * Additional information about the model represented by this bundle.
      */
+
     private String details;
 
     /**
      * The authors of the model represented by this bundle.
      */
+
     private String author;
 
     /**
      * The license of the model represented by this bundle.
      */
+
     private String license;
 
     /**
-     * boolean value indicating if this is a placeholder bundle.
-     * <p>
-     * A placeholder bundle has no underlying model and instantiates a @see TIOModel that does nothing. Placeholders bundles are used to collect labeled data for models that haven’t been trained yet.
+     * A boolean value indicating if this is a placeholder bundle.
+     *
+     * A placeholder bundle has no underlying model and instantiates a `TIOModel` that does nothing.
+     * Placeholders bundles are used to collect labeled data for models that haven't been trained yet.
      */
+
     private boolean placeholder;
 
     /**
-     * A boolean value indicating if the model represented by this bundle is quantized or not.
+     * A boolean value indicating if the model represnted by this bundle is quantized or not.
      */
+
     private boolean quantized;
 
     /**
-     * A string indicating the kind of model this is, e.g. image.classification.imagenet
+     * A string indicating the kind of model this is, e.g. "image.classification.imagenet"
      */
+
     private String type;
 
     /**
      * Options associated with the model represented by this bundle.
      */
+
     private TIOModelOptions options;
 
     /**
@@ -112,8 +142,9 @@ public class TIOModelBundle {
 
     /**
      * The file path to the actual underlying model contained in this bundle.
-     * <p>
-     * Currently, only tflite models are supported. If this placeholder is YES this property returns nil.
+     *
+     * Currently, only tflite models are supported. If this `placeholder` is `YES` this property
+     * returns `nil`.
      */
 
     private String modelFilePath;
@@ -125,7 +156,10 @@ public class TIOModelBundle {
     private String modelClassName;
 
     /**
+     * The designated initializer
+     * @param context The application or activity context
      * @param path Fully qualified path to the model bundle folder.
+     * @throws TIOModelBundleException
      */
 
     public TIOModelBundle(Context context, String path) throws TIOModelBundleException {
@@ -216,50 +250,12 @@ public class TIOModelBundle {
         this.io = new TIOModelIO(inputs, outputs);
     }
 
-    /**
-     * @return a new instance of the TIOModel represented by this bundle.
-     */
+    //region Getters and Setters
 
-    public TIOModel newModel() throws TIOModelBundleException {
-        try {
-            return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
-            throw new TIOModelBundleException("Error creating TIOModel", e);
-        }
+    public Context getContext() {
+        return context;
     }
 
-    /**
-     * Returns the path to an asset in the bundle
-     *
-     * @param filename Asset’s filename, including extension
-     * @return The full path to the file
-     */
-
-    public String pathToAsset(String filename) {
-        return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "TIOModelBundle{" +
-                "info='" + info + '\'' +
-                ", path='" + path + '\'' +
-                ", identifier='" + identifier + '\'' +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", details='" + details + '\'' +
-                ", author='" + author + '\'' +
-                ", license='" + license + '\'' +
-                ", placeholder=" + placeholder +
-                ", quantized=" + quantized +
-                ", type='" + type + '\'' +
-                ", options=" + options +
-                ", modelFilePath='" + modelFilePath + '\'' +
-                ", modelClassName='" + modelClassName + '\'' +
-                '}';
-    }
-    
     public String getPath() {
         return path;
     }
@@ -308,12 +304,54 @@ public class TIOModelBundle {
         return io;
     }
 
-    public Context getContext() {
-        return context;
-    }
-
     public String getModelFilePath() {
         return modelFilePath;
+    }
+
+    //endregion
+
+    /**
+     * @return a new instance of the TIOModel represented by this bundle.
+     */
+
+    public TIOModel newModel() throws TIOModelBundleException {
+        try {
+            return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
+            throw new TIOModelBundleException("Error creating TIOModel", e);
+        }
+    }
+
+    /**
+     * Returns the path to an asset in the bundle
+     *
+     * @param filename Asset’s filename, including extension
+     * @return The full path to the file
+     */
+
+    public String pathToAsset(String filename) {
+        return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "TIOModelBundle{" +
+                "info='" + info + '\'' +
+                ", path='" + path + '\'' +
+                ", identifier='" + identifier + '\'' +
+                ", name='" + name + '\'' +
+                ", version='" + version + '\'' +
+                ", details='" + details + '\'' +
+                ", author='" + author + '\'' +
+                ", license='" + license + '\'' +
+                ", placeholder=" + placeholder +
+                ", quantized=" + quantized +
+                ", type='" + type + '\'' +
+                ", options=" + options +
+                ", modelFilePath='" + modelFilePath + '\'' +
+                ", modelClassName='" + modelClassName + '\'' +
+                '}';
     }
 
 }
