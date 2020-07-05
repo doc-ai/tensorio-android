@@ -10,9 +10,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
@@ -107,27 +105,40 @@ public class TIOModelBundle {
     private TIOModelOptions options;
 
     /**
+     * Contains the descriptions of the model's inputs, outputs, and placeholders
+     * accessible by numeric index or by name. Not all model backends support
+     * placeholders.
+     *
+     * @code
+     * io.inputs[0]
+     * io.inputs[@"image"]
+     * io.outputs[0]
+     * io.outputs[@"label"]
+     * io.placeholders[0]
+     * io.placeholders[@"label"]
+     * @endcode
+     */
+
+    private TIOModelIO io;
+
+    /**
      * The file path to the actual underlying model contained in this bundle.
      * <p>
      * Currently, only tflite models are supported. If this placeholder is YES this property returns nil.
      */
+
     private String modelFilePath;
 
     /**
      * The class name of the @see TIOModel that should be used to implement this network.
      */
-    private String modelClassName;
-    private List<TIOLayerInterface> indexedInputInterfaces;
-    private Map<String, TIOLayerInterface> namedInputInterfaces;
-    private Map<String, Integer> namedInputToIndex;
-    private List<TIOLayerInterface> indexedOutputInterfaces;
-    private Map<String, TIOLayerInterface> namedOutputInterfaces;
-    private Map<String, Integer> namedOutputToIndex;
 
+    private String modelClassName;
 
     /**
      * @param path Fully qualified path to the model bundle folder.
      */
+
     public TIOModelBundle(Context context, String path) throws TIOModelBundleException {
         this.context = context;
 
@@ -192,8 +203,13 @@ public class TIOModelBundle {
             }
         }
 
+        // Parse Inputs and Outputs
+
+        List<TIOLayerInterface> inputs;
+        List<TIOLayerInterface> outputs;
+
         try {
-            parseInputs(context, bundle.getJSONArray("inputs"));
+            inputs = parseInputs(context, bundle.getJSONArray("inputs"));
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing inputs field", e);
         } catch (IOException e) {
@@ -201,17 +217,20 @@ public class TIOModelBundle {
         }
 
         try {
-            parseOutputs(context, bundle.getJSONArray("outputs"));
+            outputs = parseOutputs(context, bundle.getJSONArray("outputs"));
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing outputs field", e);
         } catch (IOException e) {
             throw new TIOModelBundleException("Error reading labels file", e);
         }
+
+        this.io = new TIOModelIO(inputs, outputs);
     }
 
     /**
      * @return a new instance of the TIOModel represented by this bundle.
      */
+
     public TIOModel newModel() throws TIOModelBundleException {
         try {
             return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
@@ -226,10 +245,10 @@ public class TIOModelBundle {
      * @param filename Asset’s filename, including extension
      * @return The full path to the file
      */
+
     public String pathToAsset(String filename) {
         return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
     }
-
 
     @NonNull
     @Override
@@ -296,41 +315,18 @@ public class TIOModelBundle {
         return options;
     }
 
+    public TIOModelIO getIO() {
+        return io;
+    }
+
     public String getModelFilePath() {
         return modelFilePath;
     }
 
-    public List<TIOLayerInterface> getIndexedInputInterfaces() {
-        return indexedInputInterfaces;
-    }
 
-    public Map<String, TIOLayerInterface> getNamedInputInterfaces() {
-        return namedInputInterfaces;
-    }
-
-    public Map<String, Integer> getNamedInputToIndex() {
-        return namedInputToIndex;
-    }
-
-    public List<TIOLayerInterface> getIndexedOutputInterfaces() {
-        return indexedOutputInterfaces;
-    }
-
-    public Map<String, TIOLayerInterface> getNamedOutputInterfaces() {
-        return namedOutputInterfaces;
-    }
-
-    public Map<String, Integer> getNamedOutputToIndex() {
-        return namedOutputToIndex;
-    }
-
-    private void parseInputs(Context c, JSONArray inputs) throws JSONException, TIOModelBundleException, IOException {
+    private List<TIOLayerInterface> parseInputs(Context c, JSONArray inputs) throws JSONException, TIOModelBundleException, IOException {
         ArrayList<TIOLayerInterface> indexedInputInterfaces = new ArrayList<>();
-        HashMap<String, TIOLayerInterface> namedInputInterfaces = new HashMap<>();
-        HashMap<String, Integer> namedInputToIndex = new HashMap<>();
-
         boolean isQuantized = this.isQuantized();
-
 
         for (int i = 0; i < inputs.length(); i++) {
             JSONObject inputObject = inputs.getJSONObject(i);
@@ -351,20 +347,13 @@ public class TIOModelBundle {
             }
 
             indexedInputInterfaces.add(tioLayerInterface);
-            namedInputInterfaces.put(name, tioLayerInterface);
-            namedInputToIndex.put(name, i);
         }
 
-        this.indexedInputInterfaces = indexedInputInterfaces;
-        this.namedInputInterfaces = namedInputInterfaces;
-        this.namedInputToIndex = namedInputToIndex;
+        return indexedInputInterfaces;
     }
 
-    private void parseOutputs(Context c, JSONArray outputs) throws JSONException, TIOModelBundleException, IOException {
+    private List<TIOLayerInterface> parseOutputs(Context c, JSONArray outputs) throws JSONException, TIOModelBundleException, IOException {
         ArrayList<TIOLayerInterface> indexedOutputInterfaces = new ArrayList<>();
-        HashMap<String, TIOLayerInterface> namedOutputInterfaces = new HashMap<>();
-        HashMap<String, Integer> namedOutputToIndex = new HashMap<>();
-
         boolean isQuantized = this.isQuantized();
 
         for (int i = 0; i < outputs.length(); i++) {
@@ -386,13 +375,9 @@ public class TIOModelBundle {
             }
 
             indexedOutputInterfaces.add(tioLayerInterface);
-            namedOutputInterfaces.put(name, tioLayerInterface);
-            namedOutputToIndex.put(name, i);
         }
 
-        this.indexedOutputInterfaces = indexedOutputInterfaces;
-        this.namedOutputInterfaces = namedOutputInterfaces;
-        this.namedOutputToIndex = namedOutputToIndex;
+        return indexedOutputInterfaces;
     }
 
     private TIOLayerInterface parseTIOVectorDescription(Context c, JSONObject dict, boolean isInput, boolean quantized, TIOModelBundle bundle) throws JSONException, TIOModelBundleException, IOException {
@@ -628,6 +613,5 @@ public class TIOModelBundle {
             return null;
         }
     }
-
 
 }

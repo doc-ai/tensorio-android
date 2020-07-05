@@ -45,8 +45,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(1, model.getInputs().size());
-            assertEquals(1, model.getOutputs().size());
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
 
             // Run the model on a number
             float[] input = new float[]{2};
@@ -95,8 +95,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(1, model.getInputs().size());
-            assertEquals(1, model.getOutputs().size());
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
 
             float[] expected = new float[]{2, 2, 4, 4};
             float[] input = new float[]{1, 2, 3, 4};
@@ -155,8 +155,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(2, model.getInputs().size());
-            assertEquals(2, model.getOutputs().size());
+            assertEquals(2, model.getIO().getInputs().size());
+            assertEquals(2, model.getIO().getOutputs().size());
 
             Map<String, float[]> inputs = new HashMap<>();
             inputs.put("input_x", new float[]{1, 2, 3, 4});
@@ -216,8 +216,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(2, model.getInputs().size());
-            assertEquals(2, model.getOutputs().size());
+            assertEquals(2, model.getIO().getInputs().size());
+            assertEquals(2, model.getIO().getOutputs().size());
 
             float[] expectedS = new float[]{
                     18f, 18f, 18f, 18f,
@@ -294,8 +294,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(1, model.getInputs().size());
-            assertEquals(1, model.getOutputs().size());
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
 
             float[] expectedZ = new float[]{
                     2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -343,8 +343,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(1, model.getInputs().size());
-            assertEquals(1, model.getOutputs().size());
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
 
             int width = 224;
             int height = 224;
@@ -399,8 +399,8 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
-            assertEquals(1, model.getInputs().size());
-            assertEquals(1, model.getOutputs().size());
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
 
             int width = 224;
             int height = 224;

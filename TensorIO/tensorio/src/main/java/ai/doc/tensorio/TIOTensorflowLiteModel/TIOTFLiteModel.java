@@ -66,11 +66,11 @@ public class TIOTFLiteModel extends TIOModel {
     private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
         super.runOn(input);
 
-        Object[] inputs = new Object[getInputs().size()];
+        Object[] inputs = new Object[getIO().getInputs().size()];
 
         // Fetch the input and output layer descriptions from the model
-        List<TIOLayerInterface> inputLayers = getBundle().getIndexedInputInterfaces();
-        List<TIOLayerInterface> outputLayers = getBundle().getIndexedOutputInterfaces();
+        List<TIOLayerInterface> inputLayers = getIO().getInputs().all();
+        List<TIOLayerInterface> outputLayers = getIO().getOutputs().all();
 
         for (int i=0; i<inputLayers.size(); i++){
             // Ask the input layer to parse the input object into a Bytebuffer
@@ -79,7 +79,7 @@ public class TIOTFLiteModel extends TIOModel {
             inputs[i] = inputBuffer;
         }
 
-        Map<Integer, Object> outputs = new HashMap<>(getOutputs().size());
+        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size());
         for (int i=0; i<outputLayers.size(); i++){
             // Ask the output layer for a buffer to store the output in
             TIOLayerInterface layer = outputLayers.get(i);
@@ -106,8 +106,8 @@ public class TIOTFLiteModel extends TIOModel {
         super.runOn(input);
 
         // Fetch the input and output layer descriptions from the model
-        TIOLayerDescription inputLayer = getBundle().getIndexedInputInterfaces().get(0).getDataDescription();
-        TIOLayerDescription outputLayer = getBundle().getIndexedOutputInterfaces().get(0).getDataDescription();
+        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getDataDescription();
+        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getDataDescription();
 
         // Ask the input layer to parse the input object into a Bytebuffer
         ByteBuffer inputBuffer = inputLayer.toByteBuffer(input);
@@ -127,8 +127,8 @@ public class TIOTFLiteModel extends TIOModel {
     public Object runOn(Object input) throws TIOModelException{
         super.runOn(input);
 
-        int numInputs = getInputs().size();
-        int numOutputs = getOutputs().size();
+        int numInputs = getIO().getInputs().size();
+        int numOutputs = getIO().getOutputs().size();
 
         if (numInputs > 1){
             Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
@@ -152,7 +152,7 @@ public class TIOTFLiteModel extends TIOModel {
                 }
                 else{
                     Map<String, Object> inputMap = new HashMap<>();
-                    TIOLayerInterface inputLayer = getBundle().getIndexedInputInterfaces().get(0);
+                    TIOLayerInterface inputLayer = getIO().getInputs().get(0);
                     inputMap.put(inputLayer.getName(), input);
                     return runMultipleInputMultipleOutput(inputMap);
                 }
