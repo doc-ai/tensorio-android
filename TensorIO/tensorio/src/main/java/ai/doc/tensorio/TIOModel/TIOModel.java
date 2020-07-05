@@ -62,6 +62,12 @@ public abstract class TIOModel {
     private TIOModelOptions options;
 
     /**
+     * Modes associated with the model, e.g. whether it has support for prediction, training, and evaluation
+     */
+
+    private TIOModelModes modes;
+
+    /**
      * A string uniquely identifying this model, taken from the model bundle.
      */
 
@@ -158,6 +164,7 @@ public abstract class TIOModel {
         this.bundle = bundle;
 
         this.options = bundle.getOptions();
+        this.modes = bundle.getModes();
         this.identifier = bundle.getIdentifier();
         this.name = bundle.getName();
         this.details = bundle.getDetails();
