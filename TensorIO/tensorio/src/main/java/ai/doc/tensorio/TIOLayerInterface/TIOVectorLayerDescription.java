@@ -11,32 +11,36 @@ import ai.doc.tensorio.TIOData.TIODataQuantizer;
 
 /**
  * The description of a vector (array) input or output later.
- * <p>
+ *
  * Vector inputs and outputs are always unrolled vectors, and from the tensor's perspective they are
  * just an array of bytes. The total length of a vector will be the total volume of the layer.
  * For example, if an input layer is a tensor of shape `(24,24,2)`, the length of the vector will be
  * `24x24x2 = 1152`.
- * <p>
- * TensorFlow Lite models expect row major ordering of bytes, such that higher order dimensions are
- * traversed first. For example, a 2x4 matrix with the following values:
  *
- * <pre>
+ * TensorFlow and TensorFlow Lite models expect row major ordering of bytes,
+ * such that higher order dimensions are traversed first. For example, a 2x4 matrix
+ * with the following values:
+ *
+ * @code
  * [[1 2 3 4]
- * [5 6 7 8]]
- * </pre>
- * <p>
- * <p>
+ *  [5 6 7 8]]
+ * @endcode
+ *
  * should be unrolled and provided to the model as:
  *
- * <pre>
+ * @code
  * [1 2 3 4 5 6 7 8]
- * </pre>
- * <p>
+ * @endcode
+ *
  * i.e, start with the row and traverse the columns before moving to the next row.
- * <p>
+ *
  * Because output layers are also exposed as an array of bytes, a `TIOTFLiteModel` will always return
  * a vector in one dimension. If is up to you to reshape it if required.
- * <p>
+ *
+ * @warning
+ * A `TIOVectorLayerDescription`'s length is different than the byte length of a `TIOData` object.
+ * For example a quantized `TIOVector` (uint8_t) of length 4 will occupy 4 bytes of memory but an
+ * unquantized `TIOVector` (float_t) of length 4 will occupy 16 bytes of memory.
  */
 
 public class TIOVectorLayerDescription extends TIOLayerDescription {
@@ -112,6 +116,8 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     }
 
+    //region Getters and Setters
+
     public int getLength() {
         return length;
     }
@@ -131,6 +137,8 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
     public TIODataDequantizer getDequantizer() {
         return dequantizer;
     }
+
+    //endRegion
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
@@ -225,6 +233,5 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         }
         return result;
     }
-
 
 }

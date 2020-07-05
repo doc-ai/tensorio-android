@@ -37,6 +37,7 @@ public class TIOTFLiteModel extends TIOModel {
         super(context, bundle);
     }
 
+    //region Lifecycle
 
     @Override
     public void load() throws TIOModelException {
@@ -62,6 +63,9 @@ public class TIOTFLiteModel extends TIOModel {
         super.unload();
     }
 
+    //endRegion
+
+    //region Run
 
     private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
         super.runOn(input);
@@ -100,7 +104,6 @@ public class TIOTFLiteModel extends TIOModel {
         }
         return outputMap;
     }
-
 
     private Object runSingleInputSingleOutput(Object input) throws TIOModelException {
         super.runOn(input);
@@ -159,6 +162,10 @@ public class TIOTFLiteModel extends TIOModel {
             }
         }
     }
+
+    //endRegion
+
+    //region Utilities
 
     private MappedByteBuffer loadModelFile(Context context, String path) throws IOException {
         AssetFileDescriptor fileDescriptor = context.getAssets().openFd(path);
@@ -230,5 +237,5 @@ public class TIOTFLiteModel extends TIOModel {
         recreateInterpreter();
     }
 
-
+    //endRegion
 }

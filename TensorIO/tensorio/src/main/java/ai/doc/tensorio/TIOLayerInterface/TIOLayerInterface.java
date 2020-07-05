@@ -1,19 +1,20 @@
 package ai.doc.tensorio.TIOLayerInterface;
 
 /**
- * Encapsulates information about the input and output layers of a model, fully described by a
- * @see TIOLayerDescription . Used internally by a model when parsing its description. Also used to
- * match inputs and outputs to their corresponding layers.
- * <p>
+ * Encapsulates information about the input, output, and placeholder layers of a model, fully described by a
+ * `TIOLayerDescription`. Used internally by a model when parsing its description. Also used to
+ * match inputs, outputs, and placeholders to their corresponding layers.
+ *
  * This is an algebraic data type inspired by Remodel: https://github.com/facebook/remodel.
- * The intent is to capture the
+ * In Swift it would be an Enumeration with Associated Values. The intent is to capture the
  * variety of inputs and outputs a model can accept and produce in a unified interface.
- * <p>
+ *
  * Normally you will not need to interact with this class, although you may request a
- * @see TIOLayerDescription from a conforming @see TIOModel for inputs or outputs that you are specifically
+ * `TIOLayerDescription` from a conforming `TIOModel` for inputs or outputs that you are specifically
  * interested in, for example, a pixel buffer input when you want greater control over scaling
  * and clipping an image before passing it to the model.
  */
+
 public class TIOLayerInterface {
 
     /**
@@ -50,6 +51,21 @@ public class TIOLayerInterface {
         this.dataDescription = description;
     }
 
+    //region Getters and Setters
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isInput() {
+        return input;
+    }
+
+    public TIOLayerDescription getDataDescription() {
+        return dataDescription;
+    }
+
+    //endregion
 
     /**
      * Initializes a @see TIOLayerInterface with a vector description, e.g. the description of a vector,
@@ -66,7 +82,6 @@ public class TIOLayerInterface {
     }
     */
 
-
     /**
      * Use this function to switch on the underlying description.
      * <p>
@@ -77,16 +92,4 @@ public class TIOLayerInterface {
         -(void)matchCasePixelBuffer:(TIOPixelBufferMatcher)pixelBufferMatcher caseVector:(TIOVectorMatcher)vectorMatcher;
         }
         */
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isInput() {
-        return input;
-    }
-
-    public TIOLayerDescription getDataDescription() {
-        return dataDescription;
-    }
 }

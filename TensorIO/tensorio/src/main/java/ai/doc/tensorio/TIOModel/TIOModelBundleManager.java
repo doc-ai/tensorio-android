@@ -15,6 +15,7 @@ import java.util.Set;
  * The `TIOModelBundleManager` manages model bundles in a provided directory. Use the returned
  * `TIOModelBundle` classes to instantiante `TIOModel` objects.
  */
+
 public class TIOModelBundleManager {
 
     private Map<String, TIOModelBundle> modelBundles;
@@ -26,6 +27,7 @@ public class TIOModelBundleManager {
      * @param path Directory where model bundles are located, may be in the application bundle,
      *             application documents directory, or elsewhere.
      */
+
     public TIOModelBundleManager(Context c, String path) throws IOException {
         modelBundles = new HashMap<>();
         String[] assets = c.getAssets().list("");
@@ -48,6 +50,7 @@ public class TIOModelBundleManager {
      * @param modelIds Array of model ids in `String` format
      * @return List of `TIOModelBundle` matching the model ids
      */
+
     public List<TIOModelBundle> bundlesWithIds(String[] modelIds) {
         List<TIOModelBundle> bundles = new ArrayList<>(modelIds.length);
         for (String s: modelIds){
@@ -55,7 +58,6 @@ public class TIOModelBundleManager {
         }
         return bundles;
     }
-
 
     /**
      * Returns the single model that matches the provided id.
@@ -65,6 +67,7 @@ public class TIOModelBundleManager {
      * @param modelId The single model id whose bundle you would like.
      * @return The `TIOModelBundle` matching the model id.
      */
+
     public TIOModelBundle bundleWithId(String modelId) {
         return modelBundles.get(modelId);
     }
@@ -73,6 +76,7 @@ public class TIOModelBundleManager {
      *
      * @return a Set of String IDs of all bundles known to the manager.
      */
+
     public Set<String> getBundleIds(){
         return modelBundles.keySet();
     }

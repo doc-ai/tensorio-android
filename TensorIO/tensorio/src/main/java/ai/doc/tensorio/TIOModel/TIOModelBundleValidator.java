@@ -25,6 +25,7 @@ public abstract class TIOModelBundleValidator {
      * @throws IOException IOException is thrown if the TFLite/model-schema.json file is not found inside the assets folder.
      * @throws ProcessingException ProcessingException is thrown if the JsonSchemaFactory cannot get the JsonSchema from the schemaNode.
      */
+
     public static boolean ValidateTFLite(Context context, String json) throws IOException, ProcessingException {
         InputStream inputStream = context.getAssets().open("TFLite/model-schema.json");
         int size = inputStream.available();

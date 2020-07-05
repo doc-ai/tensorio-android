@@ -45,10 +45,12 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
             // Run the model on a number
+
             float[] input = new float[]{2};
             Object output = model.runOn(input);
             assertTrue(output instanceof float[]);
@@ -58,6 +60,7 @@ public class IntegrationTests {
             assertEquals(25f, result[0], epsilon);
 
             // Run the model on a dictionary
+
             Map<String, float[]> input_dict = new HashMap<>();
             input_dict.put("input_x", new float[]{2});
             output = model.runOn(input_dict);
@@ -68,6 +71,7 @@ public class IntegrationTests {
             assertEquals(25f, result[0], epsilon);
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 input = new float[]{1, 2, 3, 4, 5};
                 model.runOn(input);
@@ -75,7 +79,6 @@ public class IntegrationTests {
             } catch (IllegalArgumentException e) {
 
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -86,6 +89,7 @@ public class IntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_vectors_test.tfbundle");
             assertNotNull(bundle);
@@ -95,6 +99,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
@@ -102,6 +107,7 @@ public class IntegrationTests {
             float[] input = new float[]{1, 2, 3, 4};
 
             // Run the model on a vector
+
             Object output = model.runOn(input);
             assertTrue(output instanceof float[]);
             float[] result = (float[]) output;
@@ -110,6 +116,7 @@ public class IntegrationTests {
             assertTrue(Arrays.equals(expected, result));
 
             // Run the model on a dictionary
+
             Map<String, float[]> input_dict = new HashMap<>();
             input_dict.put("input_x", input);
             output = model.runOn(input_dict);
@@ -120,6 +127,7 @@ public class IntegrationTests {
             assertTrue(Arrays.equals(expected, result));
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 input = new float[]{1, 2, 3, 4, 5};
                 model.runOn(input);
@@ -129,13 +137,13 @@ public class IntegrationTests {
             }
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 input = new float[]{1};
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -146,6 +154,7 @@ public class IntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "2_in_2_out_vectors_test.tfbundle");
             assertNotNull(bundle);
@@ -155,6 +164,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(2, model.getIO().getInputs().size());
             assertEquals(2, model.getIO().getOutputs().size());
 
@@ -177,6 +187,7 @@ public class IntegrationTests {
             assertEquals(240, result.get("output_z")[0], epsilon);
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 inputs = new HashMap<>();
                 inputs.put("input_x", new float[]{1, 2, 3, 5, 6});
@@ -184,10 +195,10 @@ public class IntegrationTests {
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
-
             }
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 inputs = new HashMap<>();
                 inputs.put("input_x", new float[]{1});
@@ -196,7 +207,6 @@ public class IntegrationTests {
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -207,6 +217,7 @@ public class IntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "2_in_2_out_matrices_test.tfbundle");
             assertNotNull(bundle);
@@ -216,6 +227,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(2, model.getIO().getInputs().size());
             assertEquals(2, model.getIO().getOutputs().size());
 
@@ -266,6 +278,7 @@ public class IntegrationTests {
             assertArrayEquals(expectedZ, result.get("output_z"), epsilon);
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 inputs = new HashMap<>();
                 inputs.put("input_x", new float[]{5, 6, 7, 8});
@@ -274,7 +287,6 @@ public class IntegrationTests {
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -285,6 +297,7 @@ public class IntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_tensors_test.tfbundle");
             assertNotNull(bundle);
@@ -294,6 +307,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
@@ -318,12 +332,12 @@ public class IntegrationTests {
             assertTrue(Arrays.equals(expectedZ, result));
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
+
             try {
                 model.runOn(new float[]{5, 6, 7, 8});
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -334,6 +348,7 @@ public class IntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_pixelbuffer_identity_test.tfbundle");
             assertNotNull(bundle);
@@ -343,6 +358,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
@@ -363,6 +379,7 @@ public class IntegrationTests {
             Bitmap outputBitmap = (Bitmap) output;
 
             // Inspect pixel buffer bytes
+
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
@@ -372,13 +389,13 @@ public class IntegrationTests {
             }
 
             // Try running on input image of wrong size, should throw IllegalArgumentException
+
             try {
                 Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
                 model.runOn(small);
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -388,8 +405,8 @@ public class IntegrationTests {
 
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
-
         Context appContext = InstrumentationRegistry.getTargetContext();
+
         try {
             TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_pixelbuffer_normalization_test.tfbundle");
             assertNotNull(bundle);
@@ -399,6 +416,7 @@ public class IntegrationTests {
             model.load();
 
             // Ensure inputs and outputs return correct count
+
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
@@ -419,6 +437,7 @@ public class IntegrationTests {
             Bitmap outputBitmap = (Bitmap) output;
 
             // Inspect pixel buffer bytes
+
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
@@ -428,13 +447,13 @@ public class IntegrationTests {
             }
 
             // Try running on input image of wrong size, should throw IllegalArgumentException
+
             try {
                 Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
                 model.runOn(small);
                 fail();
             } catch (IllegalArgumentException e) {
             }
-
 
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
@@ -445,6 +464,7 @@ public class IntegrationTests {
     @Test
     public void testTIOModelBundleValidator() {
         Context context = InstrumentationRegistry.getTargetContext();
+
         try {
             String[] assets = context.getAssets().list("");
             for(String s: assets){

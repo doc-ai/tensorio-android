@@ -4,14 +4,15 @@ package ai.doc.tensorio.TIOData;
  * A `TIODataDequantizer` dequantizes quantized values, converting them from
  * int representations to floating point representations.
  */
+
 public abstract class TIODataDequantizer {
 
     /**
      * @param value The int value that will be dequantized
      * @return A floating point representation of the value
      */
-    public abstract float dequantize(int value);
 
+    public abstract float dequantize(int value);
 
     /**
      * A TIODataDequantizer that applies the provided scale and bias according to the following forumla
@@ -37,6 +38,7 @@ public abstract class TIODataDequantizer {
      * <p>
      * This is equivalent to applying a scaling factor of `1.0/255.0` and no bias.
      */
+
     public static TIODataDequantizer TIODataDequantizerZeroToOne() {
         float scale = 1.0f / 255.0f;
         return TIODataDequantizerWithDequantization(scale, 0f);

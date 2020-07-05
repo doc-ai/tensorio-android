@@ -1,5 +1,9 @@
 package ai.doc.tensorio.TIOModel;
 
+/**
+ * Encapsulates additional options that a model would like to communicate to it consumers.
+ */
+
 public class TIOModelOptions {
 
     /**
@@ -18,6 +22,7 @@ public class TIOModelOptions {
      * @param descriptor A string representation of a device position. 'front' and 'back' are
      *                   the only values currently supported.
      */
+
     public TIOModelOptions(String descriptor) {
         if (descriptor.equals("front")) {
             this.devicePosition = "1";

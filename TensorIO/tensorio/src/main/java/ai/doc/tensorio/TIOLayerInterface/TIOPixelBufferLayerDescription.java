@@ -13,10 +13,13 @@ import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
 /**
  * The description of a pixel buffer input or output layer.
  */
+
 public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
+
     /**
      * `true` is the layer is quantized, `false` otherwise
      */
+
     private boolean quantized;
 
     /**
@@ -57,6 +60,7 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
      * @param denormalizer A function which denormalizes pixel values for an output layer, may be null
      * @param quantized    true if this layer expectes quantized values, false otherwise
      */
+
     public TIOPixelBufferLayerDescription(TIOPixelFormat pixelFormat, TIOImageVolume shape, TIOPixelNormalizer normalizer, TIOPixelDenormalizer denormalizer, boolean quantized) {
         this.pixelFormat = pixelFormat;
         this.shape = shape;
@@ -75,10 +79,35 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
 
     }
 
+    //region Getters and Setters
+
     @Override
     public boolean isQuantized() {
         return quantized;
     }
+
+    @Override
+    public ByteBuffer getBackingByteBuffer() {
+        return buffer;
+    }
+
+    public TIOPixelFormat getPixelFormat() {
+        return pixelFormat;
+    }
+
+    public TIOImageVolume getShape() {
+        return shape;
+    }
+
+    public TIOPixelNormalizer getNormalizer() {
+        return normalizer;
+    }
+
+    public TIOPixelDenormalizer getDenormalizer() {
+        return denormalizer;
+    }
+
+    //endRegion
 
     private void intPixelToFloat(int pixelValue, ByteBuffer imgData) {
         if (quantized) {
@@ -160,26 +189,5 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
 
         bmp.setPixels(this.intValues,0, this.shape.width, 0, 0, this.shape.width, this.shape.height);
         return bmp;
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return buffer;
-    }
-
-    public TIOPixelFormat getPixelFormat() {
-        return pixelFormat;
-    }
-
-    public TIOImageVolume getShape() {
-        return shape;
-    }
-
-    public TIOPixelNormalizer getNormalizer() {
-        return normalizer;
-    }
-
-    public TIOPixelDenormalizer getDenormalizer() {
-        return denormalizer;
     }
 }

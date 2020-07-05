@@ -9,6 +9,7 @@ package ai.doc.tensorio.TIOData;
  * <p>
  * Pixel normalization is like quantization but in the opposite direction.
  */
+
 public abstract class TIOPixelNormalizer {
     /**
      * A `TIOPixelNormalizer` transforms a pixel value in the range `[0,255]`
@@ -18,8 +19,8 @@ public abstract class TIOPixelNormalizer {
      * @param channel The RGB channel of the pixel value being transformed.
      * @return float The transformed value.
      */
-    public abstract float normalize(int value, int channel);
 
+    public abstract float normalize(int value, int channel);
 
     /**
      * A TIOPixelNormalizer that applies a scaling factor and equal bias to each pixel channel.
@@ -33,7 +34,6 @@ public abstract class TIOPixelNormalizer {
             }
         };
     }
-
 
     /**
      * A TIOPixelNormalizer that applies a scaling factor and different biases to each pixel channel.
@@ -54,7 +54,6 @@ public abstract class TIOPixelNormalizer {
             }
         };
     }
-
 
     /**
      * Normalizes pixel values from a range of `[0,255]` to `[0,1]`.
