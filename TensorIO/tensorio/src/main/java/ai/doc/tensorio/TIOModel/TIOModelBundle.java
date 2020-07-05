@@ -124,6 +124,12 @@ public class TIOModelBundle {
     private TIOModelOptions options;
 
     /**
+     * Modes associated with the model, e.g. whether it has support for prediction, training, and evaluation
+     */
+
+    private TIOModelModes modes;
+
+    /**
      * Contains the descriptions of the model's inputs, outputs, and placeholders
      * accessible by numeric index or by name. Not all model backends support
      * placeholders.
@@ -183,7 +189,7 @@ public class TIOModelBundle {
         this.path = path;
         this.info = json;
 
-        JSONObject modelJsonObject;
+        // Parse basic top level properties
 
         try {
             this.identifier = bundle.getString("id");
@@ -192,14 +198,11 @@ public class TIOModelBundle {
             this.details = bundle.getString("details");
             this.author = bundle.getString("author");
             this.license = bundle.getString("license");
-
-            modelJsonObject = bundle.getJSONObject("model");
-
-            this.quantized = modelJsonObject.getBoolean("quantized");
-
         } catch (JSONException e) {
             throw new TIOModelBundleException("Incomplete JSON model file", e);
         }
+
+        // Parse optional options
 
         try {
             if (bundle.has("options")) {
@@ -212,18 +215,30 @@ public class TIOModelBundle {
             throw new TIOModelBundleException("Incomplete options field, expected 'device_position' entry");
         }
 
+        // Parse model properties
 
-        this.type = modelJsonObject.optString("type", "unknown");
-        this.modelClassName = modelJsonObject.optString("class", TIOTFLiteModel.class.getName());
-        this.placeholder = modelJsonObject.optBoolean("placeholder", false);
+        try {
+            JSONObject modelJsonObject = bundle.getJSONObject("model");
 
+            this.quantized = modelJsonObject.getBoolean("quantized");
+            this.type = modelJsonObject.optString("type", "unknown");
+            this.modelClassName = modelJsonObject.optString("class", TIOTFLiteModel.class.getName());
+            this.placeholder = modelJsonObject.optBoolean("placeholder", false);
 
-        if (!this.placeholder) {
-            try {
-                this.modelFilePath = path + "/" + modelJsonObject.getString("file");
-            } catch (JSONException e) {
-                throw new TIOModelBundleException("Incomplete JSON model file, could not find model file declaration", e);
+            if (modelJsonObject.has("modes")) {
+                this.modes = new TIOModelModes(modelJsonObject.getJSONArray("modes"));
+            } else {
+                this.modes = new TIOModelModes();
             }
+
+            // Determine model file path
+
+            if (!this.placeholder) {
+                this.modelFilePath = path + "/" + modelJsonObject.getString("file");
+            }
+
+        } catch (JSONException e) {
+            throw new TIOModelBundleException("Incomplete JSON model file", e);
         }
 
         // Parse Inputs and Outputs
@@ -298,6 +313,10 @@ public class TIOModelBundle {
 
     public TIOModelOptions getOptions() {
         return options;
+    }
+
+    public TIOModelModes getModes() {
+        return modes;
     }
 
     public TIOModelIO getIO() {
