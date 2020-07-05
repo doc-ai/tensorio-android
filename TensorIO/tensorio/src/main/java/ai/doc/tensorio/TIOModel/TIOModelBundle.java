@@ -3,24 +3,14 @@ package ai.doc.tensorio.TIOModel;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 
-import ai.doc.tensorio.TIOData.TIODataDequantizer;
-import ai.doc.tensorio.TIOData.TIODataQuantizer;
-import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
-import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.utils.FileIO;
 
@@ -36,8 +26,7 @@ public class TIOModelBundle {
 
     private static final String TFMODEL_INFO_FILE = "model.json";
     private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
-    private static final String TENSOR_TYPE_VECTOR = "array";
-    private static final String TENSOR_TYPE_IMAGE = "image";
+
     private final Context context;
 
     /**
@@ -209,7 +198,7 @@ public class TIOModelBundle {
         List<TIOLayerInterface> outputs;
 
         try {
-            inputs = parseInputs(context, bundle.getJSONArray("inputs"));
+            inputs = TIOModelJSONParsing.parseInputs(this, bundle.getJSONArray("inputs"));
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing inputs field", e);
         } catch (IOException e) {
@@ -217,7 +206,7 @@ public class TIOModelBundle {
         }
 
         try {
-            outputs = parseOutputs(context, bundle.getJSONArray("outputs"));
+            outputs = TIOModelJSONParsing.parseOutputs(this, bundle.getJSONArray("outputs"));
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing outputs field", e);
         } catch (IOException e) {
@@ -270,7 +259,7 @@ public class TIOModelBundle {
                 ", modelClassName='" + modelClassName + '\'' +
                 '}';
     }
-
+    
     public String getPath() {
         return path;
     }
@@ -319,299 +308,12 @@ public class TIOModelBundle {
         return io;
     }
 
+    public Context getContext() {
+        return context;
+    }
+
     public String getModelFilePath() {
         return modelFilePath;
-    }
-
-
-    private List<TIOLayerInterface> parseInputs(Context c, JSONArray inputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedInputInterfaces = new ArrayList<>();
-        boolean isQuantized = this.isQuantized();
-
-        for (int i = 0; i < inputs.length(); i++) {
-            JSONObject inputObject = inputs.getJSONObject(i);
-            String type = inputObject.getString("type");
-            String name = inputObject.getString("name");
-
-            TIOLayerInterface tioLayerInterface;
-
-            switch (type) {
-                case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(c, inputObject, true, isQuantized, this);
-                    break;
-                case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(inputObject, true, isQuantized);
-                    break;
-                default:
-                    throw new TIOModelBundleException("Unsupported input layer type: " + type);
-            }
-
-            indexedInputInterfaces.add(tioLayerInterface);
-        }
-
-        return indexedInputInterfaces;
-    }
-
-    private List<TIOLayerInterface> parseOutputs(Context c, JSONArray outputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedOutputInterfaces = new ArrayList<>();
-        boolean isQuantized = this.isQuantized();
-
-        for (int i = 0; i < outputs.length(); i++) {
-            JSONObject outputObject = outputs.getJSONObject(i);
-            String type = outputObject.getString("type");
-            String name = outputObject.getString("name");
-
-            TIOLayerInterface tioLayerInterface;
-
-            switch (type) {
-                case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(c, outputObject, false, isQuantized, this);
-                    break;
-                case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(outputObject, false, isQuantized);
-                    break;
-                default:
-                    throw new TIOModelBundleException("Unsupported input layer type: " + type);
-            }
-
-            indexedOutputInterfaces.add(tioLayerInterface);
-        }
-
-        return indexedOutputInterfaces;
-    }
-
-    private TIOLayerInterface parseTIOVectorDescription(Context c, JSONObject dict, boolean isInput, boolean quantized, TIOModelBundle bundle) throws JSONException, TIOModelBundleException, IOException {
-        int[] shape = parseIntArray(dict.getJSONArray("shape"));
-        String name = dict.getString("name");
-        boolean isOutput = !isInput;
-
-        // Labels
-        String[] labels = null;
-        if (dict.optString("labels", null) != null) {
-            try {
-                String contents = FileIO.readFile(c, path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + dict.getString("labels"));
-                contents = contents.trim();
-                labels = contents.split("\\n");
-            }
-            catch (IOException e){
-                throw new TIOModelBundleException("There was a problem reading the labels file, no labels were loaded", e);
-            }
-        }
-
-        // Quantization
-        TIODataQuantizer quantizer = null;
-        if (isInput && dict.has("quantize")) {
-            quantizer = TIODataQuantizerForDict(dict.getJSONObject("quantize"));
-        }
-
-        // Dequantization
-        TIODataDequantizer dequantizer = null;
-        if (isOutput && dict.has("dequantize")) {
-            dequantizer = TIODataDequantizerForDict(dict.getJSONObject("dequantize"));
-        }
-
-        // Interface
-        return new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOVectorLayerDescription(shape, labels, quantized, quantizer, dequantizer)
-        );
-    }
-
-    private TIOLayerInterface parseTIOPixelBufferDescription(JSONObject dict, boolean isInput, boolean quantized) throws TIOModelBundleException, JSONException {
-
-        String name = dict.getString("name");
-        boolean isOutput = !isInput;
-
-        // Image Volume
-        TIOImageVolume imageVolume;
-        try {
-            int[] shape = parseIntArray(dict.getJSONArray("shape"));
-            imageVolume = TIOImageVolumeForShape(shape);
-        } catch (JSONException e) {
-            throw new TIOModelBundleException("Expected input.shape array field in model.json, none found", e);
-        }
-
-        // Pixel Format
-        TIOPixelFormat pixelFormat;
-        try {
-            pixelFormat = TIOPixelFormatForString(dict.getString("format"));
-        } catch (JSONException e) {
-            throw new TIOModelBundleException("Expected input.format string in model.json, none found", e);
-        }
-
-
-        // Normalization
-        TIOPixelNormalizer normalizer = null;
-        if (isInput && dict.has("normalize")) {
-                normalizer = TIOPixelNormalizerForDictionary(dict.getJSONObject("normalize"));
-        }
-
-        // Denormalization
-
-        TIOPixelDenormalizer denormalizer = null;
-
-        if (isOutput && dict.has("denormalize")) {
-            denormalizer = TIOPixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
-        }
-
-        // Description
-        TIOLayerInterface layerInterface = new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOPixelBufferLayerDescription(
-                        pixelFormat,
-                        imageVolume,
-                        normalizer,
-                        denormalizer,
-                        quantized
-                )
-        );
-
-        return layerInterface ;
-    }
-
-
-
-    private TIOPixelFormat TIOPixelFormatForString(String format) throws TIOModelBundleException {
-        switch (format) {
-            case "RGB":
-                return TIOPixelFormat.RGB;
-            case "BGR":
-                return TIOPixelFormat.BGR;
-        }
-        throw new TIOModelBundleException("Expected dict.format string to be RGB or BGR in model.json, found " + format);
-    }
-
-    private TIODataQuantizer TIODataQuantizerForDict(JSONObject dict) throws JSONException, TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
-            switch (standard) {
-                case "[0,1]":
-                    return TIODataQuantizer.TIODataQuantizerZeroToOne();
-                case "[-1,1]":
-                    return TIODataQuantizer.TIODataQuantizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Invalid Quantizer, expected standard quantization to be [0,1] or [1,1]");
-            }
-        } else {
-            if (dict.has("scale") && dict.has("bias")) {
-                float scale = (float) dict.getDouble("scale");
-                float bias = (float) dict.getDouble("bias");
-                return TIODataQuantizer.TIODataQuantizerWithQuantization(scale, bias);
-            } else {
-                throw new TIOModelBundleException("Invalid Quantizer, expected scale and bias for quantizer");
-            }
-        }
-    }
-
-    private TIODataDequantizer TIODataDequantizerForDict(JSONObject dict) throws TIOModelBundleException, JSONException {
-        if (dict == null) {
-            return null;
-        }
-
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
-            switch (standard) {
-                case "[0,1]":
-                    return TIODataDequantizer.TIODataDequantizerZeroToOne();
-                case "[-1,1]":
-                    return TIODataDequantizer.TIODataDequantizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Invalid Dequantizer, expected standard dequantization to be [0,1] or [1,1]");
-            }
-        } else {
-            if (dict.has("scale") && dict.has("bias")) {
-                float scale = (float) dict.getDouble("scale");
-                float bias = (float) dict.getDouble("bias");
-                return TIODataDequantizer.TIODataDequantizerWithDequantization(scale, bias);
-            } else {
-                throw new TIOModelBundleException("Invalid Dequantizer, expected scale and bias for quantizer");
-            }
-        }
-    }
-
-
-    private int[] parseIntArray(JSONArray a) throws JSONException {
-        int[] result = new int[a.length()];
-        for (int i = 0; i < a.length(); i++) {
-            result[i] = a.getInt(i);
-        }
-        return result;
-    }
-
-    private TIOImageVolume TIOImageVolumeForShape(int[] shape) throws TIOModelBundleException {
-        if (shape.length != 3) {
-            throw new TIOModelBundleException("Expected shape with three elements, actual count is " + shape.length);
-        }
-        if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
-            throw new TIOModelBundleException("Invalid image input shape, shape elements can not be <= 0");
-        }
-        return new TIOImageVolume(shape[0], shape[1], shape[2]);
-    }
-
-    /**
-     * Returns the TIOPixelNormalizer given an input dictionary.
-     */
-
-    private TIOPixelNormalizer TIOPixelNormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
-            switch (normalizerString) {
-                case "[0,1]":
-                    return TIOPixelNormalizer.TIOPixelNormalizerZeroToOne();
-                case "[-1,1]":
-                    return TIOPixelNormalizer.TIOPixelNormalizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Expected input.normalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
-            }
-        } else if (dict.has("scale") || dict.has("bias")) {
-            float scale = (float)dict.optDouble("scale", 1.0);
-            float redBias = (float)dict.optDouble("r", 0.0);
-            float greenBias = (float)dict.optDouble("g", 0.0);
-            float blueBias = (float)dict.optDouble("b", 0.0);
-            return TIOPixelNormalizer.TIOPixelNormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
-        } else {
-            return null;
-        }
-    }
-
-    private TIOPixelDenormalizer TIOPixelDenormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
-            switch (normalizerString) {
-                case "[0,1]":
-                    return TIOPixelDenormalizer.TIOPixelDenormalizerZeroToOne();
-                case "[-1,1]":
-                    return TIOPixelDenormalizer.TIOPixelDenormalizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Expected input.denormalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
-            }
-        } else if (dict.has("scale") || dict.has("bias")) {
-            float scale = (float)dict.optDouble("scale", 1.0);
-            float redBias = (float)dict.optDouble("r", 0.0);
-            float greenBias = (float)dict.optDouble("g", 0.0);
-            float blueBias = (float)dict.optDouble("b", 0.0);
-            return TIOPixelDenormalizer.TIOPixelDenormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
-        } else {
-            return null;
-        }
     }
 
 }
