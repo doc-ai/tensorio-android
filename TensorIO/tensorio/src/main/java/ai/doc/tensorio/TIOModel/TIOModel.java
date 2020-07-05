@@ -3,10 +3,8 @@ package ai.doc.tensorio.TIOModel;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import java.util.List;
 import java.util.Map;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 
 /**
@@ -95,14 +93,21 @@ public abstract class TIOModel {
     private boolean loaded;
 
     /**
-     * Returns descriptions of the model's inputs indexed to the order they appear in model.json.
+     * Contains the descriptions of the model's inputs, outputs, and placeholders
+     * accessible by numeric index or by name. Not all model backends support
+     * placeholders.
+     *
+     * @code
+     * io.inputs[0]
+     * io.inputs[@"image"]
+     * io.outputs[0]
+     * io.outputs[@"label"]
+     * io.placeholders[0]
+     * io.placeholders[@"label"]
+     * @endcode
      */
-    private List<TIOLayerInterface> inputs;
 
-    /**
-     * Returns descriptions of the model's outputs indexed to the order they appear in model.json.
-     */
-    private List<TIOLayerInterface> outputs;
+    private TIOModelIO io;
 
     private Context context;
 
@@ -129,10 +134,7 @@ public abstract class TIOModel {
         this.placeholder = bundle.isPlaceholder();
         this.quantized = bundle.isQuantized();
         this.type = bundle.getType();
-
-        this.inputs = bundle.getIndexedInputInterfaces();
-        this.outputs = bundle.getIndexedOutputInterfaces();
-
+        this.io = bundle.getIO();
     }
 
     /**
@@ -166,92 +168,24 @@ public abstract class TIOModel {
 
         if (input instanceof Map) {
             Map<String, Object> inputMap = (Map<String, Object>) input;
-            if (getInputs().size() != inputMap.size()) {
-                throw new TIOModelException("The model has " + getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
+            if (io.getInputs().size() != inputMap.size()) {
+                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
             }
-            if (!inputMap.keySet().equals(getBundle().getNamedInputInterfaces().keySet())) {
-                for (TIOLayerInterface layer : getInputs()) {
+
+            if (!inputMap.keySet().equals(io.getInputs().keys())) {
+                for (TIOLayerInterface layer : io.getInputs().all()) {
                     if (!inputMap.containsKey(layer.getName())) {
                         throw new TIOModelException("The model received no input for layer \"" + layer.getName() + "\"");
                     }
                 }
             }
         } else {
-            if (getInputs().size() != 1) {
-                throw new TIOModelException("The model has " + getInputs().size() + " input layers but only received one input");
+            if (io.getInputs().size() != 1) {
+                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but only received one input");
             }
         }
 
         return null;
-    }
-
-    public List<TIOLayerInterface> getInputs() {
-        return inputs;
-    }
-
-    public List<TIOLayerInterface> getOutputs() {
-        return outputs;
-    }
-
-    /**
-     * Returns a description of the model's input at a given index
-     * <p>
-     * Model inputs and outputs are organized by index and name. In the model.json file that describes
-     * the interface to a model, an array of named inputs includes information such as the type of
-     * data the input expects, its volume, and any transformations that will be applied to it.
-     * <p>
-     * This information is encapsulated in a `TIOLayerDescription`, which is used to prepare
-     * inputs provided to the `runOn:` method prior to performing inference. See TIOModelBundleJSONSchema.h
-     * for more information about this json file.
-     */
-    public TIOLayerDescription descriptionOfInputAtIndex(int index) {
-        return this.bundle.getIndexedInputInterfaces().get(index).getDataDescription();
-    }
-
-    /**
-     * Returns a description of the model's input for a given name
-     * <p>
-     * Model inputs and outputs are organized by index and name. In the model.json file that describes
-     * the interface to a model, an array of named inputs includes information such as the type of
-     * data the input expects, its volume, and any transformations that will be applied to it.
-     * <p>
-     * This information is encapsulated in a `TIOLayerDescription`, which is used to prepare
-     * inputs provided to the `runOn:` method prior to performing inference. See TIOModelBundleJSONSchema.h
-     * for more information about this json file.
-     */
-    public TIOLayerDescription descriptionOfInputWithName(String name) {
-        return this.bundle.getNamedInputInterfaces().get(name).getDataDescription();
-    }
-
-
-    /**
-     * Returns a description of the model's output at a given index
-     * <p>
-     * Model inputs and outputs are organized by index and name. In the model.json file that describes
-     * the interface to a model, an array of named inputs includes information such as the type of
-     * data the input expects, its volume, and any transformations that will be applied to it.
-     * <p>
-     * This information is encapsulated in a `TIOLayerDescription`, which is used to prepare the results
-     * of performing inference and returned from the `runOn:` method. See TIOModelBundleJSONSchema.h
-     * for more information about this json file.
-     */
-    public TIOLayerDescription descriptionOfOutputAtIndex(int index) {
-        return this.bundle.getIndexedOutputInterfaces().get(index).getDataDescription();
-    }
-
-    /**
-     * Returns a description of the model's output for a given name
-     * <p>
-     * Model inputs and outputs are organized by index and name. In the model.json file that describes
-     * the interface to a model, an array of named inputs includes information such as the type of
-     * data the input expects, its volume, and any transformations that will be applied to it.
-     * <p>
-     * This information is encapsulated in a `TIOLayerDescription`, which is used to prepare the results
-     * of performing inference and returned from the `runOn:` method. See TIOModelBundleJSONSchema.h
-     * for more information about this json file.
-     */
-    public TIOLayerDescription descriptionOfOutputWithName(String name) {
-        return this.bundle.getNamedOutputInterfaces().get(name).getDataDescription();
     }
 
     @NonNull
@@ -268,8 +202,8 @@ public abstract class TIOModel {
                 ", quantized=" + quantized +
                 ", type='" + type + '\'' +
                 ", loaded=" + loaded +
-                ", inputs=" + inputs.toString() +
-                ", outputs=" + outputs.toString() +
+                ", inputs=" + io.getInputs().toString() +
+                ", outputs=" + io.getOutputs().toString() +
                 '}';
     }
 
@@ -315,6 +249,10 @@ public abstract class TIOModel {
 
     public boolean isLoaded() {
         return loaded;
+    }
+
+    public TIOModelIO getIO() {
+        return io;
     }
 
     public Context getContext() {
