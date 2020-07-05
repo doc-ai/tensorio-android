@@ -20,8 +20,9 @@ import org.tensorflow.lite.Delegate;
 /**
  * Helper class for {@code GpuDelegate}.
  *
- * <p>WARNING: This is an experimental API and subject to change.
+ * WARNING: This is an experimental API and subject to change.
  */
+
 public class GpuDelegateHelper {
     private GpuDelegateHelper() {
     }
@@ -29,6 +30,7 @@ public class GpuDelegateHelper {
     /**
      * Checks whether {@code GpuDelegate} is available.
      */
+
     public static boolean isGpuDelegateAvailable() {
         try {
             Class.forName("org.tensorflow.lite.experimental.GpuDelegate");
@@ -41,6 +43,7 @@ public class GpuDelegateHelper {
     /**
      * Returns an instance of {@code GpuDelegate} if available.
      */
+
     public static Delegate createGpuDelegate() {
         try {
             return Class.forName("org.tensorflow.lite.experimental.GpuDelegate")

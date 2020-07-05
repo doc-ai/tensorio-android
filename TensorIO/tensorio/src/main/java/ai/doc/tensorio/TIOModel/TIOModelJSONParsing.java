@@ -23,9 +23,22 @@ import ai.doc.tensorio.utils.FileIO;
 
 public abstract class TIOModelJSONParsing {
 
+    /**
+     * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
+     */
+
     private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
 
+    /**
+     * Key identifying an array (vector) layer
+     */
+
     private static final String TENSOR_TYPE_VECTOR = "array";
+
+    /**
+     * Key identifying an image layer
+     */
+
     private static final String TENSOR_TYPE_IMAGE = "image";
 
     /** Parses model inputs into a List of TIOLayerInterface, will be refactored (#12) */

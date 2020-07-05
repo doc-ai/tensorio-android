@@ -10,6 +10,7 @@ package ai.doc.tensorio.TIOData;
  * Normalization and denormalization apply the same operations with scaling and bias values,
  * but they are typically inverses of one another.
  */
+
 public abstract class TIOPixelDenormalizer {
     /**
      * A `TIOPixelNormalizer` transforms a pixel value in the range `[0,255]`
@@ -19,8 +20,8 @@ public abstract class TIOPixelDenormalizer {
      * @param channel The RGB channel of the pixel value being transformed.
      * @return The transformed value.
      */
-    public abstract int denormalize(float value, int channel);
 
+    public abstract int denormalize(float value, int channel);
 
     /**
      * A TIOPixelDenormalizer that applies a scaling factor and equal bias to each pixel channel.
