@@ -67,6 +67,8 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
+    // TODO: Vector output labeling should take place here (#26)
+
     private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
         super.runOn(input);
 
