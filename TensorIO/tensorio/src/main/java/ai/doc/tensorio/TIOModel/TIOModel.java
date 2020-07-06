@@ -272,7 +272,7 @@ public abstract class TIOModel {
      * conforming class.
      */
 
-    public Object runOn(Object input) throws TIOModelException {
+    public Map<String, Object> runOn(Object input) throws TIOModelException {
 
         if (input instanceof Map) {
             Map<String, Object> inputMap = (Map<String, Object>) input;

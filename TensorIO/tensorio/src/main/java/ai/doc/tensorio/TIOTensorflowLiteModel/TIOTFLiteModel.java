@@ -67,7 +67,8 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
-    // TODO: Vector output labeling should take place here (#26)
+    // TODO: Unify output capture
+    // TODO: If an output vector has a single value, return the value directly, not the vector
 
     private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
         super.runOn(input);
@@ -75,6 +76,7 @@ public class TIOTFLiteModel extends TIOModel {
         Object[] inputs = new Object[getIO().getInputs().size()];
 
         // Fetch the input and output layer descriptions from the model
+
         List<TIOLayerInterface> inputLayers = getIO().getInputs().all();
         List<TIOLayerInterface> outputLayers = getIO().getOutputs().all();
 
@@ -86,6 +88,7 @@ public class TIOTFLiteModel extends TIOModel {
         }
 
         Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size());
+
         for (int i=0; i<outputLayers.size(); i++){
             // Ask the output layer for a buffer to store the output in
             TIOLayerInterface layer = outputLayers.get(i);
@@ -95,67 +98,84 @@ public class TIOTFLiteModel extends TIOModel {
         }
 
         // Run the model on the input buffers, store the output in the outputbuffers
+
         tflite.runForMultipleInputsOutputs(inputs, outputs);
 
         // Ask the outputlayer to convert the outputbuffer back to an object to return to the user
+
         Map<String, Object> outputMap = new HashMap<>(outputLayers.size());
+
         for (int i=0; i<outputLayers.size(); i++){
             TIOLayerInterface layer = outputLayers.get(i);
             Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
+            // TODO: Vector output labeling should take place here (#26)
             outputMap.put(layer.getName(), o);
         }
+
         return outputMap;
     }
 
-    private Object runSingleInputSingleOutput(Object input) throws TIOModelException {
+    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
         super.runOn(input);
 
         // Fetch the input and output layer descriptions from the model
+
         TIOLayerDescription inputLayer = getIO().getInputs().get(0).getDataDescription();
         TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getDataDescription();
 
         // Ask the input layer to parse the input object into a Bytebuffer
+
         ByteBuffer inputBuffer = inputLayer.toByteBuffer(input);
 
         // Ask the output layer for a buffer to store the output in
+
         ByteBuffer outputBuffer = outputLayer.getBackingByteBuffer();
         outputBuffer.rewind();
 
         // Run the model on the input buffer, store the output in the outputbuffer
+
         tflite.run(inputBuffer, outputBuffer);
 
         // Ask the outputlayer to convert the outputbuffer back to an object to return to the user
-        return outputLayer.fromByteBuffer(outputBuffer);
+        // But always return a map
+
+        // TODO: Vector output labeling should take place here (#26)
+        Map<String, Object> outputMap = new HashMap<>(1);
+        Object o = outputLayer.fromByteBuffer(outputBuffer);
+        outputMap.put(getIO().getOutputs().get(0).getName(), o);
+
+        // return outputLayer.fromByteBuffer(outputBuffer);
+        return outputMap;
     }
 
     @Override
-    public Object runOn(Object input) throws TIOModelException{
+    public Map<String, Object> runOn(Object input) throws TIOModelException{
         super.runOn(input);
 
         int numInputs = getIO().getInputs().size();
         int numOutputs = getIO().getOutputs().size();
 
-        if (numInputs > 1){
+        if (numInputs > 1) {
             Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
 
-            if (numOutputs == 1){
-                return output.values().iterator().next();
-            }
+//            if (numOutputs == 1) {
+//                return output.values().iterator().next();
+//            }
             return output;
         }
-        else{
-            if (input instanceof Map){
+        else {
+            if (input instanceof Map) {
                 Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
-                if (numOutputs == 1){
-                    return output.values().iterator().next();
-                }
+//                if (numOutputs == 1) {
+//                    return output.values().iterator().next();
+//                }
                 return output;
             }
-            else{
+            else {
                 if (numOutputs == 1) {
                     return runSingleInputSingleOutput(input);
                 }
-                else{
+                else {
                     Map<String, Object> inputMap = new HashMap<>();
                     TIOLayerInterface inputLayer = getIO().getInputs().get(0);
                     inputMap.put(inputLayer.getName(), input);
