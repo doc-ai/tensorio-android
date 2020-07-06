@@ -21,6 +21,8 @@ import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
 import ai.doc.tensorio.utils.FileIO;
 
+import static ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface.*;
+
 public abstract class TIOModelJSONParsing {
 
     /**
@@ -41,64 +43,47 @@ public abstract class TIOModelJSONParsing {
 
     private static final String TENSOR_TYPE_IMAGE = "image";
 
-    /** Parses model inputs into a List of TIOLayerInterface, will be refactored (#12) */
+    /**
+     * Enumerates through the JSON description of a model's inputs or outputs and constructs a
+     * `TIOLayerInterface` for each one.
+     * @param modelBundle The model bundle whose layer descriptions are being parsed.
+     *                    May be `null` if descriptions are being parsed from something other
+     *                    than a bundle.
+     * @param io A JSONArray of Maps describing the model's input or output layers
+     * @param mode `TIOLayerInterfaceMode` one of input, output, or placeholder, describing the
+     *             kind of layer this is.
+     * @return A List of `TIOLayerInterface` matching the descriptions.
+     * @throws JSONException
+     * @throws TIOModelBundleException
+     * @throws IOException
+     */
 
-    public static List<TIOLayerInterface> parseInputs(TIOModelBundle modelBundle, JSONArray inputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedInputInterfaces = new ArrayList<>();
-        boolean isQuantized = modelBundle.isQuantized();
+    public static List<TIOLayerInterface> parseIO(@Nullable TIOModelBundle modelBundle, JSONArray io, Mode mode) throws JSONException, TIOModelBundleException, IOException {
+        ArrayList<TIOLayerInterface> interfaces = new ArrayList<>();
+        boolean isQuantized = modelBundle.isQuantized(); // Always false if modelBundle is nil
 
-        for (int i = 0; i < inputs.length(); i++) {
-            JSONObject inputObject = inputs.getJSONObject(i);
-            String type = inputObject.getString("type");
-            String name = inputObject.getString("name");
-
-            TIOLayerInterface tioLayerInterface;
-
-            switch (type) {
-                case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(modelBundle, inputObject, true, isQuantized);
-                    break;
-                case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(inputObject, true, isQuantized);
-                    break;
-                default:
-                    throw new TIOModelBundleException("Unsupported input layer type: " + type);
-            }
-
-            indexedInputInterfaces.add(tioLayerInterface);
-        }
-
-        return indexedInputInterfaces;
-    }
-
-    /** Parses model outputs into a List of TIOLayerInterface, will be refactored (#12) */
-
-    public static List<TIOLayerInterface> parseOutputs(TIOModelBundle modelBundle, JSONArray outputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedOutputInterfaces = new ArrayList<>();
-        boolean isQuantized = modelBundle.isQuantized();
-
-        for (int i = 0; i < outputs.length(); i++) {
-            JSONObject outputObject = outputs.getJSONObject(i);
-            String type = outputObject.getString("type");
-            String name = outputObject.getString("name");
+        for (int i = 0; i < io.length(); i++) {
+            JSONObject jsonObject = io.getJSONObject(i);
+            String type = jsonObject.getString("type");
+            String name = jsonObject.getString("name");
 
             TIOLayerInterface tioLayerInterface;
 
             switch (type) {
                 case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(modelBundle, outputObject, false, isQuantized);
+                    tioLayerInterface = parseTIOVectorDescription(modelBundle, jsonObject, mode, isQuantized);
                     break;
                 case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(outputObject, false, isQuantized);
+                    tioLayerInterface = parseTIOPixelBufferDescription(jsonObject, mode, isQuantized);
                     break;
                 default:
                     throw new TIOModelBundleException("Unsupported input layer type: " + type);
             }
 
-            indexedOutputInterfaces.add(tioLayerInterface);
+            interfaces.add(tioLayerInterface);
         }
 
-        return indexedOutputInterfaces;
+        return interfaces;
     }
 
     /**
@@ -110,20 +95,20 @@ public abstract class TIOModelJSONParsing {
      * @param modelBundle `The ModelBundel` that is being parsed, needed to derive a path to the labels file.
      *                    May be `nil` if descriptions are being parsed from something other than a bundle.
      * @param dict The JSON description in `JSONObject` format.
-     * @param isInput `true` if input `false` if output
+     * @param mode One of the TIOLayerInterface.mode values
      * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
      *
      * @return TIOLayerInterface An interface that describes this vector input or output.
      */
 
-    public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, JSONObject dict, boolean isInput, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
+    public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");
-        boolean isOutput = !isInput;
 
         // Labels
 
         String[] labels = null;
+
         if (dict.optString("labels", null) != null) {
             try {
                 // TODO: Better path building
@@ -139,23 +124,41 @@ public abstract class TIOModelJSONParsing {
         // Quantization
 
         TIODataQuantizer quantizer = null;
-        if (isInput && dict.has("quantize")) {
-            quantizer = TIODataQuantizerForDict(dict.getJSONObject("quantize"));
+
+        switch (mode) {
+            case Input:
+            case Placeholder:
+                if ( dict.has("quantize") ) {
+                    quantizer = TIODataQuantizerForDict(dict.getJSONObject("quantize"));
+                }
+                break;
+            case Output:
+                break;
         }
 
         // Dequantization
 
         TIODataDequantizer dequantizer = null;
-        if (isOutput && dict.has("dequantize")) {
-            dequantizer = TIODataDequantizerForDict(dict.getJSONObject("dequantize"));
+
+        switch (mode) {
+            case Output:
+                if ( dict.has("dequantize") ) {
+                    dequantizer = TIODataDequantizerForDict(dict.getJSONObject("dequantize"));
+                }
+                break;
+            case Input:
+            case Placeholder:
+                break;
         }
 
         // Interface
 
-        return new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOVectorLayerDescription(shape, labels, quantized, quantizer, dequantizer)
+        return new TIOLayerInterface(name, mode, new TIOVectorLayerDescription(
+                shape,
+                labels,
+                quantized,
+                quantizer,
+                dequantizer)
         );
     }
 
@@ -166,20 +169,19 @@ public abstract class TIOModelJSONParsing {
      * of byte alignment and pixel format conversion requirements.
      *
      * @param dict The JSON description in `JSONObject` format.
-     * @param isInput `true` if input `false` if output
+     * @param mode One of the TIOLayerInterface.mode values
      * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
      *
      * @return TIOLayerInterface An interface that describes this pixel buffer input or output.
      */
 
-    public static TIOLayerInterface parseTIOPixelBufferDescription(JSONObject dict, boolean isInput, boolean quantized) throws TIOModelBundleException, JSONException {
-
+    public static TIOLayerInterface parseTIOPixelBufferDescription(JSONObject dict, Mode mode, boolean quantized) throws TIOModelBundleException, JSONException {
         String name = dict.getString("name");
-        boolean isOutput = !isInput;
 
         // Image Volume
 
         TIOImageVolume imageVolume;
+
         try {
             int[] shape = parseIntArray(dict.getJSONArray("shape"));
             imageVolume = TIOImageVolumeForShape(shape);
@@ -190,6 +192,7 @@ public abstract class TIOModelJSONParsing {
         // Pixel Format
 
         TIOPixelFormat pixelFormat;
+
         try {
             pixelFormat = TIOPixelFormatForString(dict.getString("format"));
         } catch (JSONException e) {
@@ -199,29 +202,41 @@ public abstract class TIOModelJSONParsing {
         // Normalization
 
         TIOPixelNormalizer normalizer = null;
-        if (isInput && dict.has("normalize")) {
-            normalizer = TIOPixelNormalizerForDictionary(dict.getJSONObject("normalize"));
+
+        switch (mode) {
+            case Input:
+            case Placeholder:
+                if ( dict.has("normalize") ) {
+                    normalizer = TIOPixelNormalizerForDictionary(dict.getJSONObject("normalize"));
+                }
+                break;
+            case Output:
+                break;
         }
 
         // Denormalization
 
         TIOPixelDenormalizer denormalizer = null;
-        if (isOutput && dict.has("denormalize")) {
-            denormalizer = TIOPixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
+
+        switch (mode) {
+            case Output:
+                if ( dict.has("denormalize") ) {
+                    denormalizer = TIOPixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
+                }
+                break;
+            case Input:
+            case Placeholder:
+                break;
         }
 
         // Description
 
-        TIOLayerInterface layerInterface = new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOPixelBufferLayerDescription(
-                        pixelFormat,
-                        imageVolume,
-                        normalizer,
-                        denormalizer,
-                        quantized
-                )
+        TIOLayerInterface layerInterface = new TIOLayerInterface(name, mode, new TIOPixelBufferLayerDescription(
+                pixelFormat,
+                imageVolume,
+                normalizer,
+                denormalizer,
+                quantized)
         );
 
         return layerInterface ;
