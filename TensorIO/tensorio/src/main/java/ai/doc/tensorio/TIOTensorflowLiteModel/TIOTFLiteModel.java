@@ -21,6 +21,7 @@ import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOModel.TIOModel;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
+import ai.doc.tensorio.TIOModel.TIOModelIO;
 
 public class TIOTFLiteModel extends TIOModel {
 
@@ -67,52 +68,42 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
-    // TODO: Unify output capture
-    // TODO: If an output vector has a single value, return the value directly, not the vector
-
     private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
         super.runOn(input);
 
-        Object[] inputs = new Object[getIO().getInputs().size()];
-
         // Fetch the input and output layer descriptions from the model
 
-        List<TIOLayerInterface> inputLayers = getIO().getInputs().all();
-        List<TIOLayerInterface> outputLayers = getIO().getOutputs().all();
+        TIOModelIO.TIOModelIOList inputList = getIO().getInputs();
+        TIOModelIO.TIOModelIOList outputList = getIO().getOutputs();
 
-        for (int i=0; i<inputLayers.size(); i++){
-            // Ask the input layer to parse the input object into a Bytebuffer
-            TIOLayerInterface layer = inputLayers.get(i);
+        // Prepare input buffers
+
+        Object[] inputs = new Object[getIO().getInputs().size()];
+
+        for (int i = 0; i < inputList.size(); i++){
+            TIOLayerInterface layer = inputList.get(i);
             ByteBuffer inputBuffer = layer.getDataDescription().toByteBuffer(input.get(layer.getName()));
             inputs[i] = inputBuffer;
         }
 
+        // Prepare output buffers
+
         Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size());
 
-        for (int i=0; i<outputLayers.size(); i++){
-            // Ask the output layer for a buffer to store the output in
-            TIOLayerInterface layer = outputLayers.get(i);
+        for (int i = 0; i < outputList.size(); i++){
+            TIOLayerInterface layer = outputList.get(i);
             ByteBuffer outputBuffer = layer.getDataDescription().getBackingByteBuffer();
             outputBuffer.rewind();
             outputs.put(i, outputBuffer);
         }
 
-        // Run the model on the input buffers, store the output in the outputbuffers
+        // Run the model on the input buffers, store the output in the output buffers
 
         tflite.runForMultipleInputsOutputs(inputs, outputs);
 
-        // Ask the outputlayer to convert the outputbuffer back to an object to return to the user
+        // Convert output buffers to user land objects
 
-        Map<String, Object> outputMap = new HashMap<>(outputLayers.size());
-
-        for (int i=0; i<outputLayers.size(); i++){
-            TIOLayerInterface layer = outputLayers.get(i);
-            Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
-            // TODO: Vector output labeling should take place here (#26)
-            outputMap.put(layer.getName(), o);
-        }
-
-        return outputMap;
+        return captureOutput(outputs);
     }
 
     private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
@@ -123,28 +114,40 @@ public class TIOTFLiteModel extends TIOModel {
         TIOLayerDescription inputLayer = getIO().getInputs().get(0).getDataDescription();
         TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getDataDescription();
 
-        // Ask the input layer to parse the input object into a Bytebuffer
+        // Prepare input buffer
 
         ByteBuffer inputBuffer = inputLayer.toByteBuffer(input);
 
-        // Ask the output layer for a buffer to store the output in
+        // Prepare output buffer
 
         ByteBuffer outputBuffer = outputLayer.getBackingByteBuffer();
         outputBuffer.rewind();
 
-        // Run the model on the input buffer, store the output in the outputbuffer
+        // Run the model on the input buffer, store the output in the output buffer
 
         tflite.run(inputBuffer, outputBuffer);
 
-        // Ask the outputlayer to convert the outputbuffer back to an object to return to the user
-        // But always return a map
+        // Convert output buffers to user land objects
 
-        // TODO: Vector output labeling should take place here (#26)
-        Map<String, Object> outputMap = new HashMap<>(1);
-        Object o = outputLayer.fromByteBuffer(outputBuffer);
-        outputMap.put(getIO().getOutputs().get(0).getName(), o);
+        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
+        outputs.put(0, outputBuffer);
 
-        // return outputLayer.fromByteBuffer(outputBuffer);
+        return captureOutput(outputs);
+    }
+
+    // TODO: If an output vector has a single value, return the value directly, not the vector
+    // TODO: Vector output labeling should take place here (#26)
+
+    private Map<String, Object> captureOutput(Map<Integer, Object> outputs) {
+        TIOModelIO.TIOModelIOList outputList = getIO().getOutputs();
+        Map<String, Object> outputMap = new HashMap<>(outputList.size());
+
+        for (int i = 0; i < outputList.size(); i++){
+            TIOLayerInterface layer = outputList.get(i);
+            Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
+            outputMap.put(layer.getName(), o);
+        }
+
         return outputMap;
     }
 
