@@ -53,11 +53,10 @@ public class TIOTFLiteVectorBuffer extends TIOBuffer {
 
         if (quantized) {
             // Layer expects bytes
-            this.buffer = ByteBuffer.allocate(length);
-        }
-        else {
+            this.buffer = ByteBuffer.allocateDirect(length);
+        } else {
             // Layer expects floats
-            this.buffer = ByteBuffer.allocate(length*4);
+            this.buffer = ByteBuffer.allocateDirect(length*4);
         }
 
         this.buffer.order(ByteOrder.nativeOrder());
