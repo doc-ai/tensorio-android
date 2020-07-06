@@ -164,12 +164,12 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
-        return buffer.toByteBuffer(o);
+        return buffer.toByteBuffer(o, this);
     }
 
     @Override
     public Object fromByteBuffer(ByteBuffer byteBuffer) {
-        return buffer.fromByteBuffer(byteBuffer);
+        return buffer.fromByteBuffer(byteBuffer, this);
     }
 
     @Override

@@ -46,7 +46,7 @@ import ai.doc.tensorio.TIOModel.TIOModelIO;
 
 public class TIOTFLiteModel extends TIOModel {
 
-    private Interpreter tflite;
+    private Interpreter interpreter;
     private MappedByteBuffer tfliteModel;
     private GpuDelegate gpuDelegate = null;
 
@@ -68,17 +68,17 @@ public class TIOTFLiteModel extends TIOModel {
         } catch (IOException e) {
             throw new TIOModelException("Error loading model file", e);
         }
-        tflite = new Interpreter(tfliteModel);
+        interpreter = new Interpreter(tfliteModel);
         super.load();
     }
 
     @Override
     public void unload() {
-        if (tflite != null) {
-            tflite.close();
-            this.tflite = null;
+        if (interpreter != null ) {
+            interpreter.close();
+            this.interpreter = null;
         }
-        if (this.gpuDelegate != null){
+        if (this.gpuDelegate != null) {
             this.gpuDelegate.close();
             this.gpuDelegate = null;
         }
@@ -120,7 +120,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Run the model on the input buffers, store the output in the output buffers
 
-        tflite.runForMultipleInputsOutputs(inputs, outputs);
+        interpreter.runForMultipleInputsOutputs(inputs, outputs);
 
         // Convert output buffers to user land objects
 
@@ -146,7 +146,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Run the model on the input buffer, store the output in the output buffer
 
-        tflite.run(inputBuffer, outputBuffer);
+        interpreter.run(inputBuffer, outputBuffer);
 
         // Convert output buffers to user land objects
 
@@ -247,8 +247,7 @@ public class TIOTFLiteModel extends TIOModel {
             tfliteOptions.addDelegate((GpuDelegate)GpuDelegateHelper.createGpuDelegate());
         }
 
-        tflite = new Interpreter(tfliteModel, tfliteOptions);
-
+        interpreter = new Interpreter(tfliteModel, tfliteOptions);
     }
 
     public void useGPU() {
@@ -281,7 +280,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     public long getLastInferenceDuration(){
-        return tflite.getLastNativeInferenceDurationNanoseconds();
+        return interpreter.getLastNativeInferenceDurationNanoseconds();
     }
 
     public void setOptions(boolean use16bit, boolean useGPU, boolean useNNAPI, int numThreads){

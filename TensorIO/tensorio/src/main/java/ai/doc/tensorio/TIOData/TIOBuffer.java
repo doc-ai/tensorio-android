@@ -43,7 +43,8 @@ public abstract class TIOBuffer {
 
     public TIOBuffer(TIOLayerDescription description) {}
 
-    public abstract ByteBuffer toByteBuffer(Object o);
-    public abstract Object fromByteBuffer(ByteBuffer buffer);
+    public abstract ByteBuffer toByteBuffer(Object o, TIOLayerDescription description);
+    public abstract Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description);
+
     public abstract ByteBuffer getBackingByteBuffer();
 }

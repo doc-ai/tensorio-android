@@ -124,106 +124,16 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
 
     //endRegion
 
-//    // TODO: incorrectly named method, it may not convert it to float at all! (#29)
-//
-//    private void intPixelToFloat(int pixelValue, ByteBuffer imgData) {
-//        if (quantized) {
-//            imgData.put((byte) ((pixelValue >> 16) & 0xFF));
-//            imgData.put((byte) ((pixelValue >> 8) & 0xFF));
-//            imgData.put((byte) (pixelValue & 0xFF));
-//        } else {
-//            if (this.normalizer != null) {
-//                imgData.putFloat(this.normalizer.normalize((pixelValue >> 16) & 0xFF, 0));
-//                imgData.putFloat(this.normalizer.normalize((pixelValue >> 8) & 0xFF, 1));
-//                imgData.putFloat(this.normalizer.normalize(pixelValue & 0xFF, 2));
-//            } else {
-//                imgData.putFloat((pixelValue >> 16) & 0xFF);
-//                imgData.putFloat((pixelValue >> 8) & 0xFF);
-//                imgData.putFloat(pixelValue & 0xFF);
-//            }
-//        }
-//    }
-//
-//    private int floatPixelToInt(float r, float g, float b){
-//        int rr, gg, bb;
-//        if (this.denormalizer != null){
-//            rr = this.denormalizer.denormalize(r, 0);
-//            gg = this.denormalizer.denormalize(g, 1);
-//            bb = this.denormalizer.denormalize(b, 2);
-//        }
-//        else{
-//            rr = (int)r;
-//            gg = (int)g;
-//            bb = (int)b;
-//        }
-//        return 0xFF000000 | (rr << 16) & 0x00FF0000| (gg << 8) & 0x0000FF00 | bb & 0x000000FF;
-//    }
-
     //region Buffer Forwarding
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
-        return buffer.toByteBuffer(o);
-
-//        if (o == null) {
-//            throw new NullPointerException("Input to a model can not be null");
-//        } else if (!(o instanceof Bitmap)) {
-//            throw new IllegalArgumentException("Image input should be bitmap");
-//        }
-//
-//        Bitmap bitmap = (Bitmap) o;
-//        if (bitmap.getWidth() != this.shape.width || bitmap.getHeight() != this.shape.height){
-//            throw new IllegalArgumentException("Image input has the wrong shape, expected width="+this.shape.width+" and height="+this.shape.height+" got width="+bitmap.getWidth()+" and height="+bitmap.getHeight());
-//        }
-//
-//        int[] intValues = new int[this.shape.width * this.shape.height]; // 4 bytes per int
-//
-//        buffer.rewind();
-//        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight()); // Returns ARGB pixels
-//
-//        // Convert the image to floating point
-//
-//        // TODO: Traversing by y-axis on the inside, shouldn't it be by x-axis? doesn't look like it matters
-//
-//        int pixel = 0;
-//        for (int i = 0; i < bitmap.getWidth(); ++i) {
-//            for (int j = 0; j < bitmap.getHeight(); ++j) {
-//                final int val = intValues[pixel++];
-//                intPixelToFloat(val, buffer);
-//            }
-//        }
-//
-//        intValues = null;
-//
-//        return buffer;
+        return buffer.toByteBuffer(o, this);
     }
 
     @Override
     public Bitmap fromByteBuffer(ByteBuffer byteBuffer) {
-        return (Bitmap) buffer.fromByteBuffer(byteBuffer);
-
-//        int[] intValues = new int[this.shape.width * this.shape.height]; // 4 bytes per int
-//
-//        byteBuffer.rewind();
-//        Bitmap bmp = Bitmap.createBitmap(this.shape.width, this.shape.height, Bitmap.Config.ARGB_8888);
-//
-//        for (int i=0; i<this.shape.width*this.shape.height; i++) {
-//            if (this.quantized) {
-//                int r = byteBuffer.get();
-//                int g = byteBuffer.get();
-//                int b = byteBuffer.get();
-//                intValues[i] = 0xFF000000 | (r << 16) & 0x00FF0000| (g << 8) & 0x0000FF00 | b & 0x000000FF;
-//            }
-//            else {
-//                intValues[i] = floatPixelToInt(byteBuffer.getFloat(), byteBuffer.getFloat(), byteBuffer.getFloat());
-//            }
-//        }
-//
-//        bmp.setPixels(intValues,0, this.shape.width, 0, 0, this.shape.width, this.shape.height);
-//
-//        intValues = null;
-//
-//        return bmp;
+        return (Bitmap) buffer.fromByteBuffer(byteBuffer, this);
     }
 
     @Override

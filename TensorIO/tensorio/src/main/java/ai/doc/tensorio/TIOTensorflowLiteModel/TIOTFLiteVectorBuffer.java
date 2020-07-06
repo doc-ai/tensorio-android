@@ -27,12 +27,10 @@ import java.nio.FloatBuffer;
 import ai.doc.tensorio.TIOData.TIOBuffer;
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
+import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 
 public class TIOTFLiteVectorBuffer extends TIOBuffer {
-
-    // TODO: Normally the description is passed into the buffer conversion methods
-    private TIOVectorLayerDescription description;
 
     /**
      * Backing buffer
@@ -49,7 +47,6 @@ public class TIOTFLiteVectorBuffer extends TIOBuffer {
 
     public TIOTFLiteVectorBuffer(TIOVectorLayerDescription description) {
         super(description);
-        this.description = description;
 
         boolean quantized = description.isQuantized();
         int length = description.getLength();
@@ -69,10 +66,11 @@ public class TIOTFLiteVectorBuffer extends TIOBuffer {
     // TODO: Where is the quantizer being applied? (#28)
 
     @Override
-    public ByteBuffer toByteBuffer(Object o) {
-        TIODataQuantizer quantizer = description.getQuantizer();
-        boolean quantized = description.isQuantized();
-        int length = description.getLength();
+    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description) {
+        TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
+        TIODataQuantizer quantizer = vectorLayerDescription.getQuantizer();
+        boolean quantized = vectorLayerDescription.isQuantized();
+        int length = vectorLayerDescription.getLength();
 
         buffer.rewind();
 
@@ -124,10 +122,11 @@ public class TIOTFLiteVectorBuffer extends TIOBuffer {
      */
 
     @Override
-    public Object fromByteBuffer(ByteBuffer byteBuffer) {
-        TIODataDequantizer dequantizer = description.getDequantizer();
-        boolean quantized = description.isQuantized();
-        int length = description.getLength();
+    public Object fromByteBuffer(ByteBuffer byteBuffer, TIOLayerDescription description) {
+        TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
+        TIODataDequantizer dequantizer = vectorLayerDescription.getDequantizer();
+        boolean quantized = vectorLayerDescription.isQuantized();
+        int length = vectorLayerDescription.getLength();
 
         if (quantized){
             if (dequantizer != null){

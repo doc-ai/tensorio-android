@@ -21,6 +21,7 @@
 package ai.doc.tensorio.TIOTensorflowLiteModel;
 
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -28,13 +29,11 @@ import java.nio.ByteOrder;
 import ai.doc.tensorio.TIOData.TIOBuffer;
 import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
+import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 
 public class TIOTFLitePixelBuffer extends TIOBuffer {
-
-    // TODO: Normally the description is passed into the buffer conversion methods
-    private TIOPixelBufferLayerDescription description;
 
     /**
      * Backing buffer
@@ -51,7 +50,6 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
 
     public TIOTFLitePixelBuffer(TIOPixelBufferLayerDescription description) {
         super(description);
-        this.description = description;
 
         boolean quantized = description.isQuantized();
         TIOImageVolume shape = description.getShape();
@@ -71,10 +69,7 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
 
     // TODO: incorrectly named method, it may not convert it to float at all! (#29)
 
-    private void intPixelToFloat(int pixelValue, ByteBuffer imgData) {
-        boolean quantized = description.isQuantized();
-        TIOPixelNormalizer normalizer = description.getNormalizer();
-
+    private void intPixelToFloat(int pixelValue, ByteBuffer imgData, boolean quantized, @Nullable TIOPixelNormalizer normalizer) {
         if (quantized) {
             imgData.put((byte) ((pixelValue >> 16) & 0xFF));
             imgData.put((byte) ((pixelValue >> 8) & 0xFF));
@@ -92,9 +87,7 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
         }
     }
 
-    private int floatPixelToInt(float r, float g, float b){
-        TIOPixelDenormalizer denormalizer = description.getDenormalizer();
-
+    private int floatPixelToInt(float r, float g, float b, @Nullable TIOPixelDenormalizer denormalizer){
         int rr, gg, bb;
 
         if (denormalizer != null) {
@@ -113,8 +106,11 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
     // endRegion
 
     @Override
-    public ByteBuffer toByteBuffer(Object o) {
-        TIOImageVolume shape = description.getShape();
+    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description) {
+        TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
+        TIOImageVolume shape = pixelBufferLayerDescription.getShape();
+        boolean quantized = pixelBufferLayerDescription.isQuantized();
+        TIOPixelNormalizer normalizer = pixelBufferLayerDescription.getNormalizer();
 
         if (o == null) {
             throw new NullPointerException("Input to a model can not be null");
@@ -140,7 +136,7 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
         for (int i = 0; i < bitmap.getWidth(); ++i) {
             for (int j = 0; j < bitmap.getHeight(); ++j) {
                 final int val = intValues[pixel++];
-                intPixelToFloat(val, buffer);
+                intPixelToFloat(val, buffer, quantized, normalizer);
             }
         }
 
@@ -150,9 +146,11 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
     }
 
     @Override
-    public Bitmap fromByteBuffer(ByteBuffer byteBuffer) {
-        TIOImageVolume shape = description.getShape();
-        boolean quantized = description.isQuantized();
+    public Bitmap fromByteBuffer(ByteBuffer byteBuffer, TIOLayerDescription description) {
+        TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
+        TIOImageVolume shape = pixelBufferLayerDescription.getShape();
+        boolean quantized = pixelBufferLayerDescription.isQuantized();
+        TIOPixelDenormalizer denormalizer = pixelBufferLayerDescription.getDenormalizer();
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 
@@ -167,7 +165,7 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
                 intValues[i] = 0xFF000000 | (r << 16) & 0x00FF0000| (g << 8) & 0x0000FF00 | b & 0x000000FF;
             }
             else {
-                intValues[i] = floatPixelToInt(byteBuffer.getFloat(), byteBuffer.getFloat(), byteBuffer.getFloat());
+                intValues[i] = floatPixelToInt(byteBuffer.getFloat(), byteBuffer.getFloat(), byteBuffer.getFloat(), denormalizer);
             }
         }
 
