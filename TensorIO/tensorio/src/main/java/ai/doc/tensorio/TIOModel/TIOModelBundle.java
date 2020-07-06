@@ -162,7 +162,8 @@ public class TIOModelBundle {
     private String modelClassName;
 
     /**
-     * The designated initializer
+     * The designated initializer, responsible for parsing a bundle's model.json and especially
+     * for setting up the description of a model's inputs and outputs.
      * @param context The application or activity context
      * @param path Fully qualified path to the model bundle folder.
      * @throws TIOModelBundleException
@@ -247,7 +248,7 @@ public class TIOModelBundle {
         List<TIOLayerInterface> outputs;
 
         try {
-            inputs = TIOModelJSONParsing.parseInputs(this, bundle.getJSONArray("inputs"));
+            inputs = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("inputs"), TIOLayerInterface.Mode.Input);
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing inputs field", e);
         } catch (IOException e) {
@@ -255,14 +256,30 @@ public class TIOModelBundle {
         }
 
         try {
-            outputs = TIOModelJSONParsing.parseOutputs(this, bundle.getJSONArray("outputs"));
+            outputs = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("outputs"), TIOLayerInterface.Mode.Output);
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing outputs field", e);
         } catch (IOException e) {
             throw new TIOModelBundleException("Error reading labels file", e);
         }
 
-        this.io = new TIOModelIO(inputs, outputs);
+        // Parse Placeholders, may be null
+
+        List<TIOLayerInterface> placeholders = null;
+
+        if ( bundle.has("placeholders") ) {
+
+            try {
+                placeholders = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("placeholders"), TIOLayerInterface.Mode.Placeholder);
+            } catch (JSONException e) {
+                throw new TIOModelBundleException("Error parsing outputs field", e);
+            } catch (IOException e) {
+                throw new TIOModelBundleException("Error reading labels file", e);
+            }
+
+        }
+
+        this.io = new TIOModelIO(inputs, outputs, placeholders);
     }
 
     //region Getters and Setters

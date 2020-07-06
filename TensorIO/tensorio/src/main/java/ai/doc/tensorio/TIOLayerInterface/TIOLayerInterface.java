@@ -18,20 +18,30 @@ package ai.doc.tensorio.TIOLayerInterface;
 public class TIOLayerInterface {
 
     /**
+     * Layers Mode is one of input, output, or placeholder.
+     */
+
+    public enum Mode {
+        Input,
+        Output,
+        Placeholder
+    }
+
+    /**
      * The name of the model interface
-     * <p>
+     *
      * May corresponding to an actual layer name or be your own name. The name will be used to copy
-     * values to a tensor buffer when a model is run with multiple inputs or to associate an
+     * values to a tensor buffer when a model is run on an multiple inputs or to associate an
      * output with a given name.
      */
 
     private String name;
 
     /**
-     * 'true' if this describes an input to the model, `false` if this describes an output to the model.
+     * The layer's mode, one of input, output, or placeholder.
      */
 
-    private boolean input;
+    private Mode mode;
 
     /**
      * The underlying data description.
@@ -45,9 +55,9 @@ public class TIOLayerInterface {
      * @param description Description of the expected  buffer
      */
 
-    public TIOLayerInterface(String name, boolean isInput, TIOLayerDescription description) {
+    public TIOLayerInterface(String name, Mode mode, TIOLayerDescription description) {
         this.name = name;
-        this.input = isInput;
+        this.mode = mode;
         this.dataDescription = description;
     }
 
@@ -57,8 +67,8 @@ public class TIOLayerInterface {
         return name;
     }
 
-    public boolean isInput() {
-        return input;
+    public Mode getMode() {
+        return mode;
     }
 
     public TIOLayerDescription getDataDescription() {
