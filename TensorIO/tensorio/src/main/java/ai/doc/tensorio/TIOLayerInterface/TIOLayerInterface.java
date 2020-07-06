@@ -82,7 +82,7 @@ public class TIOLayerInterface {
      * The underlying data description.
      */
 
-    private TIOLayerDescription dataDescription;
+    private TIOLayerDescription layerDescription;
 
     /**
      * Initializes a @see TIOLayerInterface with a pixel buffer layer description.
@@ -94,7 +94,7 @@ public class TIOLayerInterface {
     public TIOLayerInterface(String name, Mode mode, TIOPixelBufferLayerDescription description) {
         this.name = name;
         this.mode = mode;
-        this.dataDescription = description;
+        this.layerDescription = description;
         this.type = Type.PixelBuffer;
     }
 
@@ -108,7 +108,7 @@ public class TIOLayerInterface {
     public TIOLayerInterface(String name, Mode mode, TIOVectorLayerDescription description) {
         this.name = name;
         this.mode = mode;
-        this.dataDescription = description;
+        this.layerDescription = description;
         this.type = Type.Vector;
     }
 
@@ -126,35 +126,10 @@ public class TIOLayerInterface {
         return mode;
     }
 
-    public TIOLayerDescription getDataDescription() {
-        return dataDescription;
+    public TIOLayerDescription getLayerDescription() {
+        return layerDescription;
     }
 
     //endregion
 
-    /**
-     * Initializes a @see TIOLayerInterface with a vector description, e.g. the description of a vector,
-     * matrix, or other tensor.
-     *
-     * @param vectorDescription Description of the expected vector
-     */
-
-    /*
-    public TIOLayerInterface(String name, boolean isInput, TIOVectorLayerDescription vectorDescription) {
-        this.name = name;
-        this.input = isInput;
-        this.dataDescription = vectorDescription;
-    }
-    */
-
-    /**
-     * Use this function to switch on the underlying description.
-     * <p>
-     * When preparing inputs and capturing outputs, a `TIOModel` uses the underlying description of a layer
-     * in order to determine how to move bytes around.
-     */
-        /*
-        -(void)matchCasePixelBuffer:(TIOPixelBufferMatcher)pixelBufferMatcher caseVector:(TIOVectorMatcher)vectorMatcher;
-        }
-        */
 }

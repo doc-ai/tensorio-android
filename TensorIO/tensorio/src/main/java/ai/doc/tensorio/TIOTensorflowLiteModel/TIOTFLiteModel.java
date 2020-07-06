@@ -103,7 +103,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         for (int i = 0; i < inputList.size(); i++){
             TIOLayerInterface layer = inputList.get(i);
-            ByteBuffer inputBuffer = layer.getDataDescription().toByteBuffer(input.get(layer.getName()));
+            ByteBuffer inputBuffer = layer.getLayerDescription().toByteBuffer(input.get(layer.getName()));
             inputs[i] = inputBuffer;
         }
 
@@ -113,7 +113,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerInterface layer = outputList.get(i);
-            ByteBuffer outputBuffer = layer.getDataDescription().getBackingByteBuffer();
+            ByteBuffer outputBuffer = layer.getLayerDescription().getBackingByteBuffer();
             outputBuffer.rewind();
             outputs.put(i, outputBuffer);
         }
@@ -132,8 +132,8 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Fetch the input and output layer descriptions from the model
 
-        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getDataDescription();
-        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getDataDescription();
+        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
+        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
 
         // Prepare input buffer
 
@@ -168,12 +168,12 @@ public class TIOTFLiteModel extends TIOModel {
 
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerInterface layer = outputList.get(i);
-            Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
+            Object o = layer.getLayerDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
 
             // Perform any additional transformations on the captured output
 
-            if (layer.getDataDescription() instanceof TIOVectorLayerDescription) {
-                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer.getDataDescription();
+            if (layer.getLayerDescription() instanceof TIOVectorLayerDescription) {
+                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer.getLayerDescription();
 
                 // If the vector's output is labeled, return a Map of keys to values rather than raw values
 
