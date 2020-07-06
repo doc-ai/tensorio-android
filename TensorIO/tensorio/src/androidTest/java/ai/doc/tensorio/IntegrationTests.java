@@ -7,9 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.test.InstrumentationRegistry;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.style.RelativeSizeSpan;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
@@ -19,7 +16,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +26,7 @@ import ai.doc.tensorio.TIOModel.TIOModelBundleException;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
+import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -514,7 +511,7 @@ public class IntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, 5);
+            PriorityQueue<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
 
             // TODO: Gotta be a better way to do this
             Map.Entry<String, Float> item1 = top5.poll();
@@ -554,7 +551,7 @@ public class IntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, 5);
+            PriorityQueue<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
 
             // TODO: Gotta be a better way to do this
             Map.Entry<String, Float> item1 = top5.poll();
@@ -600,49 +597,4 @@ public class IntegrationTests {
     }
 
     //endRegion
-
-    // TODO: Move topN to TensorIO utility (#27)
-
-    private PriorityQueue<Map.Entry<String, Float>> topN(Map<String,Float> map, int N) {
-        PriorityQueue<Map.Entry<String, Float>> sortedLabels = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
-
-        for (Map.Entry<String,Float> entry : map.entrySet()) {
-            sortedLabels.add(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
-            if (sortedLabels.size() > N) {
-                sortedLabels.poll();
-            }
-        }
-
-        return sortedLabels;
-    }
-
-    private void printTopKLabels(SpannableStringBuilder builder, float[] result, String[] labels, int N) {
-        // Keep a PriorityQueue with the top RESULTS_TO_SHOW predictions
-        PriorityQueue<Map.Entry<String, Float>> sortedLabels =
-                new PriorityQueue<>(
-                        N,
-                        (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
-
-        for (int i = 0; i < labels.length; ++i) {
-            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
-            if (sortedLabels.size() > N) {
-                sortedLabels.poll();
-            }
-        }
-
-        final int size = sortedLabels.size();
-
-        for (int i = 0; i < size; i++) {
-            Map.Entry<String, Float> label = sortedLabels.poll();
-            SpannableString span =
-                    new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
-
-            // Make first item bigger.
-            if (i == size - 1) {
-                float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
-                span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
-            }
-            builder.insert(0, span);
-        }
-    }
 }
