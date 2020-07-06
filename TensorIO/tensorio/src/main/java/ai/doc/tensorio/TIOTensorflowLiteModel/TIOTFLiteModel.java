@@ -18,6 +18,7 @@ import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
+import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
@@ -103,7 +104,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Convert output buffers to user land objects
 
-        return captureOutput(outputs);
+        return captureOutputs(outputs);
     }
 
     private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
@@ -132,19 +133,41 @@ public class TIOTFLiteModel extends TIOModel {
         Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
         outputs.put(0, outputBuffer);
 
-        return captureOutput(outputs);
+        return captureOutputs(outputs);
     }
 
-    // TODO: If an output vector has a single value, return the value directly, not the vector
-    // TODO: Vector output labeling should take place here (#26)
+    /**
+     * Converts captured ByteBuffers to user land Objects
+     * @param outputs The indexed output buffers
+     * @return A Map of keys to user land objects capturing the model's outputs
+     */
 
-    private Map<String, Object> captureOutput(Map<Integer, Object> outputs) {
+    private Map<String, Object> captureOutputs(Map<Integer, Object> outputs) {
         TIOModelIO.TIOModelIOList outputList = getIO().getOutputs();
         Map<String, Object> outputMap = new HashMap<>(outputList.size());
 
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerInterface layer = outputList.get(i);
             Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
+
+            // Perform any additional transformations on the captured output
+
+            if (layer.getDataDescription() instanceof TIOVectorLayerDescription) {
+                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer.getDataDescription();
+
+                // If the vector's output is labeled, return a Map of keys to values rather than raw values
+
+                if (vectorLayer.isLabeled()) {
+                    o = vectorLayer.labeledValues((float[])o);
+                }
+
+                // If the output vector is single valued, return the value directly; See #33 and #34
+
+                // if (((float[])o).length == 1) {
+                //    o = ((float[])o)[0];
+                // }
+            }
+
             outputMap.put(layer.getName(), o);
         }
 
@@ -160,18 +183,11 @@ public class TIOTFLiteModel extends TIOModel {
 
         if (numInputs > 1) {
             Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
-
-//            if (numOutputs == 1) {
-//                return output.values().iterator().next();
-//            }
             return output;
         }
         else {
             if (input instanceof Map) {
                 Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
-//                if (numOutputs == 1) {
-//                    return output.values().iterator().next();
-//                }
                 return output;
             }
             else {
