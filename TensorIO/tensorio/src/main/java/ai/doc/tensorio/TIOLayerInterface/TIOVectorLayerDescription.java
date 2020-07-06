@@ -3,6 +3,7 @@ package ai.doc.tensorio.TIOLayerInterface;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -106,7 +107,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
 
-        if (quantized){
+        if (quantized) {
             this.buffer = ByteBuffer.allocate(length);
         }
         else{
@@ -139,6 +140,8 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
     }
 
     //endRegion
+
+    // TODO: Where is the quantizer being applied? (#28)
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
@@ -182,18 +185,27 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         return buffer;
     }
 
+    /**
+     * Note that bytes are signed in java so when we read outputs from a ByetBuffer as bytes we
+     * might get negative values. So we first have to unsign the byte with & 0xFF and then cast to int.
+     * Jesus.
+     * @param buffer
+     * @return
+     */
+
     @Override
     public Object fromByteBuffer(ByteBuffer buffer) {
         if (quantized){
             if (dequantizer != null){
-                float[] result = new float[this.length*4];
+                float[] result = new float[this.length];
                 buffer.rewind();
+
                 for (int i=0; i<this.length; i++) {
-                    result[i] = dequantizer.dequantize(buffer.get());
+                    result[i] = dequantizer.dequantize((int) ( buffer.get() & 0xFF ) );
                 }
                 return result;
             }
-            else{
+            else {
                 return buffer.array();
                 //int[] result = new int[this.length];
                 //buffer.rewind();
@@ -202,7 +214,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
                 //return result;
             }
         }
-        else{
+        else {
             float[] result = new float[this.length];
             buffer.rewind();
             buffer.asFloatBuffer().get(result);
