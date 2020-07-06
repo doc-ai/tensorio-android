@@ -515,25 +515,17 @@ public class IntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-//            // TODO: Vector layer labeling should happen within model (#26)
-//            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
-//            Map<String, Float> labeledOutput = layer.labeledValues(classification);
-//
-//            assertTrue(labeledOutput instanceof Map);
+            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, 5);
 
-//            // TODO: Use Map Directly for topN
-//            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
-//            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, labels, 5);
-//
-//            // TODO: Gotta be a better way to do this
-//            Map.Entry<String, Float> item1 = top5.poll();
-//            Map.Entry<String, Float> item2 = top5.poll();
-//            Map.Entry<String, Float> item3 = top5.poll();
-//            Map.Entry<String, Float> item4 = top5.poll();
-//            Map.Entry<String, Float> item5 = top5.poll();
-//
-//            String label = item5.getKey();
-//            assertEquals(label, "rocking chair");
+            // TODO: Gotta be a better way to do this
+            Map.Entry<String, Float> item1 = top5.poll();
+            Map.Entry<String, Float> item2 = top5.poll();
+            Map.Entry<String, Float> item3 = top5.poll();
+            Map.Entry<String, Float> item4 = top5.poll();
+            Map.Entry<String, Float> item5 = top5.poll();
+
+            String label = item5.getKey();
+            assertEquals(label, "rocking chair");
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
@@ -560,18 +552,10 @@ public class IntegrationTests {
             Map<String,Object> output = model.runOn(resizedBitmap);
             assertTrue(output instanceof Map);
 
-            float[] classification = (float[])output.get("classification");
-            assertTrue(classification instanceof float[]);
+            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+            assertTrue(classification instanceof Map);
 
-            // TODO: Vector layer labeling should happen within model (#26)
-            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
-            Map<String, Float> labeledOutput = layer.labeledValues(classification);
-
-            assertTrue(labeledOutput instanceof Map);
-
-            // TODO: Use Map Directly for topN
-            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
-            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, labels, 5);
+            PriorityQueue<Map.Entry<String, Float>> top5 = topN(classification, 5);
 
             // TODO: Gotta be a better way to do this
             Map.Entry<String, Float> item1 = top5.poll();
@@ -619,13 +603,12 @@ public class IntegrationTests {
     //endRegion
 
     // TODO: Move topN to TensorIO utility (#27)
-    // TODO: And build from Map
 
-    private PriorityQueue<Map.Entry<String, Float>> topN(float[] result, String[] labels, int N) {
+    private PriorityQueue<Map.Entry<String, Float>> topN(Map<String,Float> map, int N) {
         PriorityQueue<Map.Entry<String, Float>> sortedLabels = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
 
-        for (int i = 0; i < labels.length; ++i) {
-            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
+        for (Map.Entry<String,Float> entry : map.entrySet()) {
+            sortedLabels.add(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
             if (sortedLabels.size() > N) {
                 sortedLabels.poll();
             }
