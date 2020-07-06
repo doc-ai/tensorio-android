@@ -2,21 +2,30 @@ package ai.doc.tensorio;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.test.InstrumentationRegistry;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.style.RelativeSizeSpan;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 
+import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
@@ -30,14 +39,23 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class IntegrationTests {
+    private Context context = InstrumentationRegistry.getTargetContext();
     private float epsilon = 0.01f;
+
+    @Before
+    public void setUp() throws Exception {
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+
+    }
 
     @Test
     public void test1In1OutNumberModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_number_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_number_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -88,10 +106,8 @@ public class IntegrationTests {
 
     @Test
     public void test1x1VectorsModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_vectors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_vectors_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -153,10 +169,8 @@ public class IntegrationTests {
 
     @Test
     public void test2x2VectorsModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "2_in_2_out_vectors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_vectors_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -216,10 +230,8 @@ public class IntegrationTests {
 
     @Test
     public void test2x2MatricesModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "2_in_2_out_matrices_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_matrices_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -296,10 +308,8 @@ public class IntegrationTests {
 
     @Test
     public void test3x3MatricesModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_tensors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_tensors_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -347,10 +357,8 @@ public class IntegrationTests {
 
     @Test
     public void testPixelBufferIdentityModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_pixelbuffer_identity_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_identity_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -405,10 +413,8 @@ public class IntegrationTests {
 
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
         try {
-            TIOModelBundle bundle = new TIOModelBundle(appContext, "1_in_1_out_pixelbuffer_normalization_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_normalization_test.tfbundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -481,6 +487,148 @@ public class IntegrationTests {
         } catch(IOException  | ProcessingException ex) {
             ex.printStackTrace();
             fail();
+        }
+    }
+
+    //region MobileNet tests
+
+    @Test
+    public void testMobileNetClassificationModel() {
+        try {
+            TIOModelBundle bundle = new TIOModelBundle(context, "mobilenet_v2_1.4_224.tiobundle");
+            assertNotNull(bundle);
+
+            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            InputStream stream = context.getAssets().open("example-image.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+            // TODO: Vision pipeline for resizing and normalizing bitmaps
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
+
+            Object output = model.runOn(resizedBitmap);
+
+            assertTrue(output instanceof float[]);
+
+            // TODO: Vector layer labeling should happen within model (#26)
+            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
+            Map<String, Float> labeledOutput = layer.labeledValues((float[])output);
+
+            assertTrue(labeledOutput instanceof Map);
+
+            // TODO: Use Map Directly for topN
+            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
+            PriorityQueue<Map.Entry<String, Float>> top5 = topN((float[])output, labels, 5);
+
+            // TODO: Gotta be a better way to do this
+            Map.Entry<String, Float> item1 = top5.poll();
+            Map.Entry<String, Float> item2 = top5.poll();
+            Map.Entry<String, Float> item3 = top5.poll();
+            Map.Entry<String, Float> item4 = top5.poll();
+            Map.Entry<String, Float> item5 = top5.poll();
+
+            String label = item5.getKey();
+            assertEquals(label, "rocking chair");
+
+        } catch (TIOModelBundleException | TIOModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testQuantizedMobileNetClassificationModel() {
+        try {
+            TIOModelBundle bundle = new TIOModelBundle(context, "mobilenet_v1_1.0_224_quant.tiobundle");
+            assertNotNull(bundle);
+
+            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            InputStream stream = context.getAssets().open("example-image.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+            // TODO: Vision pipeline for resizing and normalizing bitmaps
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
+
+            Object output = model.runOn(resizedBitmap);
+
+            assertTrue(output instanceof float[]);
+
+            // TODO: Vector layer labeling should happen within model (#26)
+            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
+            Map<String, Float> labeledOutput = layer.labeledValues((float[])output);
+
+            assertTrue(labeledOutput instanceof Map);
+
+            // TODO: Use Map Directly for topN
+            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
+            PriorityQueue<Map.Entry<String, Float>> top5 = topN((float[])output, labels, 5);
+
+            // TODO: Gotta be a better way to do this
+            Map.Entry<String, Float> item1 = top5.poll();
+            Map.Entry<String, Float> item2 = top5.poll();
+            Map.Entry<String, Float> item3 = top5.poll();
+            Map.Entry<String, Float> item4 = top5.poll();
+            Map.Entry<String, Float> item5 = top5.poll();
+
+            String label = item5.getKey();
+            assertEquals(label, "rocking chair");
+
+        } catch (TIOModelBundleException | TIOModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    //endRegion
+
+    // TODO: Move topN to TensorIO utility (#27)
+    // TODO: And build from Map
+
+    private PriorityQueue<Map.Entry<String, Float>> topN(float[] result, String[] labels, int N) {
+        PriorityQueue<Map.Entry<String, Float>> sortedLabels = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
+
+        for (int i = 0; i < labels.length; ++i) {
+            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
+            if (sortedLabels.size() > N) {
+                sortedLabels.poll();
+            }
+        }
+
+        return sortedLabels;
+    }
+
+    private void printTopKLabels(SpannableStringBuilder builder, float[] result, String[] labels, int N) {
+        // Keep a PriorityQueue with the top RESULTS_TO_SHOW predictions
+        PriorityQueue<Map.Entry<String, Float>> sortedLabels =
+                new PriorityQueue<>(
+                        N,
+                        (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
+
+        for (int i = 0; i < labels.length; ++i) {
+            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
+            if (sortedLabels.size() > N) {
+                sortedLabels.poll();
+            }
+        }
+
+        final int size = sortedLabels.size();
+
+        for (int i = 0; i < size; i++) {
+            Map.Entry<String, Float> label = sortedLabels.poll();
+            SpannableString span =
+                    new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
+
+            // Make first item bigger.
+            if (i == size - 1) {
+                float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
+                span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
+            }
+            builder.insert(0, span);
         }
     }
 }
