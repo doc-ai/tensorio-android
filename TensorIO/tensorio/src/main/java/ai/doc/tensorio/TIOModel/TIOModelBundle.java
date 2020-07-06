@@ -12,7 +12,7 @@ import java.util.List;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.utils.FileIO;
+import ai.doc.tensorio.TIOUtilities.FileIO;
 
 /**
  * Encapsulates information about a `TIOModel` without actually loading the model.

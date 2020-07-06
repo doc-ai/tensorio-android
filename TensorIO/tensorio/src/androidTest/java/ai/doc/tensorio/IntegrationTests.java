@@ -7,9 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.test.InstrumentationRegistry;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.style.RelativeSizeSpan;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
@@ -19,18 +16,17 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
+import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -67,12 +63,18 @@ public class IntegrationTests {
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
+            Map<String, Object> output;
+            float[] result;
+
             // Run the model on a number
 
             float[] input = new float[]{2};
-            Object output = model.runOn(input);
-            assertTrue(output instanceof float[]);
-            float[] result = (float[]) output;
+
+            output = model.runOn(input);
+            assertTrue(output instanceof Map);
+
+            result = (float[]) output.get("output");
+            assertTrue(result instanceof float[]);
 
             assertEquals(1, result.length);
             assertEquals(25f, result[0], epsilon);
@@ -80,10 +82,13 @@ public class IntegrationTests {
             // Run the model on a dictionary
 
             Map<String, float[]> input_dict = new HashMap<>();
-            input_dict.put("input_x", new float[]{2});
+            input_dict.put("input", new float[]{2});
+
             output = model.runOn(input_dict);
-            assertTrue(output instanceof float[]);
-            result = (float[]) output;
+            assertTrue(output instanceof Map);
+
+            result = (float[]) output.get("output");
+            assertTrue(result instanceof float[]);
 
             assertEquals(1, result.length);
             assertEquals(25f, result[0], epsilon);
@@ -122,11 +127,16 @@ public class IntegrationTests {
             float[] expected = new float[]{2, 2, 4, 4};
             float[] input = new float[]{1, 2, 3, 4};
 
+            Map<String, Object> output;
+            float[] result;
+
             // Run the model on a vector
 
-            Object output = model.runOn(input);
-            assertTrue(output instanceof float[]);
-            float[] result = (float[]) output;
+            output = model.runOn(input);
+            assertTrue(output instanceof Map);
+
+            result = (float[]) output.get("output");
+            assertTrue(result instanceof float[]);
 
             assertEquals(4, result.length);
             assertTrue(Arrays.equals(expected, result));
@@ -134,10 +144,13 @@ public class IntegrationTests {
             // Run the model on a dictionary
 
             Map<String, float[]> input_dict = new HashMap<>();
-            input_dict.put("input_x", input);
+            input_dict.put("input", input);
+
             output = model.runOn(input_dict);
-            assertTrue(output instanceof float[]);
-            result = (float[]) output;
+            assertTrue(output instanceof Map);
+
+            result = (float[]) output.get("output");
+            assertTrue(result instanceof float[]);
 
             assertEquals(4, result.length);
             assertTrue(Arrays.equals(expected, result));
@@ -149,7 +162,6 @@ public class IntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
-
             }
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
@@ -183,40 +195,45 @@ public class IntegrationTests {
             assertEquals(2, model.getIO().getOutputs().size());
 
             Map<String, float[]> inputs = new HashMap<>();
-            inputs.put("input_x", new float[]{1, 2, 3, 4});
-            inputs.put("input_y", new float[]{10, 20, 30, 40});
+            inputs.put("input1", new float[]{1, 2, 3, 4});
+            inputs.put("input2", new float[]{10, 20, 30, 40});
 
-            Object output = model.runOn(inputs);
+            Map<String, Object> output = model.runOn(inputs);
             assertTrue(output instanceof Map);
-            Map<String, float[]> result = (Map<String, float[]>) output;
 
-            assertEquals(2, result.size());
-            assertTrue(result.containsKey("output_s"));
-            assertTrue(result.containsKey("output_z"));
+            assertEquals(2, output.size());
+            assertTrue(output.containsKey("output1"));
+            assertTrue(output.containsKey("output2"));
 
-            assertEquals(1, result.get("output_s").length);
-            assertEquals(1, result.get("output_z").length);
+            float[] result1 = (float[])output.get("output1");
+            float[] result2 = (float[])output.get("output2");
 
-            assertEquals(64, result.get("output_s")[0], epsilon);
-            assertEquals(240, result.get("output_z")[0], epsilon);
+            assertTrue(result1 instanceof float[]);
+            assertTrue(result2 instanceof float[]);
 
-            // try running on input of of the wrong length, should throw IllegalArgumentException
+            assertEquals(1, result1.length);
+            assertEquals(1, result2.length);
+
+            assertEquals(240, result1[0], epsilon);
+            assertEquals(64, result2[0], epsilon);
+
+            // Try running on input of of the wrong length, should throw IllegalArgumentException
 
             try {
                 inputs = new HashMap<>();
-                inputs.put("input_x", new float[]{1, 2, 3, 5, 6});
-                inputs.put("input_y", new float[]{10, 20, 30});
+                inputs.put("input1", new float[]{1, 2, 3, 5, 6});
+                inputs.put("input2", new float[]{10, 20, 30});
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
             }
 
-            // try running on input of of the wrong length, should throw IllegalArgumentException
+            // Try running on input of of the wrong length, should throw IllegalArgumentException
 
             try {
                 inputs = new HashMap<>();
-                inputs.put("input_x", new float[]{1});
-                inputs.put("input_y", new float[]{10, 20, 30});
+                inputs.put("input1", new float[]{1});
+                inputs.put("input2", new float[]{10, 20, 30});
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
@@ -243,28 +260,28 @@ public class IntegrationTests {
             assertEquals(2, model.getIO().getInputs().size());
             assertEquals(2, model.getIO().getOutputs().size());
 
-            float[] expectedS = new float[]{
-                    18f, 18f, 18f, 18f,
-                    180f, 180f, 180f, 180f,
-                    1800f, 1800f, 1800f, 1800f,
-                    18000f, 18000f, 18000f, 18000f
-            };
-
-            float[] expectedZ = new float[]{
+            float[] expected1 = new float[]{
                     56f, 72f, 56f, 72f,
                     5600f, 7200f, 5600f, 7200f,
                     560000f, 720000f, 560000f, 720000f,
                     56000000f, 72000000f, 56000000f, 72000000f
             };
 
-            float[] inputX = new float[]{
+            float[] expected2 = new float[]{
+                    18f, 18f, 18f, 18f,
+                    180f, 180f, 180f, 180f,
+                    1800f, 1800f, 1800f, 1800f,
+                    18000f, 18000f, 18000f, 18000f
+            };
+
+            float[] input1 = new float[]{
                     1f, 2f, 3f, 4f,
                     10f, 20f, 30f, 40f,
                     100f, 200f, 300f, 400f,
                     1000f, 2000f, 3000f, 4000f
             };
 
-            float[] inputY = new float[]{
+            float[] input2 = new float[]{
                     5, 6, 7, 8,
                     50, 60, 70, 80,
                     500, 600, 700, 800,
@@ -272,29 +289,31 @@ public class IntegrationTests {
             };
 
             Map<String, float[]> inputs = new HashMap<>();
-            inputs.put("input_x", inputX);
-            inputs.put("input_y", inputY);
+            inputs.put("input1", input1);
+            inputs.put("input2", input2);
 
-            Object output = model.runOn(inputs);
+            Map<String,Object> output = model.runOn(inputs);
             assertTrue(output instanceof Map);
-            Map<String, float[]> result = (Map<String, float[]>) output;
 
-            assertEquals(2, result.size());
-            assertTrue(result.containsKey("output_s"));
-            assertTrue(result.containsKey("output_z"));
+            assertEquals(2, output.size());
+            assertTrue(output.containsKey("output1"));
+            assertTrue(output.containsKey("output2"));
 
-            assertEquals(16, result.get("output_s").length);
-            assertEquals(16, result.get("output_z").length);
+            float[] result1 = (float[])output.get("output1");
+            float[] result2 = (float[])output.get("output2");
 
-            assertArrayEquals(expectedS, result.get("output_s"), epsilon);
-            assertArrayEquals(expectedZ, result.get("output_z"), epsilon);
+            assertEquals(16, result1.length);
+            assertEquals(16, result2.length);
 
-            // try running on input of of the wrong length, should throw IllegalArgumentException
+            assertArrayEquals(expected1, result1, epsilon);
+            assertArrayEquals(expected2, result2, epsilon);
+
+            // Try running on input of of the wrong length, should throw IllegalArgumentException
 
             try {
                 inputs = new HashMap<>();
-                inputs.put("input_x", new float[]{5, 6, 7, 8});
-                inputs.put("input_y", new float[]{5, 6, 7, 8});
+                inputs.put("input1", new float[]{5, 6, 7, 8});
+                inputs.put("input2", new float[]{5, 6, 7, 8});
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
@@ -321,27 +340,28 @@ public class IntegrationTests {
             assertEquals(1, model.getIO().getInputs().size());
             assertEquals(1, model.getIO().getOutputs().size());
 
-            float[] expectedZ = new float[]{
+            float[] expected = new float[]{
                     2, 3, 4, 5, 6, 7, 8, 9, 10,
                     12, 22, 32, 42, 52, 62, 72, 82, 92,
                     103, 203, 303, 403, 503, 603, 703, 803, 903
             };
 
-            float[] inputX = new float[]{
+            float[] input = new float[]{
                     1, 2, 3, 4, 5, 6, 7, 8, 9,
                     10, 20, 30, 40, 50, 60, 70, 80, 90,
                     100, 200, 300, 400, 500, 600, 700, 800, 900
             };
 
-            Object output = model.runOn(inputX);
+            Map<String,Object> output = model.runOn(input);
+            assertTrue(output instanceof Map);
 
-            assertTrue(output instanceof float[]);
-            float[] result = (float[]) output;
+            float[] result = (float[]) output.get("output");
+            assertTrue(result instanceof float[]);
 
             assertEquals(27, result.length);
-            assertTrue(Arrays.equals(expectedZ, result));
+            assertTrue(Arrays.equals(expected, result));
 
-            // try running on input of of the wrong length, should throw IllegalArgumentException
+            // Try running on input of of the wrong length, should throw IllegalArgumentException
 
             try {
                 model.runOn(new float[]{5, 6, 7, 8});
@@ -380,11 +400,11 @@ public class IntegrationTests {
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 
-            Object output = model.runOn(bmp);
+            Map<String, Object> output = model.runOn(bmp);
+            assertTrue(output instanceof Map);
 
-            assertTrue(output instanceof Bitmap);
-
-            Bitmap outputBitmap = (Bitmap) output;
+            Bitmap outputBitmap = (Bitmap) output.get("image");
+            assertTrue(outputBitmap instanceof Bitmap);
 
             // Inspect pixel buffer bytes
 
@@ -436,11 +456,11 @@ public class IntegrationTests {
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 
-            Object output = model.runOn(bmp);
+            Map<String,Object> output = model.runOn(bmp);
+            assertTrue(output instanceof Map);
 
-            assertTrue(output instanceof Bitmap);
-
-            Bitmap outputBitmap = (Bitmap) output;
+            Bitmap outputBitmap = (Bitmap) output.get("image");
+            assertTrue(outputBitmap instanceof Bitmap);
 
             // Inspect pixel buffer bytes
 
@@ -467,29 +487,6 @@ public class IntegrationTests {
         }
     }
 
-    @Test
-    public void testTIOModelBundleValidator() {
-        Context context = InstrumentationRegistry.getTargetContext();
-
-        try {
-            String[] assets = context.getAssets().list("");
-            for(String s: assets){
-                if (s.endsWith(".tfbundle")){
-                    InputStream inputStream = context.getAssets().open(s + "/model.json");
-                    int size = inputStream.available();
-                    byte[] buffer = new byte[size];
-                    inputStream.read(buffer);
-                    inputStream.close();
-                    String modelJSON = new String(buffer, "UTF-8");
-                    assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
-                }
-            }
-        } catch(IOException  | ProcessingException ex) {
-            ex.printStackTrace();
-            fail();
-        }
-    }
-
     //region MobileNet tests
 
     @Test
@@ -508,29 +505,17 @@ public class IntegrationTests {
             // TODO: Vision pipeline for resizing and normalizing bitmaps
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
 
-            Object output = model.runOn(resizedBitmap);
+            Map<String,Object> output = model.runOn(resizedBitmap);
+            assertTrue(output instanceof Map);
 
-            assertTrue(output instanceof float[]);
+            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+            assertTrue(classification instanceof Map);
 
-            // TODO: Vector layer labeling should happen within model (#26)
-            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
-            Map<String, Float> labeledOutput = layer.labeledValues((float[])output);
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
 
-            assertTrue(labeledOutput instanceof Map);
-
-            // TODO: Use Map Directly for topN
-            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
-            PriorityQueue<Map.Entry<String, Float>> top5 = topN((float[])output, labels, 5);
-
-            // TODO: Gotta be a better way to do this
-            Map.Entry<String, Float> item1 = top5.poll();
-            Map.Entry<String, Float> item2 = top5.poll();
-            Map.Entry<String, Float> item3 = top5.poll();
-            Map.Entry<String, Float> item4 = top5.poll();
-            Map.Entry<String, Float> item5 = top5.poll();
-
-            String label = item5.getKey();
-            assertEquals(label, "rocking chair");
+            assertEquals("rocking chair", label);
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
@@ -554,29 +539,17 @@ public class IntegrationTests {
             // TODO: Vision pipeline for resizing and normalizing bitmaps
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
 
-            Object output = model.runOn(resizedBitmap);
+            Map<String,Object> output = model.runOn(resizedBitmap);
+            assertTrue(output instanceof Map);
 
-            assertTrue(output instanceof float[]);
+            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+            assertTrue(classification instanceof Map);
 
-            // TODO: Vector layer labeling should happen within model (#26)
-            TIOVectorLayerDescription layer = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription());
-            Map<String, Float> labeledOutput = layer.labeledValues((float[])output);
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
 
-            assertTrue(labeledOutput instanceof Map);
-
-            // TODO: Use Map Directly for topN
-            String[] labels = ((TIOVectorLayerDescription) model.getIO().getOutputs().get(0).getDataDescription()).getLabels();
-            PriorityQueue<Map.Entry<String, Float>> top5 = topN((float[])output, labels, 5);
-
-            // TODO: Gotta be a better way to do this
-            Map.Entry<String, Float> item1 = top5.poll();
-            Map.Entry<String, Float> item2 = top5.poll();
-            Map.Entry<String, Float> item3 = top5.poll();
-            Map.Entry<String, Float> item4 = top5.poll();
-            Map.Entry<String, Float> item5 = top5.poll();
-
-            String label = item5.getKey();
-            assertEquals(label, "rocking chair");
+            assertEquals("rocking chair", label);
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
@@ -586,49 +559,30 @@ public class IntegrationTests {
 
     //endRegion
 
-    // TODO: Move topN to TensorIO utility (#27)
-    // TODO: And build from Map
+    //region Validation Tests
 
-    private PriorityQueue<Map.Entry<String, Float>> topN(float[] result, String[] labels, int N) {
-        PriorityQueue<Map.Entry<String, Float>> sortedLabels = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
+    @Test
+    public void testTIOModelBundleValidator() {
+        Context context = InstrumentationRegistry.getTargetContext();
 
-        for (int i = 0; i < labels.length; ++i) {
-            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
-            if (sortedLabels.size() > N) {
-                sortedLabels.poll();
+        try {
+            String[] assets = context.getAssets().list("");
+            for(String s: assets){
+                if (s.endsWith(".tfbundle")){
+                    InputStream inputStream = context.getAssets().open(s + "/model.json");
+                    int size = inputStream.available();
+                    byte[] buffer = new byte[size];
+                    inputStream.read(buffer);
+                    inputStream.close();
+                    String modelJSON = new String(buffer, "UTF-8");
+                    assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
+                }
             }
-        }
-
-        return sortedLabels;
-    }
-
-    private void printTopKLabels(SpannableStringBuilder builder, float[] result, String[] labels, int N) {
-        // Keep a PriorityQueue with the top RESULTS_TO_SHOW predictions
-        PriorityQueue<Map.Entry<String, Float>> sortedLabels =
-                new PriorityQueue<>(
-                        N,
-                        (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
-
-        for (int i = 0; i < labels.length; ++i) {
-            sortedLabels.add(new AbstractMap.SimpleEntry<>(labels[i], result[i]));
-            if (sortedLabels.size() > N) {
-                sortedLabels.poll();
-            }
-        }
-
-        final int size = sortedLabels.size();
-
-        for (int i = 0; i < size; i++) {
-            Map.Entry<String, Float> label = sortedLabels.poll();
-            SpannableString span =
-                    new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
-
-            // Make first item bigger.
-            if (i == size - 1) {
-                float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
-                span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
-            }
-            builder.insert(0, span);
+        } catch(IOException  | ProcessingException ex) {
+            ex.printStackTrace();
+            fail();
         }
     }
+
+    //endRegion
 }
