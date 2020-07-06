@@ -38,6 +38,15 @@ package ai.doc.tensorio.TIOLayerInterface;
 public class TIOLayerInterface {
 
     /**
+     * The type of layer represented by an interface
+     */
+
+    public enum Type {
+        PixelBuffer,
+        Vector
+    }
+
+    /**
      * Layers Mode is one of input, output, or placeholder.
      */
 
@@ -58,6 +67,12 @@ public class TIOLayerInterface {
     private String name;
 
     /**
+     * The layers type, one of pixel buffer or vector (list)
+     */
+
+    private Type type;
+
+    /**
      * The layer's mode, one of input, output, or placeholder.
      */
 
@@ -70,21 +85,41 @@ public class TIOLayerInterface {
     private TIOLayerDescription dataDescription;
 
     /**
-     * Initializes a @see TIOLayerInterface with a layer description.
-     *
-     * @param description Description of the expected  buffer
+     * Initializes a @see TIOLayerInterface with a pixel buffer layer description.
+     * @param name The name of the layer
+     * @param mode The mode of the layer
+     * @param description A vector layer description
      */
 
-    public TIOLayerInterface(String name, Mode mode, TIOLayerDescription description) {
+    public TIOLayerInterface(String name, Mode mode, TIOPixelBufferLayerDescription description) {
         this.name = name;
         this.mode = mode;
         this.dataDescription = description;
+        this.type = Type.PixelBuffer;
+    }
+
+    /**
+     * Initializes a @see TIOLayerInterface with a vector layer description.
+     * @param name The name of the layer
+     * @param mode The mode of the layer
+     * @param description A vector layer description
+     */
+
+    public TIOLayerInterface(String name, Mode mode, TIOVectorLayerDescription description) {
+        this.name = name;
+        this.mode = mode;
+        this.dataDescription = description;
+        this.type = Type.Vector;
     }
 
     //region Getters and Setters
 
     public String getName() {
         return name;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     public Mode getMode() {
