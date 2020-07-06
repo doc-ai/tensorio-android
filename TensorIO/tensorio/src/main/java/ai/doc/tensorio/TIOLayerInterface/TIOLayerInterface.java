@@ -31,7 +31,7 @@ public class TIOLayerInterface {
      * The name of the model interface
      *
      * May corresponding to an actual layer name or be your own name. The name will be used to copy
-     * values to a tensor buffer when a model is run on an `NSDictionary` input or to associate an
+     * values to a tensor buffer when a model is run on an multiple inputs or to associate an
      * output with a given name.
      */
 
