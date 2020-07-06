@@ -1,4 +1,4 @@
-package ai.doc.tensorio.utils;
+package ai.doc.tensorio.TIOUtilities;
 
 import android.content.Context;
 

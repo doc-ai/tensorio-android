@@ -19,7 +19,7 @@ import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
-import ai.doc.tensorio.utils.FileIO;
+import ai.doc.tensorio.TIOUtilities.FileIO;
 
 import static ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface.*;
 

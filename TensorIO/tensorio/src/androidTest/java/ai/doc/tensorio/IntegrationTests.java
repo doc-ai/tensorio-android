@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
