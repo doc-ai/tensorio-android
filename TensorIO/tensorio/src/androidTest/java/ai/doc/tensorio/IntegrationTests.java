@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
@@ -511,17 +511,11 @@ public class IntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            PriorityQueue<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
 
-            // TODO: Gotta be a better way to do this
-            Map.Entry<String, Float> item1 = top5.poll();
-            Map.Entry<String, Float> item2 = top5.poll();
-            Map.Entry<String, Float> item3 = top5.poll();
-            Map.Entry<String, Float> item4 = top5.poll();
-            Map.Entry<String, Float> item5 = top5.poll();
-
-            String label = item5.getKey();
-            assertEquals(label, "rocking chair");
+            assertEquals("rocking chair", label);
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
@@ -551,17 +545,11 @@ public class IntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            PriorityQueue<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
 
-            // TODO: Gotta be a better way to do this
-            Map.Entry<String, Float> item1 = top5.poll();
-            Map.Entry<String, Float> item2 = top5.poll();
-            Map.Entry<String, Float> item3 = top5.poll();
-            Map.Entry<String, Float> item4 = top5.poll();
-            Map.Entry<String, Float> item5 = top5.poll();
-
-            String label = item5.getKey();
-            assertEquals(label, "rocking chair");
+            assertEquals("rocking chair", label);
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
