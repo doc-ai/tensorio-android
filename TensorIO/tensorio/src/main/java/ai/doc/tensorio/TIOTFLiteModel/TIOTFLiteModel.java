@@ -118,18 +118,7 @@ public class TIOTFLiteModel extends TIOModel {
         for (int i = 0; i < inputList.size(); i++){
             TIOLayerDescription inputLayer = inputList.get(i).getLayerDescription();
             Object input = inputs.get(inputList.get(i).getName());
-            ByteBuffer inputBuffer = null;
-
-            // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
-            // Note we are not using the backing input buffer here but recreating it every time
-
-            if ( inputLayer instanceof TIOVectorLayerDescription ) {
-                inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, null);
-            }
-            else if ( inputLayer instanceof TIOPixelBufferLayerDescription ) {
-                inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, null);
-            }
-
+            ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
             inputBuffers[i] = inputBuffer;
         }
 
@@ -139,19 +128,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerDescription outputLayer = outputList.get(i).getLayerDescription();
-            ByteBuffer outputBuffer = null;
-
-            // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
-            // Note we are not using the backing output buffer here but recreating it every time
-
-            if ( outputLayer instanceof TIOVectorLayerDescription ) {
-                outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
-            }
-            else if ( outputLayer instanceof TIOPixelBufferLayerDescription ) {
-                outputBuffer = pixelDataConverter.createBackingBuffer(outputLayer);
-            }
-
-            outputBuffer.rewind(); // only needed if using cached outputBuffer
+            ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
             outputBuffers.put(i, outputBuffer);
         }
 
@@ -174,6 +151,34 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Prepare input buffer
 
+        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+
+        // Prepare output buffer
+
+        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
+
+        // Run the model on the input buffer, store the output in the output buffer
+
+        interpreter.run(inputBuffer, outputBuffer);
+
+        // Convert output buffers to user land objects
+
+        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
+        outputs.put(0, outputBuffer);
+
+        return captureOutputs(outputs);
+    }
+
+    /**
+     * Prepares a ByteBuffer that will be used for input to a model.
+     *
+     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
+     * @param input The input to convert to a byte buffer
+     * @param inputLayer A description of the layer this buffer will be used with
+     * @return ByteBuffer ready for input to a model
+     */
+
+    private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
         ByteBuffer inputBuffer = null;
 
         // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
@@ -186,8 +191,18 @@ public class TIOTFLiteModel extends TIOModel {
             inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, null);
         }
 
-        // Prepare output buffer
+        return inputBuffer;
+    }
 
+    /**
+     * Prepares a ByteBuffer that can be used for output from a model.
+     *
+     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
+     * @param outputLayer A description of the layer this buffer will be used with
+     * @return ByteBuffer ready for model output
+     */
+
+    private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
         ByteBuffer outputBuffer = null;
 
         // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
@@ -200,16 +215,10 @@ public class TIOTFLiteModel extends TIOModel {
             outputBuffer = pixelDataConverter.createBackingBuffer(outputLayer);
         }
 
-        // Run the model on the input buffer, store the output in the output buffer
+        // If returning cached outputBuffer be sure to rewind it
+        // outputBuffer.rewind();
 
-        interpreter.run(inputBuffer, outputBuffer);
-
-        // Convert output buffers to user land objects
-
-        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
-        outputs.put(0, outputBuffer);
-
-        return captureOutputs(outputs);
+        return outputBuffer;
     }
 
     /**
@@ -228,7 +237,6 @@ public class TIOTFLiteModel extends TIOModel {
             Object o = null;
 
             // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
-            // Note we are not using the backing output buffer here but recreating it every time
 
             if ( layer instanceof TIOVectorLayerDescription ) {
                 o = vectorDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
