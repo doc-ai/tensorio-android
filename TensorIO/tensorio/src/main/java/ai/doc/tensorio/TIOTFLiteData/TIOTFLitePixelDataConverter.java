@@ -57,46 +57,6 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         return buffer;
     }
 
-    //region Utilities
-
-    // TODO: incorrectly named method, it may not convert it to float at all! (#29)
-
-    private void intPixelToFloat(int pixelValue, ByteBuffer imgData, boolean quantized, @Nullable TIOPixelNormalizer normalizer) {
-        if (quantized) {
-            imgData.put((byte) ((pixelValue >> 16) & 0xFF));
-            imgData.put((byte) ((pixelValue >> 8) & 0xFF));
-            imgData.put((byte) (pixelValue & 0xFF));
-        } else {
-            if (normalizer != null) {
-                imgData.putFloat(normalizer.normalize((pixelValue >> 16) & 0xFF, 0));
-                imgData.putFloat(normalizer.normalize((pixelValue >> 8) & 0xFF, 1));
-                imgData.putFloat(normalizer.normalize(pixelValue & 0xFF, 2));
-            } else {
-                imgData.putFloat((pixelValue >> 16) & 0xFF);
-                imgData.putFloat((pixelValue >> 8) & 0xFF);
-                imgData.putFloat(pixelValue & 0xFF);
-            }
-        }
-    }
-
-    private int floatPixelToInt(float r, float g, float b, @Nullable TIOPixelDenormalizer denormalizer){
-        int rr, gg, bb;
-
-        if (denormalizer != null) {
-            rr = denormalizer.denormalize(r, 0);
-            gg = denormalizer.denormalize(g, 1);
-            bb = denormalizer.denormalize(b, 2);
-        } else {
-            rr = (int)r;
-            gg = (int)g;
-            bb = (int)b;
-        }
-
-        return 0xFF000000 | (rr << 16) & 0x00FF0000| (gg << 8) & 0x0000FF00 | bb & 0x000000FF;
-    }
-
-    // endRegion
-
     @Override
     public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
@@ -114,7 +74,10 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         Bitmap bitmap = (Bitmap) o;
         if (bitmap.getWidth() != shape.width || bitmap.getHeight() != shape.height){
-            throw new IllegalArgumentException("Image input has the wrong shape, expected width="+shape.width+" and height="+shape.height+" got width="+bitmap.getWidth()+" and height="+bitmap.getHeight());
+            throw new IllegalArgumentException("Image input has the wrong shape, expected width="+shape.width+" " +
+                    "and height="+shape.height+" " +
+                    "got width="+bitmap.getWidth()+" " +
+                    "and height="+bitmap.getHeight());
         }
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
@@ -124,14 +87,11 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         // Convert the image to floating point
 
-        // TODO: Traversing by y-axis on the inside, shouldn't it be by x-axis? doesn't look like it matters
-        // TODO: Holy hell why are you pre-incrementing!?
-
         int pixel = 0;
-        for (int i = 0; i < bitmap.getWidth(); ++i) {
-            for (int j = 0; j < bitmap.getHeight(); ++j) {
+        for (int y = 0; y < bitmap.getHeight(); y++) {
+            for (int x = 0; x < bitmap.getWidth(); x++) {
                 final int val = intValues[pixel++];
-                intPixelToFloat(val, buffer, quantized, normalizer);
+                writePixelToBuffer(val, buffer, quantized, normalizer);
             }
         }
 
@@ -141,7 +101,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     @Override
-    public Bitmap fromByteBuffer(ByteBuffer byteBuffer, TIOLayerDescription description) {
+    public Bitmap fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
         TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
         TIOImageVolume shape = pixelBufferLayerDescription.getShape();
         boolean quantized = pixelBufferLayerDescription.isQuantized();
@@ -149,19 +109,11 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 
-        byteBuffer.rewind();
+        buffer.rewind();
         Bitmap bmp = Bitmap.createBitmap(shape.width, shape.height, Bitmap.Config.ARGB_8888);
 
         for (int i = 0; i < shape.width * shape.height; i++) {
-            if (quantized) {
-                int r = byteBuffer.get();
-                int g = byteBuffer.get();
-                int b = byteBuffer.get();
-                intValues[i] = 0xFF000000 | (r << 16) & 0x00FF0000| (g << 8) & 0x0000FF00 | b & 0x000000FF;
-            }
-            else {
-                intValues[i] = floatPixelToInt(byteBuffer.getFloat(), byteBuffer.getFloat(), byteBuffer.getFloat(), denormalizer);
-            }
+            intValues[i] = readPixelFromBuffer(buffer, quantized, denormalizer);
         }
 
         bmp.setPixels(intValues,0, shape.width, 0, 0, shape.width, shape.height);
@@ -170,4 +122,79 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         return bmp;
     }
+
+    //region Utilities
+
+    /**
+     * Writes a pixel to a buffer, normalizing and converting it as needed.
+     *
+     * Before calling this method the first time in a loop, rewind the buffer. The buffer then
+     * increments its index with every call to put.
+     * @param pixelValue 4 byte pixel value to write with ARGB or BGRA format wit
+     * @param buffer The buffer to write to
+     * @param quantized true if the buffer expects quantized (byte) data, false otherwise (float)
+     * @param normalizer The normalizer than converts a single byte pixel-channel value to a
+     *                   floating point value
+     */
+
+    private void writePixelToBuffer(int pixelValue, ByteBuffer buffer, boolean quantized, @Nullable TIOPixelNormalizer normalizer) {
+        if (quantized) {
+            buffer.put((byte) ((pixelValue >> 16) & 0xFF));
+            buffer.put((byte) ((pixelValue >> 8) & 0xFF));
+            buffer.put((byte) (pixelValue & 0xFF));
+        } else {
+            if (normalizer != null) {
+                buffer.putFloat(normalizer.normalize((pixelValue >> 16) & 0xFF, 0));
+                buffer.putFloat(normalizer.normalize((pixelValue >> 8) & 0xFF, 1));
+                buffer.putFloat(normalizer.normalize(pixelValue & 0xFF, 2));
+            } else {
+                buffer.putFloat((pixelValue >> 16) & 0xFF);
+                buffer.putFloat((pixelValue >> 8) & 0xFF);
+                buffer.putFloat(pixelValue & 0xFF);
+            }
+        }
+    }
+
+    /**
+     * Reads three bytes of a pixel from a buffer, assuming no alpha channel, and denormalizing and
+     * converting the values as needed.
+     *
+     * Before calling this method the first time in a loop, rewind the buffer. The buffer then
+     * increments its index with every call to get.
+     * @param buffer The buffer to read from
+     * @param quantized True if the buffer contains quantized (byte) data, false otherwise (float)
+     * @param denormalizer The denormalizer than converts a floating point pixel-channel value to a
+     *                     byte value
+     * @return The 4 byte representation of the pixel.
+     */
+
+    private int readPixelFromBuffer(ByteBuffer buffer, boolean quantized, @Nullable TIOPixelDenormalizer denormalizer) {
+        if (quantized) {
+            int r = buffer.get();
+            int g = buffer.get();
+            int b = buffer.get();
+            return ( 0xFF000000 | (r << 16) & 0x00FF0000| (g << 8) & 0x0000FF00 | b & 0x000000FF );
+        }
+        else {
+            float r = buffer.getFloat();
+            float g = buffer.getFloat();
+            float b = buffer.getFloat();
+
+            int rr, gg, bb;
+
+            if (denormalizer != null) {
+                rr = denormalizer.denormalize(r, 0);
+                gg = denormalizer.denormalize(g, 1);
+                bb = denormalizer.denormalize(b, 2);
+            } else {
+                rr = (int)r;
+                gg = (int)g;
+                bb = (int)b;
+            }
+
+            return 0xFF000000 | (rr << 16) & 0x00FF0000| (gg << 8) & 0x0000FF00 | bb & 0x000000FF;
+        }
+    }
+
+    // endRegion
 }
