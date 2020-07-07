@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
@@ -183,7 +182,7 @@ public class TIOTFLiteModel extends TIOModel {
      */
 
     private Map<String, Object> mappedInput(Object input) {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put(getIO().getInputs().get(0).getName(), input);
         return map;
     }
@@ -230,7 +229,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Convert output buffers to user land objects
 
-        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
+        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
         outputs.put(0, outputBuffer);
 
         return captureOutputs(outputs);
@@ -292,10 +291,8 @@ public class TIOTFLiteModel extends TIOModel {
      */
 
     private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
-        ByteBuffer inputBuffer = null;
-
-        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
         // Note we are not using the backing input buffer here but recreating it every time
+        ByteBuffer inputBuffer = null;
 
         if ( inputLayer instanceof TIOVectorLayerDescription ) {
             inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, null);
@@ -316,10 +313,8 @@ public class TIOTFLiteModel extends TIOModel {
      */
 
     private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
-        ByteBuffer outputBuffer = null;
-
-        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
         // Note we are not using the backing output buffer here but recreating it every time
+        ByteBuffer outputBuffer = null;
 
         if ( outputLayer instanceof TIOVectorLayerDescription ) {
             outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
@@ -335,7 +330,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     /**
-     * Converts captured ByteBuffers to user land Objects
+     * Converts captured ByteBuffers from a model's output to user land Objects
      * @param outputs The indexed output buffers
      * @return A Map of keys to user land objects capturing the model's outputs
      */
@@ -347,39 +342,53 @@ public class TIOTFLiteModel extends TIOModel {
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerDescription layer = outputList.get(i).getLayerDescription();
             String name = outputList.get(i).getName();
-            Object o = null;
 
-            // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
-
-            if ( layer instanceof TIOVectorLayerDescription ) {
-                o = vectorDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
-            }
-            else if ( layer instanceof TIOPixelBufferLayerDescription ) {
-                o = pixelDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
-            }
-
-            // Perform any additional transformations on the captured output
-
-            if (layer instanceof TIOVectorLayerDescription) {
-                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
-
-                // If the vector's output is labeled, return a Map of keys to values rather than raw values
-
-                if (vectorLayer.isLabeled()) {
-                    o = vectorLayer.labeledValues((float[])o);
-                }
-
-                // If the output vector is single valued, return the value directly; See #33 and #34
-
-                // if (((float[])o).length == 1) {
-                //    o = ((float[])o)[0];
-                // }
-            }
+            ByteBuffer buffer = (ByteBuffer)outputs.get(i);
+            Object o = captureOutput(buffer, layer);
 
             outputMap.put(name, o);
         }
 
         return outputMap;
+    }
+
+    /**
+     * Converts a single ByteBuffer to a user land object
+     * @param buffer The buffer to capture and convert
+     * @param layer A layer describing the output
+     * @return An object in accordance with the layer description, usually one of byte[], float[],
+     * or Bitmap
+     */
+
+    private Object captureOutput(ByteBuffer buffer, TIOLayerDescription layer) {
+        Object o = null;
+
+        if ( layer instanceof TIOVectorLayerDescription ) {
+            o = vectorDataConverter.fromByteBuffer(buffer, layer);
+        }
+        else if ( layer instanceof TIOPixelBufferLayerDescription ) {
+            o = pixelDataConverter.fromByteBuffer(buffer, layer);
+        }
+
+        // Perform any additional transformations on the captured output
+
+        if (layer instanceof TIOVectorLayerDescription) {
+            TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
+
+            // If the vector's output is labeled, return a Map of keys to values rather than raw values
+
+            if (vectorLayer.isLabeled()) {
+                o = vectorLayer.labeledValues((float[])o);
+            }
+
+            // If the output vector is single valued, return the value directly; See #33 and #34
+
+            // if (((float[])o).length == 1) {
+            //    o = ((float[])o)[0];
+            // }
+        }
+
+        return o;
     }
 
     //endRegion

@@ -319,8 +319,8 @@ public abstract class TIOModel {
 
     /**
      * Perform inference on an array of floats for a single input layer.
-     * @param input
-     * @return
+     * @param input an array of floats
+     * @return results of running the model mapped from the output layer names to the values
      * @throws TIOModelException
      */
 
@@ -328,8 +328,8 @@ public abstract class TIOModel {
 
     /**
      * Perform inference on an array of bytes for a single input layer.
-     * @param input
-     * @return
+     * @param input an array of bytes
+     * @return results of running the model mapped from the output layer names to the values
      * @throws TIOModelException
      */
 
@@ -337,8 +337,8 @@ public abstract class TIOModel {
 
     /**
      * Perform inference on a Bitmap for a single input layer.
-     * @param input
-     * @return
+     * @param input A Bitmap
+     * @return results of running the model mapped from the output layer names to the values
      * @throws TIOModelException
      */
 
@@ -346,8 +346,8 @@ public abstract class TIOModel {
 
     /**
      * Perform inference on an map of bytes
-     * @param input
-     * @return
+     * @param input A mapping of layer names to arbitrary objects
+     * @return results of running the model mapped from the output layer names to the values
      * @throws TIOModelException
      */
 
