@@ -428,8 +428,8 @@ public class IntegrationTests {
 
             // Inspect pixel buffer bytes
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
                     assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
@@ -484,8 +484,8 @@ public class IntegrationTests {
 
             // Inspect pixel buffer bytes
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
                     assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
