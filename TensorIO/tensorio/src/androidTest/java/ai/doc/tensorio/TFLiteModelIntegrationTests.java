@@ -54,7 +54,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class IntegrationTests {
+public class TFLiteModelIntegrationTests {
     private Context context = InstrumentationRegistry.getTargetContext();
     private float epsilon = 0.01f;
 

@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+// TODO: Quantiziation should produce bytes not ints but there are is no unsigned byte primitive (#28)
+
 package ai.doc.tensorio.TIOData;
 
 /**
@@ -26,6 +28,7 @@ package ai.doc.tensorio.TIOData;
  */
 
 public abstract class TIODataQuantizer {
+
     /**
      * @param value The float value that will be quantized
      * @return A quantized representation of the value
@@ -34,7 +37,7 @@ public abstract class TIODataQuantizer {
     public abstract int quantize(float value);
 
     /**
-     * A TIODataQuantizer that applies the provided scale and bias according to the following forumla
+     * A TIODataQuantizer that applies the provided scale and bias according to the following formula:
      *
      * <pre>
      * quantized_value = (value + bias) * scale

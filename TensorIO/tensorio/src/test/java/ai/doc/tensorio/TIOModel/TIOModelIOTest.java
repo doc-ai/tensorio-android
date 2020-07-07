@@ -46,29 +46,14 @@ public class TIOModelIOTest {
 
     @Before
     public void setUp() throws Exception {
-        this.fooIn =  new TIOLayerInterface("foo", true, new TIOVectorLayerDescription(
+        this.fooIn =  new TIOLayerInterface("foo", TIOLayerInterface.Mode.Input, new TIOVectorLayerDescription(
                 new int[]{1},
                 null,
                 false,
                 null,
                 null
         ));
-        this.barIn =  new TIOLayerInterface("bar", true, new TIOVectorLayerDescription(
-                new int[]{1},
-                null,
-                false,
-                null,
-                null
-        ));
-
-        this.fooOut =  new TIOLayerInterface("foo", false, new TIOVectorLayerDescription(
-                new int[]{1},
-                null,
-                false,
-                null,
-                null
-        ));
-        this.barOut =  new TIOLayerInterface("bar", false, new TIOVectorLayerDescription(
+        this.barIn =  new TIOLayerInterface("bar", TIOLayerInterface.Mode.Input, new TIOVectorLayerDescription(
                 new int[]{1},
                 null,
                 false,
@@ -76,14 +61,29 @@ public class TIOModelIOTest {
                 null
         ));
 
-        this.fooPlaceholder =  new TIOLayerInterface("foo", false, new TIOVectorLayerDescription(
+        this.fooOut =  new TIOLayerInterface("foo", TIOLayerInterface.Mode.Output, new TIOVectorLayerDescription(
                 new int[]{1},
                 null,
                 false,
                 null,
                 null
         ));
-        this.barPlaceholder =  new TIOLayerInterface("bar", false, new TIOVectorLayerDescription(
+        this.barOut =  new TIOLayerInterface("bar", TIOLayerInterface.Mode.Output, new TIOVectorLayerDescription(
+                new int[]{1},
+                null,
+                false,
+                null,
+                null
+        ));
+
+        this.fooPlaceholder =  new TIOLayerInterface("foo", TIOLayerInterface.Mode.Placeholder, new TIOVectorLayerDescription(
+                new int[]{1},
+                null,
+                false,
+                null,
+                null
+        ));
+        this.barPlaceholder =  new TIOLayerInterface("bar", TIOLayerInterface.Mode.Placeholder, new TIOVectorLayerDescription(
                 new int[]{1},
                 null,
                 false,

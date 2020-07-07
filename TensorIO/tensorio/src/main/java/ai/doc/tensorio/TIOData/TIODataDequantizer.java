@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+// TODO: Dequantiziation should take bytes not ints but there are is no unsigned byte primitive (#28)
+
 package ai.doc.tensorio.TIOData;
 
 /**
@@ -35,8 +37,11 @@ public abstract class TIODataDequantizer {
     public abstract float dequantize(int value);
 
     /**
-     * A TIODataDequantizer that applies the provided scale and bias according to the following forumla
-     * <pre>dequantized_value = (value * scale) + bias</pre>
+     * A TIODataDequantizer that applies the provided scale and bias according to the following formula:
+     *
+     * <pre>
+     * dequantized_value = (value * scale) + bias
+     * </pre>
      *
      * @param scale The scale
      * @param bias  The bias value
@@ -55,7 +60,7 @@ public abstract class TIODataDequantizer {
 
     /**
      * A standard TIODataDequantizer that converts values from a range of `[0,255]` to `[0,1]`.
-     * <p>
+     *
      * This is equivalent to applying a scaling factor of `1.0/255.0` and no bias.
      */
 
@@ -66,7 +71,7 @@ public abstract class TIODataDequantizer {
 
     /**
      * A standard TIODataDequantizer that converts values from a range of `[0,255]` to `[-1,1]`.
-     * <p>
+     *
      * This is equivalent to applying a scaling factor of `2.0/255.0` and a bias of `-1`.
      */
 

@@ -34,8 +34,6 @@ import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 
 public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
-    public TIOTFLiteVectorDataConverter() {}
-
     @Override
     public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
         ByteBuffer buffer;
@@ -56,97 +54,106 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
         return buffer;
     }
 
-    // TODO: Where is the quantizer being applied? (#28)
-
     @Override
     public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+        if ( !((o instanceof byte[]) || (o instanceof float[])) ) {
+            throw TIOTFLiteVectorDataConverter.BadInputException();
+        }
+
+        // Create a buffer if no reusable cache is provided
+
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOVectorLayerDescription)description);
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
 
         TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
         TIODataQuantizer quantizer = vectorLayerDescription.getQuantizer();
         boolean quantized = vectorLayerDescription.isQuantized();
         int length = vectorLayerDescription.getLength();
 
-        buffer.rewind();
+        // Fork on float[] and bytes[]
 
         if (o instanceof float[]) {
-            if (quantized) {
-                if (quantizer != null) {
-                    FloatBuffer f = buffer.asFloatBuffer();
-                    float[] floatInput = (float[])o;
-                    if (floatInput.length != length) {
-                        throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+floatInput.length);
-                    }
-                    for (float v: floatInput) {
-                        f.put(v);
-                    }
-                }
-                else {
-                    throw new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer");
-                }
+            float[] floats = (float[]) o;
+
+            if (floats.length != length) {
+                throw TIOTFLiteVectorDataConverter.BadLengthException(floats.length, length);
             }
-            else{
-                float[] floatInput = (float[])o;
-                if (floatInput.length != length) {
-                    throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+floatInput.length);
+
+            // Fork on quantized
+
+            if (quantized && quantizer == null) {
+                throw TIOTFLiteVectorDataConverter.MissingQuantizeException();
+            } else if (quantized) {
+                for (float v: floats) {
+                    buffer.put((byte)quantizer.quantize(v));
                 }
+            } else {
                 FloatBuffer f = buffer.asFloatBuffer();
-                f.put(floatInput);
+                f.put(floats);
             }
         }
         else if (o instanceof byte[]) {
-            byte[] byteInput = (byte[])o;
-            if (byteInput.length != length) {
-                throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+byteInput.length);
+            byte[] bytes = (byte[])o;
+
+            if (bytes.length != length) {
+                throw TIOTFLiteVectorDataConverter.BadLengthException(bytes.length, length);
             }
-            buffer.put(byteInput);
-        }
-        else {
-            throw new IllegalArgumentException("Expected float[] or byte[] as input to the model");
+
+            buffer.put(bytes);
         }
 
         return buffer;
     }
 
-    /**
-     * Note that bytes are signed in java so when we read outputs from a ByetBuffer as bytes we
-     * might get negative values. So we first have to unsign the byte with & 0xFF and then cast to int.
-     * Jesus.
-     * @param byteBuffer
-     * @return
-     */
+    // Note that bytes are signed in java so when we read outputs from a ByteBuffer as bytes we
+    // might get negative values. So we first have to unsign the byte with & 0xFF and then cast to int.
 
     @Override
-    public Object fromByteBuffer(ByteBuffer byteBuffer, TIOLayerDescription description) {
+    public Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
+
+        // Prepare buffer for reading
+
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
+
         TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
         TIODataDequantizer dequantizer = vectorLayerDescription.getDequantizer();
         boolean quantized = vectorLayerDescription.isQuantized();
         int length = vectorLayerDescription.getLength();
 
-        if (quantized){
-            if (dequantizer != null){
-                float[] result = new float[length];
-                byteBuffer.rewind();
+        // Fork on quantized
 
-                for (int i=0; i<length; i++) {
-                    result[i] = dequantizer.dequantize((int) ( byteBuffer.get() & 0xFF ) );
-                }
-                return result;
-            }
-            else {
-                return byteBuffer.array();
-                //int[] result = new int[this.length];
-                //byteBuffer.rewind();
-                //byteBuffer.asIntBuffer().get(result);
-                //byteBuffer.asIntBuffer().get(result);
-                //return result;
-            }
-        }
-        else {
+        if (quantized && dequantizer == null) {
+            return buffer.array();
+        } else if (quantized) {
             float[] result = new float[length];
-            byteBuffer.rewind();
-            byteBuffer.asFloatBuffer().get(result);
+            for (int i = 0; i < length; i++) {
+                result[i] = dequantizer.dequantize((int) ( buffer.get() & 0xFF ) );
+            }
+            return result;
+        } else {
+            float[] result = new float[length];
+            buffer.asFloatBuffer().get(result);
             return result;
         }
     }
+
+    //region Exceptions
+
+    private static IllegalArgumentException BadInputException() {
+        return new IllegalArgumentException("Expected float[] or byte[] as input to the converter");
+    }
+
+    private static IllegalArgumentException BadLengthException(int given, int expected) {
+        return new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected " + expected + " input has length " + given);
+    }
+
+    private static IllegalArgumentException MissingQuantizeException() {
+        return new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer != null");
+    }
+
+    //endRegion
 }
