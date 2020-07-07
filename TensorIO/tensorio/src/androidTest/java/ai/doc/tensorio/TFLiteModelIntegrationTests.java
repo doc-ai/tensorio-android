@@ -43,6 +43,7 @@ import java.util.Map;
 
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
+import ai.doc.tensorio.TIOModel.TIOModelBundleManager;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
@@ -71,7 +72,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1In1OutNumberModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_number_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_number_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -132,7 +133,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_vectors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -202,7 +203,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_vectors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -268,7 +269,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_matrices_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -348,7 +349,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_tensors_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_tensors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -398,7 +399,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_identity_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -454,7 +455,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_normalization_test.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -587,18 +588,22 @@ public class TFLiteModelIntegrationTests {
 
         try {
             String[] assets = context.getAssets().list("");
-            for(String s: assets){
-                if (s.endsWith(".tfbundle")){
-                    InputStream inputStream = context.getAssets().open(s + "/model.json");
-                    int size = inputStream.available();
-                    byte[] buffer = new byte[size];
-                    inputStream.read(buffer);
-                    inputStream.close();
-                    String modelJSON = new String(buffer, "UTF-8");
-                    assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
+            for (String s: assets) {
+                if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
+                    continue;
                 }
+
+                InputStream inputStream = context.getAssets().open(s + "/model.json");
+                int size = inputStream.available();
+                byte[] buffer = new byte[size];
+
+                inputStream.read(buffer);
+                inputStream.close();
+
+                String modelJSON = new String(buffer, "UTF-8");
+                assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
             }
-        } catch(IOException  | ProcessingException ex) {
+        } catch (IOException | ProcessingException ex) {
             ex.printStackTrace();
             fail();
         }

@@ -25,7 +25,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +37,16 @@ import java.util.Set;
 
 public class TIOModelBundleManager {
 
+    /**
+     * Map of Model Bundle identifiers to Model Bundles
+     */
+
     private Map<String, TIOModelBundle> modelBundles;
 
     /**
-     * Loads the available models at the specified path, e.g. folders that end in .tfbundle
-     * and assigns them to the models property. Models will be sorted by name by default.
+     * Loads the available models at the specified path, e.g. folders that end in .tiobundle or
+     * the now deprecated .tfbundle and assigns them to the models property. Models will be sorted
+     * by name by default.
      *
      * @param path Directory where model bundles are located, may be in the application bundle,
      *             application documents directory, or elsewhere.
@@ -50,16 +54,20 @@ public class TIOModelBundleManager {
 
     public TIOModelBundleManager(Context c, String path) throws IOException {
         modelBundles = new HashMap<>();
+
         String[] assets = c.getAssets().list("");
-        for(String s: assets){
-            if (s.endsWith(".tfbundle")){
-                try {
-                    TIOModelBundle bundle = new TIOModelBundle(c, s);
-                    modelBundles.put(bundle.getIdentifier(), bundle);
-                } catch (TIOModelBundleException e) {
-                    Log.i("TIOModelBundleManager", "Invalid bundle: "+s);
-                    e.printStackTrace();
-                }
+
+        for(String s: assets) {
+            if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
+                continue;
+            }
+
+            try {
+                TIOModelBundle bundle = new TIOModelBundle(c, s);
+                modelBundles.put(bundle.getIdentifier(), bundle);
+            } catch (TIOModelBundleException e) {
+                Log.i("TIOModelBundleManager", "Invalid bundle: " + s);
+                e.printStackTrace();
             }
         }
     }
@@ -73,15 +81,17 @@ public class TIOModelBundleManager {
 
     public List<TIOModelBundle> bundlesWithIds(String[] modelIds) {
         List<TIOModelBundle> bundles = new ArrayList<>(modelIds.length);
+
         for (String s: modelIds){
             bundles.add(modelBundles.get(s));
         }
+
         return bundles;
     }
 
     /**
      * Returns the single model that matches the provided id.
-     * <p>
+     *
      * You must call `loadModelsAtPath:error:` before calling this method.
      *
      * @param modelId The single model id whose bundle you would like.
