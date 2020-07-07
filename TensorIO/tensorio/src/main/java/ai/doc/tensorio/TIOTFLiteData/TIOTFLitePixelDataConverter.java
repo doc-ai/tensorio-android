@@ -35,8 +35,6 @@ import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 
 public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
-    public TIOTFLitePixelDataConverter() {}
-
     @Override
     public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
         ByteBuffer buffer;

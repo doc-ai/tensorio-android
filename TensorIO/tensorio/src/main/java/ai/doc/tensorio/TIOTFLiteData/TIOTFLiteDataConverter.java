@@ -25,7 +25,6 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 
 /**
  * TFLite models use ByteBuffers to write data into models and read data out of them, so conforming

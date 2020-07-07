@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+// TODO: Dequantiziation should take bytes not ints but there are is no unsigned byte primitive (#28)
+
 package ai.doc.tensorio.TIOData;
 
 /**
