@@ -115,7 +115,65 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
-    private Map<String, Object> runMultipleInputMultipleOutput(Map inputs) throws TIOModelException {
+    @Override
+    public Map<String, Object> runOn(Object input) throws TIOModelException{
+        this.load();
+        super.runOn(input);
+
+        int numInputs = getIO().getInputs().size();
+        int numOutputs = getIO().getOutputs().size();
+
+        if (numInputs > 1 || numOutputs > 1) {
+            // Always run multiple inputs|outputs but convert input to map if necessary
+            Map<String, Object> inputMap = null;
+            if (input instanceof Map) {
+                inputMap = (Map<String, Object>)input;
+            } else {
+                inputMap = new HashMap<String, Object>();
+                inputMap.put(getIO().getInputs().get(0).getName(), input);
+            }
+            return runMultipleInputMultipleOutput(inputMap);
+        } else {
+            // Always run single input|output but convert map to single value if necessary
+            Object inputObject = null;
+            if (input instanceof Map) {
+                inputObject = ((Map<String, Object>)input).get(getIO().getInputs().get(0).getName());
+            } else {
+                inputObject = input;
+            }
+            return runSingleInputSingleOutput(inputObject);
+        }
+    }
+
+    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
+        super.runOn(input);
+
+        // Fetch the input and output layer descriptions from the model
+
+        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
+        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
+
+        // Prepare input buffer
+
+        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+
+        // Prepare output buffer
+
+        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
+
+        // Run the model on the input buffer, store the output in the output buffer
+
+        interpreter.run(inputBuffer, outputBuffer);
+
+        // Convert output buffers to user land objects
+
+        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
+        outputs.put(0, outputBuffer);
+
+        return captureOutputs(outputs);
+    }
+
+    private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws TIOModelException {
         super.runOn(inputs);
 
         // Fetch the input and output layer descriptions from the model
@@ -153,34 +211,6 @@ public class TIOTFLiteModel extends TIOModel {
         // Convert output buffers to user land objects
 
         return captureOutputs(outputBuffers);
-    }
-
-    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
-        super.runOn(input);
-
-        // Fetch the input and output layer descriptions from the model
-
-        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
-        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
-
-        // Prepare input buffer
-
-        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-
-        // Prepare output buffer
-
-        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
-
-        // Run the model on the input buffer, store the output in the output buffer
-
-        interpreter.run(inputBuffer, outputBuffer);
-
-        // Convert output buffers to user land objects
-
-        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
-        outputs.put(0, outputBuffer);
-
-        return captureOutputs(outputs);
     }
 
     /**
@@ -281,29 +311,6 @@ public class TIOTFLiteModel extends TIOModel {
         }
 
         return outputMap;
-    }
-
-    @Override
-    public Map<String, Object> runOn(Object input) throws TIOModelException{
-        this.load();
-        super.runOn(input);
-
-        int numInputs = getIO().getInputs().size();
-        int numOutputs = getIO().getOutputs().size();
-
-        if (numInputs > 1) {
-            return runMultipleInputMultipleOutput((Map<String, Object>)input);
-        } else if (input instanceof Map) {
-            // TODO: The map could contains just a single value (#44)
-            return runMultipleInputMultipleOutput((Map<String, Object>)input);
-        } else if (numOutputs == 1) {
-            return runSingleInputSingleOutput(input);
-        } else {
-            Map<String, Object> inputMap = new HashMap<>();
-            TIOLayerInterface inputLayer = getIO().getInputs().get(0);
-            inputMap.put(inputLayer.getName(), input);
-            return runMultipleInputMultipleOutput(inputMap);
-        }
     }
 
     //endRegion
