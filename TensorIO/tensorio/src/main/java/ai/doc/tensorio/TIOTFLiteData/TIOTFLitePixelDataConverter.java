@@ -40,7 +40,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      * Backing buffer
      */
 
-    private ByteBuffer buffer;
+    private ByteBuffer _buffer;
 
     public TIOTFLitePixelDataConverter(TIOPixelBufferLayerDescription description) {
         boolean quantized = description.isQuantized();
@@ -48,13 +48,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         if (quantized) {
             // Layer expects bytes
-            this.buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels);
+            _buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels);
         } else {
             // Layer expects floats
-            this.buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels * 4);
+            _buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels * 4);
         }
 
-        this.buffer.order(ByteOrder.nativeOrder());
+        _buffer.order(ByteOrder.nativeOrder());
     }
 
     //region Utilities
@@ -117,7 +117,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 
-        buffer.rewind();
+        _buffer.rewind();
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight()); // Returns ARGB pixels
 
         // Convert the image to floating point
@@ -128,13 +128,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         for (int i = 0; i < bitmap.getWidth(); ++i) {
             for (int j = 0; j < bitmap.getHeight(); ++j) {
                 final int val = intValues[pixel++];
-                intPixelToFloat(val, buffer, quantized, normalizer);
+                intPixelToFloat(val, _buffer, quantized, normalizer);
             }
         }
 
         intValues = null;
 
-        return buffer;
+        return _buffer;
     }
 
     @Override
@@ -170,6 +170,6 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
     @Override
     public ByteBuffer getBackingByteBuffer() {
-        return buffer;
+        return _buffer;
     }
 }
