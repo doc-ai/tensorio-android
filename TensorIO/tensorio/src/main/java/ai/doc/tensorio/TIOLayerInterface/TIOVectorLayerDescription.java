@@ -20,10 +20,6 @@
 
 package ai.doc.tensorio.TIOLayerInterface;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +63,6 @@ import ai.doc.tensorio.TIOData.TIODataQuantizer;
 public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     private final int[] shape;
-    private ByteBuffer buffer;
 
     /**
      * The length of the vector in terms of its number of elements.
@@ -76,19 +71,19 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
     private int length;
 
     /**
-     * Indexed labels corresponding to the indexed output of a layer. May be `nil`.
-     * <p>
+     * true if there are labels associated with this layer, false otherwise.
+     */
+
+    private boolean labeled;
+
+    /**
+     * Indexed labels corresponding to the indexed output of a layer. May be null.
+     *
      * Labeling the output of a model is such a common operation that support for it is included
      * by default.
      */
 
     private String[] labels;
-
-    /**
-     * `YES` if there are labels associated with this layer, `NO` otherwise.
-     */
-
-    private boolean labeled;
 
     /**
      * A function that converts a vector from unquantized values to quantized values
@@ -126,15 +121,6 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.quantized = quantized;
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
-
-        if (quantized) {
-            this.buffer = ByteBuffer.allocate(length);
-        }
-        else{
-            this.buffer = ByteBuffer.allocate(length*4);
-        }
-        this.buffer.order(ByteOrder.nativeOrder());
-
     }
 
     //region Getters and Setters
@@ -161,92 +147,6 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     //endRegion
 
-    // TODO: Where is the quantizer being applied? (#28)
-
-    @Override
-    public ByteBuffer toByteBuffer(Object o) {
-        buffer.rewind();
-        if (o instanceof float[]){
-            if (quantized){
-                if (quantizer != null){
-                    FloatBuffer f = buffer.asFloatBuffer();
-                    float[] floatInput = (float[])o;
-                    if (floatInput.length != this.length){
-                        throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+floatInput.length);
-                    }
-                    for (float v: floatInput){
-                        f.put(v);
-                    }
-                }
-                else{
-                    throw new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer");
-                }
-            }
-            else{
-                float[] floatInput = (float[])o;
-                if (floatInput.length != this.length){
-                    throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+floatInput.length);
-                }
-                FloatBuffer f = buffer.asFloatBuffer();
-                f.put(floatInput);
-            }
-        }
-        else if (o instanceof byte[]){
-            byte[] byteInput = (byte[])o;
-            if (byteInput.length != this.length){
-                throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+byteInput.length);
-            }
-            buffer.put(byteInput);
-        }
-        else{
-            throw new IllegalArgumentException("Expected float[] or byte[] as input to the model");
-        }
-
-        return buffer;
-    }
-
-    /**
-     * Note that bytes are signed in java so when we read outputs from a ByetBuffer as bytes we
-     * might get negative values. So we first have to unsign the byte with & 0xFF and then cast to int.
-     * Jesus.
-     * @param buffer
-     * @return
-     */
-
-    @Override
-    public Object fromByteBuffer(ByteBuffer buffer) {
-        if (quantized){
-            if (dequantizer != null){
-                float[] result = new float[this.length];
-                buffer.rewind();
-
-                for (int i=0; i<this.length; i++) {
-                    result[i] = dequantizer.dequantize((int) ( buffer.get() & 0xFF ) );
-                }
-                return result;
-            }
-            else {
-                return buffer.array();
-                //int[] result = new int[this.length];
-                //buffer.rewind();
-                //buffer.asIntBuffer().get(result);
-                //buffer.asIntBuffer().get(result);
-                //return result;
-            }
-        }
-        else {
-            float[] result = new float[this.length];
-            buffer.rewind();
-            buffer.asFloatBuffer().get(result);
-            return result;
-        }
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return buffer;
-    }
-
     /**
      * Given the output vector of a tensor, returns labeled outputs using `labels`.
      *
@@ -256,13 +156,16 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
      */
 
     public Map<String, Float> labeledValues(float[] vector) {
-        if (!isLabeled()){
+        if (!isLabeled()) {
             return null;
         }
+
         Map<String, Float> result = new HashMap<>(vector.length);
+
         for (int i = 0; i < labels.length; i++){
             result.put(labels[i], vector[i]);
         }
+
         return result;
     }
 

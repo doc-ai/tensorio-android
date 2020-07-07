@@ -18,11 +18,10 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOTensorflowLiteModel;
+package ai.doc.tensorio.TIOTFLiteModel;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
-import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.experimental.GpuDelegate;
@@ -33,27 +32,42 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
+import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
+
+// TODO: Have the TFLite model hold onto the long lived buffer data converters itself and pass layer descriptions to them as needed
 
 public class TIOTFLiteModel extends TIOModel {
 
-    private Interpreter tflite;
+    // TFLite Backend
+
+    private Interpreter interpreter;
     private MappedByteBuffer tfliteModel;
     private GpuDelegate gpuDelegate = null;
+
+    // TFLite Backend Options
 
     private int numThreads = 1;
     private boolean useGPU = false;
     private boolean useNNAPI = false;
     private boolean use16bit = false;
+
+    // Data Converters
+
+    final private TIOTFLiteVectorDataConverter vectorDataConverter = new TIOTFLiteVectorDataConverter();
+    final private TIOTFLitePixelDataConverter pixelDataConverter = new TIOTFLitePixelDataConverter();
+
+    // Constructor
 
     public TIOTFLiteModel(Context context, TIOModelBundle bundle) {
         super(context, bundle);
@@ -68,17 +82,17 @@ public class TIOTFLiteModel extends TIOModel {
         } catch (IOException e) {
             throw new TIOModelException("Error loading model file", e);
         }
-        tflite = new Interpreter(tfliteModel);
+        interpreter = new Interpreter(tfliteModel);
         super.load();
     }
 
     @Override
     public void unload() {
-        if (tflite != null) {
-            tflite.close();
-            this.tflite = null;
+        if (interpreter != null ) {
+            interpreter.close();
+            this.interpreter = null;
         }
-        if (this.gpuDelegate != null){
+        if (this.gpuDelegate != null) {
             this.gpuDelegate.close();
             this.gpuDelegate = null;
         }
@@ -89,8 +103,8 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
-    private Map<String, Object> runMultipleInputMultipleOutput(Map input) throws TIOModelException {
-        super.runOn(input);
+    private Map<String, Object> runMultipleInputMultipleOutput(Map inputs) throws TIOModelException {
+        super.runOn(inputs);
 
         // Fetch the input and output layer descriptions from the model
 
@@ -99,32 +113,34 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Prepare input buffers
 
-        Object[] inputs = new Object[getIO().getInputs().size()];
+        Object[] inputBuffers = new Object[inputList.size()];
 
         for (int i = 0; i < inputList.size(); i++){
-            TIOLayerInterface layer = inputList.get(i);
-            ByteBuffer inputBuffer = layer.getDataDescription().toByteBuffer(input.get(layer.getName()));
-            inputs[i] = inputBuffer;
+            TIOLayerDescription inputLayer = inputList.get(i).getLayerDescription();
+            Object input = inputs.get(inputList.get(i).getName());
+            ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+
+            inputBuffers[i] = inputBuffer;
         }
 
         // Prepare output buffers
 
-        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size());
+        Map<Integer, Object> outputBuffers = new HashMap<>(outputList.size());
 
         for (int i = 0; i < outputList.size(); i++){
-            TIOLayerInterface layer = outputList.get(i);
-            ByteBuffer outputBuffer = layer.getDataDescription().getBackingByteBuffer();
-            outputBuffer.rewind();
-            outputs.put(i, outputBuffer);
+            TIOLayerDescription outputLayer = outputList.get(i).getLayerDescription();
+            ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
+
+            outputBuffers.put(i, outputBuffer);
         }
 
         // Run the model on the input buffers, store the output in the output buffers
 
-        tflite.runForMultipleInputsOutputs(inputs, outputs);
+        interpreter.runForMultipleInputsOutputs(inputBuffers, outputBuffers);
 
         // Convert output buffers to user land objects
 
-        return captureOutputs(outputs);
+        return captureOutputs(outputBuffers);
     }
 
     private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
@@ -132,28 +148,79 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Fetch the input and output layer descriptions from the model
 
-        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getDataDescription();
-        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getDataDescription();
+        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
+        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
 
         // Prepare input buffer
 
-        ByteBuffer inputBuffer = inputLayer.toByteBuffer(input);
+        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
 
         // Prepare output buffer
 
-        ByteBuffer outputBuffer = outputLayer.getBackingByteBuffer();
-        outputBuffer.rewind();
+        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
 
         // Run the model on the input buffer, store the output in the output buffer
 
-        tflite.run(inputBuffer, outputBuffer);
+        interpreter.run(inputBuffer, outputBuffer);
 
         // Convert output buffers to user land objects
 
-        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
+        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
         outputs.put(0, outputBuffer);
 
         return captureOutputs(outputs);
+    }
+
+    /**
+     * Prepares a ByteBuffer that will be used for input to a model.
+     *
+     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
+     * @param input The input to convert to a byte buffer
+     * @param inputLayer A description of the layer this buffer will be used with
+     * @return ByteBuffer ready for input to a model
+     */
+
+    private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
+        ByteBuffer inputBuffer = null;
+
+        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
+        // Note we are not using the backing input buffer here but recreating it every time
+
+        if ( inputLayer instanceof TIOVectorLayerDescription ) {
+            inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, null);
+        }
+        else if ( inputLayer instanceof TIOPixelBufferLayerDescription ) {
+            inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, null);
+        }
+
+        return inputBuffer;
+    }
+
+    /**
+     * Prepares a ByteBuffer that can be used for output from a model.
+     *
+     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
+     * @param outputLayer A description of the layer this buffer will be used with
+     * @return ByteBuffer ready for model output
+     */
+
+    private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
+        ByteBuffer outputBuffer = null;
+
+        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
+        // Note we are not using the backing output buffer here but recreating it every time
+
+        if ( outputLayer instanceof TIOVectorLayerDescription ) {
+            outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
+        }
+        else if ( outputLayer instanceof TIOPixelBufferLayerDescription ) {
+            outputBuffer = pixelDataConverter.createBackingBuffer(outputLayer);
+        }
+
+        // If returning cached outputBuffer be sure to rewind it
+        // outputBuffer.rewind();
+
+        return outputBuffer;
     }
 
     /**
@@ -167,13 +234,23 @@ public class TIOTFLiteModel extends TIOModel {
         Map<String, Object> outputMap = new HashMap<>(outputList.size());
 
         for (int i = 0; i < outputList.size(); i++){
-            TIOLayerInterface layer = outputList.get(i);
-            Object o = layer.getDataDescription().fromByteBuffer((ByteBuffer)outputs.get(i));
+            TIOLayerDescription layer = outputList.get(i).getLayerDescription();
+            String name = outputList.get(i).getName();
+            Object o = null;
+
+            // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
+
+            if ( layer instanceof TIOVectorLayerDescription ) {
+                o = vectorDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
+            }
+            else if ( layer instanceof TIOPixelBufferLayerDescription ) {
+                o = pixelDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
+            }
 
             // Perform any additional transformations on the captured output
 
-            if (layer.getDataDescription() instanceof TIOVectorLayerDescription) {
-                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer.getDataDescription();
+            if (layer instanceof TIOVectorLayerDescription) {
+                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
 
                 // If the vector's output is labeled, return a Map of keys to values rather than raw values
 
@@ -188,7 +265,7 @@ public class TIOTFLiteModel extends TIOModel {
                 // }
             }
 
-            outputMap.put(layer.getName(), o);
+            outputMap.put(name, o);
         }
 
         return outputMap;
@@ -202,19 +279,14 @@ public class TIOTFLiteModel extends TIOModel {
         int numOutputs = getIO().getOutputs().size();
 
         if (numInputs > 1) {
-            Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
-            return output;
-        }
-        else {
+            return runMultipleInputMultipleOutput((Map<String, Object>)input);
+        } else {
             if (input instanceof Map) {
-                Map<String, Object>  output = runMultipleInputMultipleOutput((Map<String, Object>)input);
-                return output;
-            }
-            else {
+                return runMultipleInputMultipleOutput((Map<String, Object>)input);
+            } else {
                 if (numOutputs == 1) {
                     return runSingleInputSingleOutput(input);
-                }
-                else {
+                } else {
                     Map<String, Object> inputMap = new HashMap<>();
                     TIOLayerInterface inputLayer = getIO().getInputs().get(0);
                     inputMap.put(inputLayer.getName(), input);
@@ -247,8 +319,7 @@ public class TIOTFLiteModel extends TIOModel {
             tfliteOptions.addDelegate((GpuDelegate)GpuDelegateHelper.createGpuDelegate());
         }
 
-        tflite = new Interpreter(tfliteModel, tfliteOptions);
-
+        interpreter = new Interpreter(tfliteModel, tfliteOptions);
     }
 
     public void useGPU() {
@@ -281,7 +352,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     public long getLastInferenceDuration(){
-        return tflite.getLastNativeInferenceDurationNanoseconds();
+        return interpreter.getLastNativeInferenceDurationNanoseconds();
     }
 
     public void setOptions(boolean use16bit, boolean useGPU, boolean useNNAPI, int numThreads){

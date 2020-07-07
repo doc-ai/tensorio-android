@@ -31,7 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
+import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.TIOUtilities.FileIO;
 
 /**
