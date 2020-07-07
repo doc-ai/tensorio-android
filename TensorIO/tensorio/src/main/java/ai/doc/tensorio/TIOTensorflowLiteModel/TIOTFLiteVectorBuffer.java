@@ -24,13 +24,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import ai.doc.tensorio.TIOData.TIOBuffer;
+import ai.doc.tensorio.TIOData.TIODataConverter;
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 
-public class TIOTFLiteVectorBuffer extends TIOBuffer {
+public class TIOTFLiteVectorBuffer implements TIODataConverter, TIOTFLiteDataConverter {
 
     /**
      * Backing buffer
@@ -38,16 +38,7 @@ public class TIOTFLiteVectorBuffer extends TIOBuffer {
 
     private ByteBuffer buffer;
 
-    /**
-     * Designated constructor
-     *
-     * @param description A description of the layer this buffer will be used for. Do not hold onto
-     *                    the description or you will create a retain loop
-     */
-
     public TIOTFLiteVectorBuffer(TIOVectorLayerDescription description) {
-        super(description);
-
         boolean quantized = description.isQuantized();
         int length = description.getLength();
 

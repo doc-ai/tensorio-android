@@ -26,14 +26,14 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import ai.doc.tensorio.TIOData.TIOBuffer;
+import ai.doc.tensorio.TIOData.TIODataConverter;
 import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 
-public class TIOTFLitePixelBuffer extends TIOBuffer {
+public class TIOTFLitePixelBuffer implements TIODataConverter, TIOTFLiteDataConverter {
 
     /**
      * Backing buffer
@@ -41,16 +41,7 @@ public class TIOTFLitePixelBuffer extends TIOBuffer {
 
     private ByteBuffer buffer;
 
-    /**
-     * Designated constructor
-     *
-     * @param description A description of the layer this buffer will be used for. Do not hold onto
-     *                    the description or you will create a retain loop
-     */
-
     public TIOTFLitePixelBuffer(TIOPixelBufferLayerDescription description) {
-        super(description);
-
         boolean quantized = description.isQuantized();
         TIOImageVolume shape = description.getShape();
 

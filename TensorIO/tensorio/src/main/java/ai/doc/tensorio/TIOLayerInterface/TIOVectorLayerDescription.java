@@ -24,9 +24,9 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import ai.doc.tensorio.TIOData.TIOBuffer;
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
+import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteDataConverter;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteVectorBuffer;
 
 /**
@@ -72,7 +72,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
      * a backing buffer to the model.
      */
 
-    TIOBuffer buffer;
+    TIOTFLiteDataConverter converter;
 
     /**
      * The length of the vector in terms of its number of elements.
@@ -133,7 +133,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.dequantizer = dequantizer;
 
         // TODO: Hardcoded to TFLite
-        this.buffer = new TIOTFLiteVectorBuffer(this);
+        this.converter = new TIOTFLiteVectorBuffer(this);
     }
 
     //region Getters and Setters
@@ -164,17 +164,17 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
-        return buffer.toByteBuffer(o, this);
+        return converter.toByteBuffer(o, this);
     }
 
     @Override
     public Object fromByteBuffer(ByteBuffer byteBuffer) {
-        return buffer.fromByteBuffer(byteBuffer, this);
+        return converter.fromByteBuffer(byteBuffer, this);
     }
 
     @Override
     public ByteBuffer getBackingByteBuffer() {
-        return buffer.getBackingByteBuffer();
+        return converter.getBackingByteBuffer();
     }
 
     //endRegion

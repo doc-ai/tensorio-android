@@ -23,15 +23,13 @@ package ai.doc.tensorio.TIOLayerInterface;
 import android.graphics.Bitmap;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
-import ai.doc.tensorio.TIOData.TIOBuffer;
 import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
+import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteDataConverter;
 import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLitePixelBuffer;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteVectorBuffer;
 
 /**
  * The description of a pixel buffer input or output layer.
@@ -44,7 +42,7 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
      * a backing buffer to the model.
      */
 
-    TIOBuffer buffer;
+    TIOTFLiteDataConverter converter;
 
     /**
      * `true` is the layer is quantized, `false` otherwise
@@ -96,7 +94,7 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
         this.quantized = quantized;
 
         // TODO: Hardcoded to TFLite
-        this.buffer = new TIOTFLitePixelBuffer(this);
+        this.converter = new TIOTFLitePixelBuffer(this);
     }
 
     //region Getters and Setters
@@ -128,17 +126,17 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
 
     @Override
     public ByteBuffer toByteBuffer(Object o) {
-        return buffer.toByteBuffer(o, this);
+        return converter.toByteBuffer(o, this);
     }
 
     @Override
     public Bitmap fromByteBuffer(ByteBuffer byteBuffer) {
-        return (Bitmap) buffer.fromByteBuffer(byteBuffer, this);
+        return (Bitmap) converter.fromByteBuffer(byteBuffer, this);
     }
 
     @Override
     public ByteBuffer getBackingByteBuffer() {
-        return buffer.getBackingByteBuffer();
+        return converter.getBackingByteBuffer();
     }
 
     // endRegion

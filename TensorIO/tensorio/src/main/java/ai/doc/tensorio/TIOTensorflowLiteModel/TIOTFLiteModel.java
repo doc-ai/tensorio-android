@@ -44,6 +44,8 @@ import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
 
+// TODO: Have the TFLite model hold onto the long lived buffer data converters itself and pass layer descriptions to them as needed
+
 public class TIOTFLiteModel extends TIOModel {
 
     private Interpreter interpreter;
