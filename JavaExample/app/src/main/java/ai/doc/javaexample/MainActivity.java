@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
             // load the model
             TIOModelBundle bundle = manager.bundleWithId("mobilenet-v2-100-224-unquantized");
             TIOModel model = bundle.newModel();
-            model.load();
 
             // Load the image
             InputStream bitmap = getAssets().open("picture2.jpg");
@@ -69,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TIOModelBundleException e) {
-            e.printStackTrace();
-        } catch (TIOModelException e) {
             e.printStackTrace();
         }
     }

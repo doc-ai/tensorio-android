@@ -12,7 +12,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import java.io.IOException
-import java.util.*
 
 private const val TAG = "MainActivity"
 
@@ -28,7 +27,6 @@ class MainActivity : AppCompatActivity() {
             // load the model
             val bundle = manager.bundleWithId("mobilenet-v2-100-224-unquantized")
             val model = bundle.newModel()
-            model.load()
 
             // Load the image
             val bitmap = assets.open("picture2.jpg")
@@ -56,8 +54,6 @@ class MainActivity : AppCompatActivity() {
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: TIOModelBundleException) {
-            e.printStackTrace()
-        } catch (e: TIOModelException) {
             e.printStackTrace()
         }
 
