@@ -288,31 +288,6 @@ public abstract class TIOModel {
 
     //endRegion
 
-    //region Input Validation
-
-    protected void validateInput(Object input) throws TIOModelException {
-        if (input instanceof Map) {
-            Map<String, Object> inputMap = (Map<String, Object>) input;
-            if (io.getInputs().size() != inputMap.size()) {
-                throw TIOModelException.InputCountMismatchException(inputMap.size(), io.getInputs().size());
-            }
-
-            if (!inputMap.keySet().equals(io.getInputs().keys())) {
-                for (TIOLayerInterface layer : io.getInputs().all()) {
-                    if (!inputMap.containsKey(layer.getName())) {
-                        throw TIOModelException.MissingInput(layer.getName());
-                    }
-                }
-            }
-        } else {
-            if (io.getInputs().size() != 1) {
-                throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
-            }
-        }
-    }
-
-    //endRegion
-
     //region Run
 
     // The run methods are the primary interface to a concrete implementation
@@ -352,6 +327,45 @@ public abstract class TIOModel {
      */
 
     public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException;
+
+    //endRegion
+
+    //region Input Validation
+
+    protected void validateInput(float[] input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(byte[] input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(Bitmap input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(Map<String, Object> input) throws TIOModelException {
+        int expectedSize = io.getInputs().size();
+        int actualSize = input.size();
+
+        if (expectedSize != actualSize) {
+            throw TIOModelException.InputCountMismatchException(actualSize, expectedSize);
+        }
+
+        if ( !input.keySet().equals(io.getInputs().keys()) ) {
+            for (TIOLayerInterface layer : io.getInputs().all()) {
+                if ( !input.containsKey(layer.getName()) ) {
+                    throw TIOModelException.MissingInput(layer.getName());
+                }
+            }
+        }
+    }
 
     //endRegion
 
