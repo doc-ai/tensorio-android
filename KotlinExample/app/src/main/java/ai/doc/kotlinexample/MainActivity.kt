@@ -1,9 +1,9 @@
 package ai.doc.kotlinexample
 
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription
 import ai.doc.tensorio.TIOModel.TIOModelBundleException
 import ai.doc.tensorio.TIOModel.TIOModelBundleManager
 import ai.doc.tensorio.TIOModel.TIOModelException
+import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.support.v7.app.AppCompatActivity
@@ -11,10 +11,10 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import android.widget.Toast
 import java.io.IOException
 import java.util.*
-import java.util.Map
+
+private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,18 +40,18 @@ class MainActivity : AppCompatActivity() {
             mHandlerThread.start()
             val mHandler = Handler(mHandlerThread.looper)
 
-
             mHandler.post {
-                // Run the model on the input
-                var result = FloatArray(0)
-
                 try {
-                    result = model.runOn(scaled) as FloatArray
+                    val output = model.runOn(scaled)
+                    val classification = output.get("classification") as MutableMap<String, Float>
+                    val top5 = TIOClassificationHelper.topN(classification, 5)
+
+                    for (entry in top5) {
+                        Log.i(TAG, entry.key + ":" + entry.value)
+                    }
                 } catch (e: TIOModelException) {
                     e.printStackTrace()
                 }
-
-                Log.i("result", Arrays.toString(result))
             }
         } catch (e: IOException) {
             e.printStackTrace()
