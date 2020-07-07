@@ -48,11 +48,12 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         _buffer = createBackingBuffer(description);
     }
 
-    public ByteBuffer createBackingBuffer(TIOPixelBufferLayerDescription description) {
+    @Override
+    public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
         ByteBuffer buffer;
 
-        boolean quantized = description.isQuantized();
-        TIOImageVolume shape = description.getShape();
+        boolean quantized = ((TIOPixelBufferLayerDescription)description).isQuantized();
+        TIOImageVolume shape = ((TIOPixelBufferLayerDescription)description).getShape();
 
         if (quantized) {
             // Layer expects bytes

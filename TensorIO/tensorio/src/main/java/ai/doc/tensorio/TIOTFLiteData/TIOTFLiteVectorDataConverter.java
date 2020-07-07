@@ -47,11 +47,12 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
         _buffer = createBackingBuffer(description);
     }
 
-    public ByteBuffer createBackingBuffer(TIOVectorLayerDescription description) {
+    @Override
+    public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
         ByteBuffer buffer;
 
-        boolean quantized = description.isQuantized();
-        int length = description.getLength();
+        boolean quantized = ((TIOVectorLayerDescription)description).isQuantized();
+        int length = ((TIOVectorLayerDescription)description).getLength();
 
         if (quantized) {
             // Layer expects bytes

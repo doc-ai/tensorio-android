@@ -25,6 +25,7 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
+import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 
 /**
  * TFLite models use ByteBuffers to write data into models and read data out of them, so conforming
@@ -32,6 +33,15 @@ import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
  */
 
 public interface TIOTFLiteDataConverter {
+
+    /**
+     * Creates a ByteBuffer to hold data for input or output to a TFLite model using the parameters
+     * in the layer description.
+     * @param description A description of the layer to create a byte buffer for
+     * @return ByteBuffer ready to be filled with input or output data.
+     */
+
+    public ByteBuffer createBackingBuffer(TIOLayerDescription description);
 
     /**
      * Converts an Object to a ByteBuffer, used to prepare data for a writing into a model.
