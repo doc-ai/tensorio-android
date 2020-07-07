@@ -21,7 +21,6 @@
 package ai.doc.tensorio.TIOData;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,9 +42,9 @@ public class TIODataDequantizerTest {
         TIODataDequantizer dequantizer = TIODataDequantizer.TIODataDequantizerZeroToOne();
         float epsilon = 0.01f;
 
-        assertEquals(0, dequantizer.dequantize(0), 0.0);
-        assertEquals(1, dequantizer.dequantize(255), 0.0);
-        assertEquals(dequantizer.dequantize(127), 0.5, epsilon);
+        assertEquals(0, dequantizer.dequantize(0), epsilon);
+        assertEquals(1, dequantizer.dequantize(255), epsilon);
+        assertEquals(0.5, dequantizer.dequantize(127), epsilon);
     }
 
     @Test
@@ -53,9 +52,9 @@ public class TIODataDequantizerTest {
         TIODataDequantizer dequantizer = TIODataDequantizer.TIODataDequantizerNegativeOneToOne();
         float epsilon = 0.01f;
 
-        assertEquals(dequantizer.dequantize(0), -1, 0.0);
-        assertEquals(1, dequantizer.dequantize(255), 0.0);
-        assertEquals(dequantizer.dequantize(127), 0, epsilon);
+        assertEquals(dequantizer.dequantize(0), -1, epsilon);
+        assertEquals(1, dequantizer.dequantize(255), epsilon);
+        assertEquals(0, dequantizer.dequantize(127), epsilon);
     }
 
     @Test
@@ -63,8 +62,8 @@ public class TIODataDequantizerTest {
         TIODataDequantizer dequantizer = TIODataDequantizer.TIODataDequantizerWithDequantization(1.0f / 255.0f, 0f);
         float epsilon = 0.01f;
 
-        assertEquals(0, dequantizer.dequantize(0), 0.0);
-        assertEquals(1, dequantizer.dequantize(255), 0.0);
-        assertEquals(dequantizer.dequantize(127), 0.5, epsilon);
+        assertEquals(0, dequantizer.dequantize(0), epsilon);
+        assertEquals(1, dequantizer.dequantize(255), epsilon);
+        assertEquals(0.5, dequantizer.dequantize(127), epsilon);
     }
 }

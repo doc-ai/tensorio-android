@@ -42,9 +42,9 @@ public class TIODataQuantizerTest {
         TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerZeroToOne();
         int epsilon = 1;
 
-        assertEquals(0, quantizer.quantize(0));
-        assertEquals(255, quantizer.quantize(1));
-        assertEquals(quantizer.quantize(0.5f), 127, epsilon);
+        assertEquals(0, quantizer.quantize(0), epsilon);
+        assertEquals(255, quantizer.quantize(1), epsilon);
+        assertEquals(127, quantizer.quantize(0.5f), epsilon);
     }
 
     @Test
@@ -52,9 +52,9 @@ public class TIODataQuantizerTest {
         TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerNegativeOneToOne();
         int epsilon = 1;
 
-        assertEquals(0, quantizer.quantize(-1));
-        assertEquals(255, quantizer.quantize(1));
-        assertEquals(quantizer.quantize(0), 127, epsilon);
+        assertEquals(0, quantizer.quantize(-1), epsilon);
+        assertEquals(255, quantizer.quantize(1), epsilon);
+        assertEquals(127, quantizer.quantize(0), epsilon);
     }
 
     @Test
@@ -62,8 +62,8 @@ public class TIODataQuantizerTest {
         TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerWithQuantization(255.0f, 0.0f);
         int epsilon = 1;
 
-        assertEquals(0, quantizer.quantize(0));
-        assertEquals(255, quantizer.quantize(1));
-        assertEquals(quantizer.quantize(0.5f), 127, epsilon);
+        assertEquals(0, quantizer.quantize(0), epsilon);
+        assertEquals(255, quantizer.quantize(1), epsilon);
+        assertEquals(127, quantizer.quantize(0.5f), epsilon);
     }
 }
