@@ -102,7 +102,7 @@ public class TIOPixelDenormalizerTest {
         assertEquals(denormalizer.denormalize(0.5f + 0.1f, 0), 127, epsilon);
         assertEquals(denormalizer.denormalize(0.5f + 0.2f, 1), 127, epsilon);
         assertEquals(denormalizer.denormalize(0.5f + 0.3f, 2), 127, epsilon);
-        
+
         assertEquals(denormalizer.denormalize(1.0f + 0.1f, 0), 255, epsilon);
         assertEquals(denormalizer.denormalize(1.0f + 0.2f, 1), 255, epsilon);
         assertEquals(denormalizer.denormalize(1.0f + 0.3f, 2), 255, epsilon);
