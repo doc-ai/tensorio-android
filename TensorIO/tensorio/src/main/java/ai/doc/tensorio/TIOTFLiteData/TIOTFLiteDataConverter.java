@@ -61,6 +61,4 @@ public interface TIOTFLiteDataConverter {
      */
 
     public Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description);
-
-    public ByteBuffer getBackingByteBuffer();
 }

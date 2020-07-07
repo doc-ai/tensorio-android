@@ -31,21 +31,10 @@ import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
-import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
 
 public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
-    /**
-     * Backing buffer
-     */
-
-    private ByteBuffer _buffer;
-
     public TIOTFLiteVectorDataConverter() {}
-
-    public TIOTFLiteVectorDataConverter(TIOVectorLayerDescription description) {
-        _buffer = createBackingBuffer(description);
-    }
 
     @Override
     public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
@@ -80,39 +69,39 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
 
         buffer.rewind();
 
-        if (o instanceof float[]){
-            if (quantized){
-                if (quantizer != null){
+        if (o instanceof float[]) {
+            if (quantized) {
+                if (quantizer != null) {
                     FloatBuffer f = buffer.asFloatBuffer();
                     float[] floatInput = (float[])o;
-                    if (floatInput.length != length){
+                    if (floatInput.length != length) {
                         throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+floatInput.length);
                     }
-                    for (float v: floatInput){
+                    for (float v: floatInput) {
                         f.put(v);
                     }
                 }
-                else{
+                else {
                     throw new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer");
                 }
             }
             else{
                 float[] floatInput = (float[])o;
-                if (floatInput.length != length){
+                if (floatInput.length != length) {
                     throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+floatInput.length);
                 }
                 FloatBuffer f = buffer.asFloatBuffer();
                 f.put(floatInput);
             }
         }
-        else if (o instanceof byte[]){
+        else if (o instanceof byte[]) {
             byte[] byteInput = (byte[])o;
-            if (byteInput.length != length){
+            if (byteInput.length != length) {
                 throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+length+" input has length "+byteInput.length);
             }
             buffer.put(byteInput);
         }
-        else{
+        else {
             throw new IllegalArgumentException("Expected float[] or byte[] as input to the model");
         }
 
@@ -159,10 +148,5 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
             byteBuffer.asFloatBuffer().get(result);
             return result;
         }
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return _buffer;
     }
 }

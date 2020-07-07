@@ -32,21 +32,10 @@ import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
-import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
 
 public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
-    /**
-     * Backing buffer
-     */
-
-    private ByteBuffer _buffer;
-
     public TIOTFLitePixelDataConverter() {}
-
-    public TIOTFLitePixelDataConverter(TIOPixelBufferLayerDescription description) {
-        _buffer = createBackingBuffer(description);
-    }
 
     @Override
     public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
@@ -136,6 +125,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         // Convert the image to floating point
 
         // TODO: Traversing by y-axis on the inside, shouldn't it be by x-axis? doesn't look like it matters
+        // TODO: Holy hell why are you pre-incrementing!?
 
         int pixel = 0;
         for (int i = 0; i < bitmap.getWidth(); ++i) {
@@ -179,10 +169,5 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         intValues = null;
 
         return bmp;
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return _buffer;
     }
 }
