@@ -22,6 +22,7 @@ package ai.doc.tensorio.TIOTFLiteModel;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.experimental.GpuDelegate;
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
@@ -115,8 +115,134 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Run
 
-    private Map<String, Object> runMultipleInputMultipleOutput(Map inputs) throws TIOModelException {
-        super.runOn(inputs);
+    @Override
+    public Map<String, Object> runOn(float[] input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
+    }
+
+    @Override
+    public Map<String, Object> runOn(byte[] input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
+    }
+
+    @Override
+    public Map<String, Object> runOn(Bitmap input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
+    }
+
+    @Override
+    public Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(input);
+        } else {
+            return runSingleInputSingleOutput(unmappedInput(input));
+        }
+    }
+
+    /**
+     * @return yes if models has either of more than one input or output, false otherwise
+     */
+
+    private boolean hasMultipleInputsOrOutputs() {
+        return getIO().getInputs().size() > 0 || getIO().getOutputs().size() > 0;
+    }
+
+    /**
+     * Converts a single input to a mapped input using the single input layer's name.
+     *
+     * Used to convert a single input to a map when a model has multiple outputs.
+     * Check that the model only has a single input before calling this method.
+     *
+     * @param input One of the supported input types, e.g. byte[], float[], or Bitmap
+     * @return A map from the input layer's name to the input
+     */
+
+    private Map<String, Object> mappedInput(Object input) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(getIO().getInputs().get(0).getName(), input);
+        return map;
+    }
+
+    /**
+     * Extracts the value from a mapped input using the single input layer's name.
+     *
+     * Used to convert a mapped input to its raw value when a model has a single output.
+     * Check that the model only has a single input before calling this method.
+     *
+     * @param input A mapping from an input layer's name to a value
+     * @return The value in the map
+     */
+
+    private Object unmappedInput(Map<String, Object> input) {
+        return input.get(getIO().getInputs().get(0).getName());
+    }
+
+    /**
+     * Actually performs inference on a single input with a single output
+     * @param input An input in one of the supported types, e.g. byte[], float[], or Bitmap
+     * @return The model's single output mapped by the output layers name
+     * @throws TIOModelException
+     */
+
+    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
+
+        // Fetch the input and output layer descriptions from the model
+
+        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
+        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
+
+        // Prepare input buffer
+
+        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+
+        // Prepare output buffer
+
+        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
+
+        // Run the model on the input buffer, store the output in the output buffer
+
+        interpreter.run(inputBuffer, outputBuffer);
+
+        // Convert output buffers to user land objects
+
+        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
+        outputs.put(0, outputBuffer);
+
+        return captureOutputs(outputs);
+    }
+
+    /**
+     * Actually performs inference on multiple inputs or multiple outputs
+     * @param inputs A mapping from input layer names to input values
+     * @return The model's outputs mapped by the output layer names
+     * @throws TIOModelException
+     */
+
+    private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws TIOModelException {
 
         // Fetch the input and output layer descriptions from the model
 
@@ -155,34 +281,6 @@ public class TIOTFLiteModel extends TIOModel {
         return captureOutputs(outputBuffers);
     }
 
-    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
-        super.runOn(input);
-
-        // Fetch the input and output layer descriptions from the model
-
-        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
-        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
-
-        // Prepare input buffer
-
-        ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-
-        // Prepare output buffer
-
-        ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
-
-        // Run the model on the input buffer, store the output in the output buffer
-
-        interpreter.run(inputBuffer, outputBuffer);
-
-        // Convert output buffers to user land objects
-
-        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
-        outputs.put(0, outputBuffer);
-
-        return captureOutputs(outputs);
-    }
-
     /**
      * Prepares a ByteBuffer that will be used for input to a model.
      *
@@ -193,10 +291,8 @@ public class TIOTFLiteModel extends TIOModel {
      */
 
     private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
-        ByteBuffer inputBuffer = null;
-
-        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
         // Note we are not using the backing input buffer here but recreating it every time
+        ByteBuffer inputBuffer = null;
 
         if ( inputLayer instanceof TIOVectorLayerDescription ) {
             inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, null);
@@ -217,10 +313,8 @@ public class TIOTFLiteModel extends TIOModel {
      */
 
     private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
-        ByteBuffer outputBuffer = null;
-
-        // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
         // Note we are not using the backing output buffer here but recreating it every time
+        ByteBuffer outputBuffer = null;
 
         if ( outputLayer instanceof TIOVectorLayerDescription ) {
             outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
@@ -236,7 +330,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     /**
-     * Converts captured ByteBuffers to user land Objects
+     * Converts captured ByteBuffers from a model's output to user land Objects
      * @param outputs The indexed output buffers
      * @return A Map of keys to user land objects capturing the model's outputs
      */
@@ -248,34 +342,9 @@ public class TIOTFLiteModel extends TIOModel {
         for (int i = 0; i < outputList.size(); i++){
             TIOLayerDescription layer = outputList.get(i).getLayerDescription();
             String name = outputList.get(i).getName();
-            Object o = null;
 
-            // TODO: This is where a switch case with lambdas on the TIOLayerInterface is nice
-
-            if ( layer instanceof TIOVectorLayerDescription ) {
-                o = vectorDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
-            }
-            else if ( layer instanceof TIOPixelBufferLayerDescription ) {
-                o = pixelDataConverter.fromByteBuffer((ByteBuffer)outputs.get(i), layer);
-            }
-
-            // Perform any additional transformations on the captured output
-
-            if (layer instanceof TIOVectorLayerDescription) {
-                TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
-
-                // If the vector's output is labeled, return a Map of keys to values rather than raw values
-
-                if (vectorLayer.isLabeled()) {
-                    o = vectorLayer.labeledValues((float[])o);
-                }
-
-                // If the output vector is single valued, return the value directly; See #33 and #34
-
-                // if (((float[])o).length == 1) {
-                //    o = ((float[])o)[0];
-                // }
-            }
+            ByteBuffer buffer = (ByteBuffer)outputs.get(i);
+            Object o = captureOutput(buffer, layer);
 
             outputMap.put(name, o);
         }
@@ -283,27 +352,43 @@ public class TIOTFLiteModel extends TIOModel {
         return outputMap;
     }
 
-    @Override
-    public Map<String, Object> runOn(Object input) throws TIOModelException{
-        this.load();
-        super.runOn(input);
+    /**
+     * Converts a single ByteBuffer to a user land object
+     * @param buffer The buffer to capture and convert
+     * @param layer A layer describing the output
+     * @return An object in accordance with the layer description, usually one of byte[], float[],
+     * or Bitmap
+     */
 
-        int numInputs = getIO().getInputs().size();
-        int numOutputs = getIO().getOutputs().size();
+    private Object captureOutput(ByteBuffer buffer, TIOLayerDescription layer) {
+        Object o = null;
 
-        if (numInputs > 1) {
-            return runMultipleInputMultipleOutput((Map<String, Object>)input);
-        } else if (input instanceof Map) {
-            // TODO: The map could contains just a single value (#44)
-            return runMultipleInputMultipleOutput((Map<String, Object>)input);
-        } else if (numOutputs == 1) {
-            return runSingleInputSingleOutput(input);
-        } else {
-            Map<String, Object> inputMap = new HashMap<>();
-            TIOLayerInterface inputLayer = getIO().getInputs().get(0);
-            inputMap.put(inputLayer.getName(), input);
-            return runMultipleInputMultipleOutput(inputMap);
+        if ( layer instanceof TIOVectorLayerDescription ) {
+            o = vectorDataConverter.fromByteBuffer(buffer, layer);
         }
+        else if ( layer instanceof TIOPixelBufferLayerDescription ) {
+            o = pixelDataConverter.fromByteBuffer(buffer, layer);
+        }
+
+        // Perform any additional transformations on the captured output
+
+        if (layer instanceof TIOVectorLayerDescription) {
+            TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
+
+            // If the vector's output is labeled, return a Map of keys to values rather than raw values
+
+            if (vectorLayer.isLabeled()) {
+                o = vectorLayer.labeledValues((float[])o);
+            }
+
+            // If the output vector is single valued, return the value directly; See #33 and #34
+
+            // if (((float[])o).length == 1) {
+            //    o = ((float[])o)[0];
+            // }
+        }
+
+        return o;
     }
 
     //endRegion

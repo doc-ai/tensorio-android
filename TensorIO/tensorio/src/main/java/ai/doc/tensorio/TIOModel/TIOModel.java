@@ -21,6 +21,7 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 
 import java.util.Map;
@@ -289,33 +290,81 @@ public abstract class TIOModel {
 
     //region Run
 
+    // The run methods are the primary interface to a concrete implementation
+
     /**
-     * Performs inference on the provided input and returns the results. The primary interface to a
-     * conforming class.
+     * Perform inference on an array of floats for a single input layer.
+     * @param input an array of floats
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws TIOModelException
      */
 
-    public Map<String, Object> runOn(Object input) throws TIOModelException {
+    public abstract Map<String, Object> runOn(float[] input) throws TIOModelException;
 
-        if (input instanceof Map) {
-            Map<String, Object> inputMap = (Map<String, Object>) input;
-            if (io.getInputs().size() != inputMap.size()) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
-            }
+    /**
+     * Perform inference on an array of bytes for a single input layer.
+     * @param input an array of bytes
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws TIOModelException
+     */
 
-            if (!inputMap.keySet().equals(io.getInputs().keys())) {
-                for (TIOLayerInterface layer : io.getInputs().all()) {
-                    if (!inputMap.containsKey(layer.getName())) {
-                        throw new TIOModelException("The model received no input for layer \"" + layer.getName() + "\"");
-                    }
-                }
-            }
-        } else {
-            if (io.getInputs().size() != 1) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but only received one input");
-            }
+    public abstract Map<String, Object> runOn(byte[] input) throws TIOModelException;
+
+    /**
+     * Perform inference on a Bitmap for a single input layer.
+     * @param input A Bitmap
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(Bitmap input) throws TIOModelException;
+
+    /**
+     * Perform inference on an map of bytes
+     * @param input A mapping of layer names to arbitrary objects
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException;
+
+    //endRegion
+
+    //region Input Validation
+
+    protected void validateInput(float[] input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(byte[] input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(Bitmap input) throws TIOModelException {
+        if (io.getInputs().size() != 1) {
+            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(Map<String, Object> input) throws TIOModelException {
+        int expectedSize = io.getInputs().size();
+        int actualSize = input.size();
+
+        if (expectedSize != actualSize) {
+            throw TIOModelException.InputCountMismatchException(actualSize, expectedSize);
         }
 
-        return null;
+        if ( !input.keySet().equals(io.getInputs().keys()) ) {
+            for (TIOLayerInterface layer : io.getInputs().all()) {
+                if ( !input.containsKey(layer.getName()) ) {
+                    throw TIOModelException.MissingInput(layer.getName());
+                }
+            }
+        }
     }
 
     //endRegion
