@@ -22,6 +22,7 @@ package ai.doc.tensorio.TIOData;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -33,5 +34,77 @@ public class TIOPixelDenormalizerTest {
 
     @After
     public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void testPixelDenormalizerForDictionaryParsesStandardZeroToOne() {
+        TIOPixelDenormalizer denormalizer = TIOPixelDenormalizer.TIOPixelDenormalizerZeroToOne();
+        int epsilon = 1;
+
+        assertEquals(denormalizer.denormalize(0.0f, 0), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 1), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 2), 0, epsilon);
+
+        assertEquals(denormalizer.denormalize(0.5f, 0), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f, 1), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f, 2), 127, epsilon);
+
+        assertEquals(denormalizer.denormalize(1.0f, 0), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 1), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 2), 255, epsilon);
+    }
+
+    @Test
+    public void testPixelDenormalizerForDictionaryParsesStandardNegativeOneToOne() {
+        TIOPixelDenormalizer denormalizer = TIOPixelDenormalizer.TIOPixelDenormalizerNegativeOneToOne();
+        int epsilon = 1;
+
+        assertEquals(denormalizer.denormalize(-1.0f, 0), 0, epsilon);
+        assertEquals(denormalizer.denormalize(-1.0f, 1), 0, epsilon);
+        assertEquals(denormalizer.denormalize(-1.0f, 2), 0, epsilon);
+
+        assertEquals(denormalizer.denormalize(0.0f, 0), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 1), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 2), 127, epsilon);
+
+        assertEquals(denormalizer.denormalize(1.0f, 0), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 1), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 2), 255, epsilon);
+    }
+
+    @Test
+    public void testPixelDenormalizerForDictionaryParsesScaleAndSameBiases() {
+        TIOPixelDenormalizer denormalizer = TIOPixelDenormalizer.TIOPixelDenormalizerSingleBias(255.0f, 0.0f);
+        int epsilon = 1;
+
+        assertEquals(denormalizer.denormalize(0.0f, 0), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 1), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f, 2), 0, epsilon);
+
+        assertEquals(denormalizer.denormalize(0.5f, 0), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f, 1), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f, 2), 127, epsilon);
+
+        assertEquals(denormalizer.denormalize(1.0f, 0), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 1), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f, 2), 255, epsilon);
+    }
+
+    @Test
+    public void testPixelDenormalizerForDictionaryParsesScaleAndDifferenceBiases() {
+        TIOPixelDenormalizer denormalizer = TIOPixelDenormalizer.TIOPixelDenormalizerPerChannelBias(255.0f, -0.1f, -0.2f, -0.3f);
+        int epsilon = 1;
+
+        assertEquals(denormalizer.denormalize(0.0f + 0.1f, 0), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f + 0.2f, 1), 0, epsilon);
+        assertEquals(denormalizer.denormalize(0.0f + 0.3f, 2), 0, epsilon);
+
+        assertEquals(denormalizer.denormalize(0.5f + 0.1f, 0), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f + 0.2f, 1), 127, epsilon);
+        assertEquals(denormalizer.denormalize(0.5f + 0.3f, 2), 127, epsilon);
+        
+        assertEquals(denormalizer.denormalize(1.0f + 0.1f, 0), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f + 0.2f, 1), 255, epsilon);
+        assertEquals(denormalizer.denormalize(1.0f + 0.3f, 2), 255, epsilon);
     }
 }

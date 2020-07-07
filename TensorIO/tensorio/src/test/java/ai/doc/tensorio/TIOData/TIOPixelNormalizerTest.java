@@ -22,6 +22,7 @@ package ai.doc.tensorio.TIOData;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -33,5 +34,77 @@ public class TIOPixelNormalizerTest {
 
     @After
     public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void testPixelNormalizerStandardZeroToOne() {
+        TIOPixelNormalizer normalizer = TIOPixelNormalizer.TIOPixelNormalizerZeroToOne();
+        float epsilon = 0.01f;
+
+        assertEquals(normalizer.normalize(0, 0), 0.0, epsilon);
+        assertEquals(normalizer.normalize(0, 1), 0.0, epsilon);
+        assertEquals(normalizer.normalize(0, 2), 0.0, epsilon);
+
+        assertEquals(normalizer.normalize(127, 0), 0.5, epsilon);
+        assertEquals(normalizer.normalize(127, 1), 0.5, epsilon);
+        assertEquals(normalizer.normalize(127, 2), 0.5, epsilon);
+
+        assertEquals(normalizer.normalize(255, 0), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 1), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 2), 1.0, epsilon);
+    }
+
+    @Test
+    public void testPixelNormalizerStandardNegativeOneToOne() {
+        TIOPixelNormalizer normalizer = TIOPixelNormalizer.TIOPixelNormalizerNegativeOneToOne();
+        float epsilon = 0.01f;
+
+        assertEquals(normalizer.normalize(0, 0), -1.0, epsilon);
+        assertEquals(normalizer.normalize(0, 1), -1.0, epsilon);
+        assertEquals(normalizer.normalize(0, 2), -1.0, epsilon);
+
+        assertEquals(normalizer.normalize(127, 0), 0.0, epsilon);
+        assertEquals(normalizer.normalize(127, 1), 0.0, epsilon);
+        assertEquals(normalizer.normalize(127, 2), 0.0, epsilon);
+
+        assertEquals(normalizer.normalize(255, 0), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 1), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 2), 1.0, epsilon);
+    }
+
+    @Test
+    public void testPixelNormalizerScaleAndSameBiases() {
+        TIOPixelNormalizer normalizer = TIOPixelNormalizer.TIOPixelNormalizerSingleBias(1.0f / 255.0f, 0.0f);
+        float epsilon = 0.01f;
+
+        assertEquals(normalizer.normalize(0, 0), 0.0, epsilon);
+        assertEquals(normalizer.normalize(0, 1), 0.0, epsilon);
+        assertEquals(normalizer.normalize(0, 2), 0.0, epsilon);
+
+        assertEquals(normalizer.normalize(127, 0), 0.5, epsilon);
+        assertEquals(normalizer.normalize(127, 1), 0.5, epsilon);
+        assertEquals(normalizer.normalize(127, 2), 0.5, epsilon);
+
+        assertEquals(normalizer.normalize(255, 0), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 1), 1.0, epsilon);
+        assertEquals(normalizer.normalize(255, 2), 1.0, epsilon);
+    }
+
+    @Test
+    public void testPixelNormalizerScaleAndDifferenceBiases() {
+        TIOPixelNormalizer normalizer = TIOPixelNormalizer.TIOPixelNormalizerPerChannelBias(1.0f / 255.0f, 0.1f, 0.2f, 0.3f);
+        float epsilon = 0.01f;
+
+        assertEquals(normalizer.normalize(0, 0), 0.0 + 0.1, epsilon);
+        assertEquals(normalizer.normalize(0, 1), 0.0 + 0.2, epsilon);
+        assertEquals(normalizer.normalize(0, 2), 0.0 + 0.3, epsilon);
+
+        assertEquals(normalizer.normalize(127, 0), 0.5 + 0.1, epsilon);
+        assertEquals(normalizer.normalize(127, 1), 0.5 + 0.2, epsilon);
+        assertEquals(normalizer.normalize(127, 2), 0.5 + 0.3, epsilon);
+
+        assertEquals(normalizer.normalize(255, 0), 1.0 + 0.1, epsilon);
+        assertEquals(normalizer.normalize(255, 1), 1.0 + 0.2, epsilon);
+        assertEquals(normalizer.normalize(255, 2), 1.0 + 0.3, epsilon);
     }
 }

@@ -22,7 +22,9 @@ package ai.doc.tensorio.TIOData;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.*;
 
 public class TIODataQuantizerTest {
@@ -33,5 +35,35 @@ public class TIODataQuantizerTest {
 
     @After
     public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void testDataQuantizerStandardZeroToOne() {
+        TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerZeroToOne();
+        int epsilon = 1;
+
+        assertEquals(0, quantizer.quantize(0));
+        assertEquals(255, quantizer.quantize(1));
+        assertEquals(quantizer.quantize(0.5f), 127, epsilon);
+    }
+
+    @Test
+    public void testDataQuantizerStandardNegativeOneToOne() {
+        TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerNegativeOneToOne();
+        int epsilon = 1;
+
+        assertEquals(0, quantizer.quantize(-1));
+        assertEquals(255, quantizer.quantize(1));
+        assertEquals(quantizer.quantize(0), 127, epsilon);
+    }
+
+    @Test
+    public void testDataQuantizerScaleAndBias() {
+        TIODataQuantizer quantizer = TIODataQuantizer.TIODataQuantizerWithQuantization(255.0f, 0.0f);
+        int epsilon = 1;
+
+        assertEquals(0, quantizer.quantize(0));
+        assertEquals(255, quantizer.quantize(1));
+        assertEquals(quantizer.quantize(0.5f), 127, epsilon);
     }
 }
