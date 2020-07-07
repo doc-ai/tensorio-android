@@ -20,14 +20,11 @@
 
 package ai.doc.tensorio.TIOLayerInterface;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
-import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
-import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 
 /**
  * The description of a vector (array) input or output later.
@@ -66,13 +63,6 @@ import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     private final int[] shape;
-
-    /**
-     * The buffer is responsible for converting data between the model and userland and for providing
-     * a backing buffer to the model.
-     */
-
-    TIOTFLiteDataConverter converter;
 
     /**
      * The length of the vector in terms of its number of elements.
@@ -131,9 +121,6 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.quantized = quantized;
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
-
-        // TODO: Hardcoded to TFLite
-        this.converter = new TIOTFLiteVectorDataConverter(this);
     }
 
     //region Getters and Setters
@@ -156,25 +143,6 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     public TIODataDequantizer getDequantizer() {
         return dequantizer;
-    }
-
-    //endRegion
-
-    //region Buffer Forwarding
-
-    @Override
-    public ByteBuffer toByteBuffer(Object o) {
-        return converter.toByteBuffer(o, this, converter.getBackingByteBuffer());
-    }
-
-    @Override
-    public Object fromByteBuffer(ByteBuffer byteBuffer) {
-        return converter.fromByteBuffer(byteBuffer, this);
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return converter.getBackingByteBuffer();
     }
 
     //endRegion
