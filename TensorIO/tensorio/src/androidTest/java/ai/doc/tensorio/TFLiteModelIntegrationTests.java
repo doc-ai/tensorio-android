@@ -101,7 +101,7 @@ public class TFLiteModelIntegrationTests {
 
             // Run the model on a dictionary
 
-            Map<String, float[]> input_dict = new HashMap<>();
+            Map<String, Object> input_dict = new HashMap<>();
             input_dict.put("input", new float[]{2});
 
             output = model.runOn(input_dict);
@@ -163,7 +163,7 @@ public class TFLiteModelIntegrationTests {
 
             // Run the model on a dictionary
 
-            Map<String, float[]> input_dict = new HashMap<>();
+            Map<String, Object> input_dict = new HashMap<>();
             input_dict.put("input", input);
 
             output = model.runOn(input_dict);
@@ -214,7 +214,7 @@ public class TFLiteModelIntegrationTests {
             assertEquals(2, model.getIO().getInputs().size());
             assertEquals(2, model.getIO().getOutputs().size());
 
-            Map<String, float[]> inputs = new HashMap<>();
+            Map<String, Object> inputs = new HashMap<>();
             inputs.put("input1", new float[]{1, 2, 3, 4});
             inputs.put("input2", new float[]{10, 20, 30, 40});
 
@@ -308,7 +308,7 @@ public class TFLiteModelIntegrationTests {
                     5000, 6000, 7000, 8000
             };
 
-            Map<String, float[]> inputs = new HashMap<>();
+            Map<String, Object> inputs = new HashMap<>();
             inputs.put("input1", input1);
             inputs.put("input2", input2);
 

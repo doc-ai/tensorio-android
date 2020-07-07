@@ -22,6 +22,7 @@ package ai.doc.tensorio.TIOTFLiteModel;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.experimental.GpuDelegate;
@@ -116,37 +117,99 @@ public class TIOTFLiteModel extends TIOModel {
     //region Run
 
     @Override
-    public Map<String, Object> runOn(Object input) throws TIOModelException{
-        this.load();
-        super.runOn(input);
+    public Map<String, Object> runOn(float[] input) throws TIOModelException {
+        validateInput(input);
+        load();
 
-        int numInputs = getIO().getInputs().size();
-        int numOutputs = getIO().getOutputs().size();
-
-        if (numInputs > 1 || numOutputs > 1) {
-            // Always run multiple inputs|outputs but convert input to map if necessary
-            Map<String, Object> inputMap = null;
-            if (input instanceof Map) {
-                inputMap = (Map<String, Object>)input;
-            } else {
-                inputMap = new HashMap<String, Object>();
-                inputMap.put(getIO().getInputs().get(0).getName(), input);
-            }
-            return runMultipleInputMultipleOutput(inputMap);
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
         } else {
-            // Always run single input|output but convert map to single value if necessary
-            Object inputObject = null;
-            if (input instanceof Map) {
-                inputObject = ((Map<String, Object>)input).get(getIO().getInputs().get(0).getName());
-            } else {
-                inputObject = input;
-            }
-            return runSingleInputSingleOutput(inputObject);
+            return runSingleInputSingleOutput(input);
         }
     }
 
+    @Override
+    public Map<String, Object> runOn(byte[] input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
+    }
+
+    @Override
+    public Map<String, Object> runOn(Bitmap input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
+    }
+
+    @Override
+    public Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException {
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(input);
+        } else {
+            return runSingleInputSingleOutput(unmappedInput(input));
+        }
+    }
+
+    /**
+     * @return yes if models has either of more than one input or output, false otherwise
+     */
+
+    private boolean hasMultipleInputsOrOutputs() {
+        return getIO().getInputs().size() > 0 || getIO().getOutputs().size() > 0;
+    }
+
+    /**
+     * Converts a single input to a mapped input using the single input layer's name.
+     *
+     * Used to convert a single input to a map when a model has multiple outputs.
+     * Check that the model only has a single input before calling this method.
+     *
+     * @param input One of the supported input types, e.g. byte[], float[], or Bitmap
+     * @return A map from the input layer's name to the input
+     */
+
+    private Map<String, Object> mappedInput(Object input) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(getIO().getInputs().get(0).getName(), input);
+        return map;
+    }
+
+    /**
+     * Extracts the value from a mapped input using the single input layer's name.
+     *
+     * Used to convert a mapped input to its raw value when a model has a single output.
+     * Check that the model only has a single input before calling this method.
+     *
+     * @param input A mapping from an input layer's name to a value
+     * @return The value in the map
+     */
+
+    private Object unmappedInput(Map<String, Object> input) {
+        return input.get(getIO().getInputs().get(0).getName());
+    }
+
+    /**
+     * Actually performs inference on a single input with a single output
+     * @param input An input in one of the supported types, e.g. byte[], float[], or Bitmap
+     * @return The model's single output mapped by the output layers name
+     * @throws TIOModelException
+     */
+
     private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
-        super.runOn(input);
 
         // Fetch the input and output layer descriptions from the model
 
@@ -173,8 +236,14 @@ public class TIOTFLiteModel extends TIOModel {
         return captureOutputs(outputs);
     }
 
+    /**
+     * Actually performs inference on multiple inputs or multiple outputs
+     * @param inputs A mapping from input layer names to input values
+     * @return The model's outputs mapped by the output layer names
+     * @throws TIOModelException
+     */
+
     private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws TIOModelException {
-        super.runOn(inputs);
 
         // Fetch the input and output layer descriptions from the model
 

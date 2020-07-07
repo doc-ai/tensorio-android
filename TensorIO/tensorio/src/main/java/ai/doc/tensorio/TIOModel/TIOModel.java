@@ -21,6 +21,7 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 
 import java.util.Map;
@@ -287,15 +288,9 @@ public abstract class TIOModel {
 
     //endRegion
 
-    //region Run
+    //region Input Validation
 
-    /**
-     * Performs inference on the provided input and returns the results. The primary interface to a
-     * conforming class.
-     */
-
-    public Map<String, Object> runOn(Object input) throws TIOModelException {
-
+    protected void validateInput(Object input) throws TIOModelException {
         if (input instanceof Map) {
             Map<String, Object> inputMap = (Map<String, Object>) input;
             if (io.getInputs().size() != inputMap.size()) {
@@ -314,9 +309,49 @@ public abstract class TIOModel {
                 throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
             }
         }
-
-        return null;
     }
+
+    //endRegion
+
+    //region Run
+
+    // The run methods are the primary interface to a concrete implementation
+
+    /**
+     * Perform inference on an array of floats for a single input layer.
+     * @param input
+     * @return
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(float[] input) throws TIOModelException;
+
+    /**
+     * Perform inference on an array of bytes for a single input layer.
+     * @param input
+     * @return
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(byte[] input) throws TIOModelException;
+
+    /**
+     * Perform inference on a Bitmap for a single input layer.
+     * @param input
+     * @return
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(Bitmap input) throws TIOModelException;
+
+    /**
+     * Perform inference on an map of bytes
+     * @param input
+     * @return
+     * @throws TIOModelException
+     */
+
+    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException;
 
     //endRegion
 
