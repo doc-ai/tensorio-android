@@ -57,6 +57,6 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-gpu-experimental'
 
     // JSON Schema validator library dependencies
-    implementation 'com.github.java-json-tools:json-schema-validator:2.2.10'
+    implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
     implementation 'io.apisense:rhino-android:1.0'
 }
