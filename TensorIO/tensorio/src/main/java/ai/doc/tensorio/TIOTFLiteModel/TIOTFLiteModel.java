@@ -77,25 +77,37 @@ public class TIOTFLiteModel extends TIOModel {
 
     @Override
     public void load() throws TIOModelException {
+        if (isLoaded()) {
+            return;
+        }
+
         try {
             tfliteModel = loadModelFile(getContext(), getBundle().getModelFilePath());
         } catch (IOException e) {
             throw new TIOModelException("Error loading model file", e);
         }
+
         interpreter = new Interpreter(tfliteModel);
+
         super.load();
     }
 
     @Override
     public void unload() {
+        if (!isLoaded()) {
+            return;
+        }
+
         if (interpreter != null ) {
             interpreter.close();
             this.interpreter = null;
         }
+
         if (this.gpuDelegate != null) {
             this.gpuDelegate.close();
             this.gpuDelegate = null;
         }
+
         super.unload();
     }
 
@@ -273,6 +285,7 @@ public class TIOTFLiteModel extends TIOModel {
 
     @Override
     public Map<String, Object> runOn(Object input) throws TIOModelException{
+        this.load();
         super.runOn(input);
 
         int numInputs = getIO().getInputs().size();
@@ -280,19 +293,16 @@ public class TIOTFLiteModel extends TIOModel {
 
         if (numInputs > 1) {
             return runMultipleInputMultipleOutput((Map<String, Object>)input);
+        } else if (input instanceof Map) {
+            // TODO: The map could contains just a single value (#44)
+            return runMultipleInputMultipleOutput((Map<String, Object>)input);
+        } else if (numOutputs == 1) {
+            return runSingleInputSingleOutput(input);
         } else {
-            if (input instanceof Map) {
-                return runMultipleInputMultipleOutput((Map<String, Object>)input);
-            } else {
-                if (numOutputs == 1) {
-                    return runSingleInputSingleOutput(input);
-                } else {
-                    Map<String, Object> inputMap = new HashMap<>();
-                    TIOLayerInterface inputLayer = getIO().getInputs().get(0);
-                    inputMap.put(inputLayer.getName(), input);
-                    return runMultipleInputMultipleOutput(inputMap);
-                }
-            }
+            Map<String, Object> inputMap = new HashMap<>();
+            TIOLayerInterface inputLayer = getIO().getInputs().get(0);
+            inputMap.put(inputLayer.getName(), input);
+            return runMultipleInputMultipleOutput(inputMap);
         }
     }
 
