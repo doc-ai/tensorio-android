@@ -45,7 +45,7 @@ import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
 import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
+import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
 
 import static org.junit.Assert.assertArrayEquals;

@@ -18,11 +18,10 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOTensorflowLiteModel;
+package ai.doc.tensorio.TIOTFLiteModel;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
-import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.experimental.GpuDelegate;
@@ -33,7 +32,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;

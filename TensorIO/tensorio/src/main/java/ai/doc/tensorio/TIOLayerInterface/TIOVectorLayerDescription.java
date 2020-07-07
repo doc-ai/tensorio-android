@@ -26,8 +26,8 @@ import java.util.Map;
 
 import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteDataConverter;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteVectorBuffer;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 
 /**
  * The description of a vector (array) input or output later.
@@ -133,7 +133,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.dequantizer = dequantizer;
 
         // TODO: Hardcoded to TFLite
-        this.converter = new TIOTFLiteVectorBuffer(this);
+        this.converter = new TIOTFLiteVectorDataConverter(this);
     }
 
     //region Getters and Setters

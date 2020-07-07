@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOTensorflowLiteModel;
+package ai.doc.tensorio.TIOTFLiteData;
 
 import java.nio.ByteBuffer;
 

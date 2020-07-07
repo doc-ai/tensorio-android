@@ -1,5 +1,5 @@
 /*
- * TIOTFLiteVectorBuffer.java
+ * TIOTFLiteVectorDataConverter.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOTensorflowLiteModel;
+package ai.doc.tensorio.TIOTFLiteData;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -29,8 +29,9 @@ import ai.doc.tensorio.TIOData.TIODataDequantizer;
 import ai.doc.tensorio.TIOData.TIODataQuantizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
 
-public class TIOTFLiteVectorBuffer implements TIODataConverter, TIOTFLiteDataConverter {
+public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
     /**
      * Backing buffer
@@ -38,7 +39,7 @@ public class TIOTFLiteVectorBuffer implements TIODataConverter, TIOTFLiteDataCon
 
     private ByteBuffer buffer;
 
-    public TIOTFLiteVectorBuffer(TIOVectorLayerDescription description) {
+    public TIOTFLiteVectorDataConverter(TIOVectorLayerDescription description) {
         boolean quantized = description.isQuantized();
         int length = description.getLength();
 

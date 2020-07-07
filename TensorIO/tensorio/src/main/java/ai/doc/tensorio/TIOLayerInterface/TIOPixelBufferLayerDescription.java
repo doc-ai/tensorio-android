@@ -28,8 +28,8 @@ import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteDataConverter;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLitePixelBuffer;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
 
 /**
  * The description of a pixel buffer input or output layer.
@@ -94,7 +94,7 @@ public class TIOPixelBufferLayerDescription extends TIOLayerDescription {
         this.quantized = quantized;
 
         // TODO: Hardcoded to TFLite
-        this.converter = new TIOTFLitePixelBuffer(this);
+        this.converter = new TIOTFLitePixelDataConverter(this);
     }
 
     //region Getters and Setters

@@ -1,5 +1,5 @@
 /*
- * TIOTFLitePixelBuffer.java
+ * TIOTFLitePixelDataConverter.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOTensorflowLiteModel;
+package ai.doc.tensorio.TIOTFLiteData;
 
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
@@ -32,8 +32,9 @@ import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteDataConverter;
 
-public class TIOTFLitePixelBuffer implements TIODataConverter, TIOTFLiteDataConverter {
+public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
     /**
      * Backing buffer
@@ -41,7 +42,7 @@ public class TIOTFLitePixelBuffer implements TIODataConverter, TIOTFLiteDataConv
 
     private ByteBuffer buffer;
 
-    public TIOTFLitePixelBuffer(TIOPixelBufferLayerDescription description) {
+    public TIOTFLitePixelDataConverter(TIOPixelBufferLayerDescription description) {
         boolean quantized = description.isQuantized();
         TIOImageVolume shape = description.getShape();
 
