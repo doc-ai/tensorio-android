@@ -299,19 +299,19 @@ public abstract class TIOModel {
         if (input instanceof Map) {
             Map<String, Object> inputMap = (Map<String, Object>) input;
             if (io.getInputs().size() != inputMap.size()) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but received " + inputMap.size() + " inputs");
+                throw TIOModelException.InputCountMismatchException(inputMap.size(), io.getInputs().size());
             }
 
             if (!inputMap.keySet().equals(io.getInputs().keys())) {
                 for (TIOLayerInterface layer : io.getInputs().all()) {
                     if (!inputMap.containsKey(layer.getName())) {
-                        throw new TIOModelException("The model received no input for layer \"" + layer.getName() + "\"");
+                        throw TIOModelException.MissingInput(layer.getName());
                     }
                 }
             }
         } else {
             if (io.getInputs().size() != 1) {
-                throw new TIOModelException("The model has " + io.getInputs().size() + " input layers but only received one input");
+                throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
             }
         }
 
