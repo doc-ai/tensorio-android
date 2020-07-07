@@ -41,19 +41,32 @@ import ai.doc.tensorio.TIOModel.TIOModel;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 
 // TODO: Have the TFLite model hold onto the long lived buffer data converters itself and pass layer descriptions to them as needed
 
 public class TIOTFLiteModel extends TIOModel {
 
+    // TFLite Backend
+
     private Interpreter interpreter;
     private MappedByteBuffer tfliteModel;
     private GpuDelegate gpuDelegate = null;
+
+    // TFLite Backend Options
 
     private int numThreads = 1;
     private boolean useGPU = false;
     private boolean useNNAPI = false;
     private boolean use16bit = false;
+
+    // Data Converters
+
+    final private TIOTFLiteVectorDataConverter vectorDataConverter = new TIOTFLiteVectorDataConverter();
+    final private TIOTFLitePixelDataConverter pixelDataConverter = new TIOTFLitePixelDataConverter();
+
+    // Constructor
 
     public TIOTFLiteModel(Context context, TIOModelBundle bundle) {
         super(context, bundle);
@@ -150,7 +163,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Convert output buffers to user land objects
 
-        Map<Integer, Object> outputs = new HashMap<>(getIO().getOutputs().size()); // Always size 1
+        Map<Integer, Object> outputs = new HashMap<Integer, Object>(getIO().getOutputs().size()); // Always size 1
         outputs.put(0, outputBuffer);
 
         return captureOutputs(outputs);

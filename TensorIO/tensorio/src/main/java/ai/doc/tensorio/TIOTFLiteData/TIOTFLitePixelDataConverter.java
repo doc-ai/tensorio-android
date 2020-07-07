@@ -42,19 +42,29 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
     private ByteBuffer _buffer;
 
+    public TIOTFLitePixelDataConverter() {}
+
     public TIOTFLitePixelDataConverter(TIOPixelBufferLayerDescription description) {
+        _buffer = createBackingBuffer(description);
+    }
+
+    public ByteBuffer createBackingBuffer(TIOPixelBufferLayerDescription description) {
+        ByteBuffer buffer;
+
         boolean quantized = description.isQuantized();
         TIOImageVolume shape = description.getShape();
 
         if (quantized) {
             // Layer expects bytes
-            _buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels);
+            buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels);
         } else {
             // Layer expects floats
-            _buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels * 4);
+            buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels * 4);
         }
 
-        _buffer.order(ByteOrder.nativeOrder());
+        buffer.order(ByteOrder.nativeOrder());
+
+        return buffer;
     }
 
     //region Utilities
@@ -98,7 +108,9 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     // endRegion
 
     @Override
-    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description) {
+    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
+
         TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
         TIOImageVolume shape = pixelBufferLayerDescription.getShape();
         boolean quantized = pixelBufferLayerDescription.isQuantized();
@@ -117,7 +129,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 
-        _buffer.rewind();
+        buffer.rewind();
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight()); // Returns ARGB pixels
 
         // Convert the image to floating point
@@ -128,13 +140,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         for (int i = 0; i < bitmap.getWidth(); ++i) {
             for (int j = 0; j < bitmap.getHeight(); ++j) {
                 final int val = intValues[pixel++];
-                intPixelToFloat(val, _buffer, quantized, normalizer);
+                intPixelToFloat(val, buffer, quantized, normalizer);
             }
         }
 
         intValues = null;
 
-        return _buffer;
+        return buffer;
     }
 
     @Override
