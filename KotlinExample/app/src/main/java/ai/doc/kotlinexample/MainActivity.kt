@@ -1,7 +1,7 @@
 package ai.doc.kotlinexample
 
+import ai.doc.tensorio.TIOModel.TIOModelBundle
 import ai.doc.tensorio.TIOModel.TIOModelBundleException
-import ai.doc.tensorio.TIOModel.TIOModelBundleManager
 import ai.doc.tensorio.TIOModel.TIOModelException
 import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper
 import android.graphics.Bitmap
@@ -22,21 +22,24 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         try {
-            val manager = TIOModelBundleManager(applicationContext, "")
+            // Load the Model
 
-            // load the model
-            val bundle = manager.bundleWithId("mobilenet-v2-100-224-unquantized")
+            val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tfbundle")
             val model = bundle.newModel()
 
-            // Load the image
+            // Load the Image
+
             val bitmap = assets.open("picture2.jpg")
             val bMap = BitmapFactory.decodeStream(bitmap)
             val scaled = Bitmap.createScaledBitmap(bMap, 224, 224, false)
 
-            // Create a background thread
+            // Create a Background Thread
+
             val mHandlerThread = HandlerThread("HandlerThread")
             mHandlerThread.start()
             val mHandler = Handler(mHandlerThread.looper)
+
+            // Execute the Model
 
             mHandler.post {
                 try {
@@ -56,6 +59,5 @@ class MainActivity : AppCompatActivity() {
         } catch (e: TIOModelBundleException) {
             e.printStackTrace()
         }
-
     }
 }
