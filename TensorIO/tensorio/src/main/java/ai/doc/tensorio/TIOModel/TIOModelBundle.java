@@ -61,6 +61,18 @@ public class TIOModelBundle {
     private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
 
     /**
+     * The directory extension for TF bundles, considered deprecated, using .tiobundle instead
+     */
+
+    public static final String TF_BUNDLE_EXTENSION = ".tfbundle";
+
+    /**
+     * The directory extension for TIO bundles
+     */
+
+    public static final String TIO_BUNDLE_EXTENSION = ".tiobundle";
+
+    /**
      * The application or activity context
      */
 

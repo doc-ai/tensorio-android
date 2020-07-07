@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Load the Model
 
-            TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tfbundle");
+            TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
 
             // Load the Test Image
