@@ -47,16 +47,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:support-annotations:+'
-
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'org.json:json:20190722'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
     // Tensorflow dependency
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-gpu-experimental'
-
     // JSON Schema validator library dependencies
     implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
     implementation 'io.apisense:rhino-android:1.0'
+
+    testImplementation 'junit:junit:4.13'
+    testImplementation 'org.json:json:20190722'
+
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
