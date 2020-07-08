@@ -31,6 +31,7 @@
         android:paddingTop="12dp"
         android:paddingEnd="12dp"
         android:paddingBottom="12dp"
+        android:minHeight="96dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
