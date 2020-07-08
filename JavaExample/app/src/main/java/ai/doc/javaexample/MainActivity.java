@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Map<String,Object> output = model.runOn(scaled);
                     Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-                    List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+                    List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5, 0.1f);
 
                     for (Map.Entry<String, Float> entry : top5) {
                         Log.i(TAG, entry.getKey() + ":" + entry.getValue());

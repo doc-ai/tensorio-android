@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val output = model.runOn(scaled)
                     val classification = output.get("classification") as MutableMap<String, Float>
-                    val top5 = TIOClassificationHelper.topN(classification, 5)
+                    val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
 
                     for (entry in top5) {
                         Log.i(TAG, entry.key + ":" + entry.value)
