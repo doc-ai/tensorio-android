@@ -2,11 +2,15 @@ package ai.doc.javaexample;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +25,7 @@ import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
 
 public class MainActivity extends AppCompatActivity {
 
+    private Handler main = new Handler(Looper.getMainLooper());
     private String TAG = "MainActivity";
 
     @Override
@@ -36,9 +41,14 @@ public class MainActivity extends AppCompatActivity {
 
             // Load the Test Image
 
-            InputStream bitmap = getAssets().open("picture2.jpg");
-            Bitmap bMap = BitmapFactory.decodeStream(bitmap);
-            final Bitmap scaled = Bitmap.createScaledBitmap(bMap, 224, 224, false);
+            InputStream stream = getAssets().open("picture2.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+            final Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
+
+            ImageView imageView = findViewById(R.id.imageView);
+            imageView.setImageBitmap(bitmap);
+
+            stream.close();
 
             // Create a Background Thread
 
@@ -57,6 +67,12 @@ public class MainActivity extends AppCompatActivity {
                     for (Map.Entry<String, Float> entry : top5) {
                         Log.i(TAG, entry.getKey() + ":" + entry.getValue());
                     }
+
+                    main.post( () -> {
+                        TextView textView = findViewById(R.id.textView);
+                        textView.setText(formattedResults(top5));
+                    });
+
                 } catch (TIOModelException e) {
                     e.printStackTrace();
                 }
@@ -65,5 +81,20 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException | TIOModelBundleException e) {
             e.printStackTrace();
         }
+    }
+
+    private String formattedResults(List<Map.Entry<String, Float>> results) {
+        StringBuilder b = new StringBuilder();
+
+        for (Map.Entry<String, Float> entry : results) {
+            b.append(entry.getKey());
+            b.append(": ");
+            b.append(entry.getValue());
+            b.append("\n");
+        }
+
+        b.setLength(b.length() - 1);
+
+        return b.toString();
     }
 }
