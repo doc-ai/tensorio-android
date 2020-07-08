@@ -31,8 +31,6 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.docai.javaexample.R;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -62,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Load the Test Image
 
-            InputStream stream = getAssets().open("picture2.jpg");
+            InputStream stream = getAssets().open("elephant.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
             final Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
 

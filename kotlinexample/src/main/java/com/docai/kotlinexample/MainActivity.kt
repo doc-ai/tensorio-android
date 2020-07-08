@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
             // Load the Image
 
-            val stream = assets.open("picture2.jpg")
+            val stream = assets.open("elephant.jpg")
             val bitmap = BitmapFactory.decodeStream(stream)
             val scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false)
 
