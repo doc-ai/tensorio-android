@@ -31,8 +31,6 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.docai.javaexample.R;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
