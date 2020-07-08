@@ -1,14 +1,16 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 28
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 28
-        versionCode 3
-        versionName "0.9.1"
+        versionCode 4
+        versionName "0.9.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -17,8 +19,7 @@ android {
         debug{}
         innerTest{}
     }
-
-
+    
     aaptOptions {
         noCompress "tflite"
     }
