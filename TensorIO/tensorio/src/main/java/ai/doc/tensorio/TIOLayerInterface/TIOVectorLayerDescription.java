@@ -1,8 +1,25 @@
+/*
+ * TIOVectorLayerDescription.java
+ * TensorIO
+ *
+ * Created by Philip Dow on 7/6/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.doc.tensorio.TIOLayerInterface;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,38 +28,41 @@ import ai.doc.tensorio.TIOData.TIODataQuantizer;
 
 /**
  * The description of a vector (array) input or output later.
- * <p>
+ *
  * Vector inputs and outputs are always unrolled vectors, and from the tensor's perspective they are
  * just an array of bytes. The total length of a vector will be the total volume of the layer.
  * For example, if an input layer is a tensor of shape `(24,24,2)`, the length of the vector will be
  * `24x24x2 = 1152`.
- * <p>
- * TensorFlow Lite models expect row major ordering of bytes, such that higher order dimensions are
- * traversed first. For example, a 2x4 matrix with the following values:
  *
- * <pre>
+ * TensorFlow and TensorFlow Lite models expect row major ordering of bytes,
+ * such that higher order dimensions are traversed first. For example, a 2x4 matrix
+ * with the following values:
+ *
+ * @code
  * [[1 2 3 4]
- * [5 6 7 8]]
- * </pre>
- * <p>
- * <p>
+ *  [5 6 7 8]]
+ * @endcode
+ *
  * should be unrolled and provided to the model as:
  *
- * <pre>
+ * @code
  * [1 2 3 4 5 6 7 8]
- * </pre>
- * <p>
+ * @endcode
+ *
  * i.e, start with the row and traverse the columns before moving to the next row.
- * <p>
+ *
  * Because output layers are also exposed as an array of bytes, a `TIOTFLiteModel` will always return
  * a vector in one dimension. If is up to you to reshape it if required.
- * <p>
+ *
+ * @warning
+ * A `TIOVectorLayerDescription`'s length is different than the byte length of a `TIOData` object.
+ * For example a quantized `TIOVector` (uint8_t) of length 4 will occupy 4 bytes of memory but an
+ * unquantized `TIOVector` (float_t) of length 4 will occupy 16 bytes of memory.
  */
 
 public class TIOVectorLayerDescription extends TIOLayerDescription {
 
     private final int[] shape;
-    private ByteBuffer buffer;
 
     /**
      * The length of the vector in terms of its number of elements.
@@ -51,19 +71,19 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
     private int length;
 
     /**
-     * Indexed labels corresponding to the indexed output of a layer. May be `nil`.
-     * <p>
+     * true if there are labels associated with this layer, false otherwise.
+     */
+
+    private boolean labeled;
+
+    /**
+     * Indexed labels corresponding to the indexed output of a layer. May be null.
+     *
      * Labeling the output of a model is such a common operation that support for it is included
      * by default.
      */
 
     private String[] labels;
-
-    /**
-     * `YES` if there are labels associated with this layer, `NO` otherwise.
-     */
-
-    private boolean labeled;
 
     /**
      * A function that converts a vector from unquantized values to quantized values
@@ -101,16 +121,9 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         this.quantized = quantized;
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
-
-        if (quantized){
-            this.buffer = ByteBuffer.allocate(length);
-        }
-        else{
-            this.buffer = ByteBuffer.allocate(length*4);
-        }
-        this.buffer.order(ByteOrder.nativeOrder());
-
     }
+
+    //region Getters and Setters
 
     public int getLength() {
         return length;
@@ -132,80 +145,7 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
         return dequantizer;
     }
 
-    @Override
-    public ByteBuffer toByteBuffer(Object o) {
-        buffer.rewind();
-        if (o instanceof float[]){
-            if (quantized){
-                if (quantizer != null){
-                    FloatBuffer f = buffer.asFloatBuffer();
-                    float[] floatInput = (float[])o;
-                    if (floatInput.length != this.length){
-                        throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+floatInput.length);
-                    }
-                    for (float v: floatInput){
-                        f.put(v);
-                    }
-                }
-                else{
-                    throw new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer");
-                }
-            }
-            else{
-                float[] floatInput = (float[])o;
-                if (floatInput.length != this.length){
-                    throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+floatInput.length);
-                }
-                FloatBuffer f = buffer.asFloatBuffer();
-                f.put(floatInput);
-            }
-        }
-        else if (o instanceof byte[]){
-            byte[] byteInput = (byte[])o;
-            if (byteInput.length != this.length){
-                throw new IllegalArgumentException("Provided input is of different size than the size expected by the model, expected "+this.length+" input has length "+byteInput.length);
-            }
-            buffer.put(byteInput);
-        }
-        else{
-            throw new IllegalArgumentException("Expected float[] or byte[] as input to the model");
-        }
-
-        return buffer;
-    }
-
-    @Override
-    public Object fromByteBuffer(ByteBuffer buffer) {
-        if (quantized){
-            if (dequantizer != null){
-                float[] result = new float[this.length*4];
-                buffer.rewind();
-                for (int i=0; i<this.length; i++) {
-                    result[i] = dequantizer.dequantize(buffer.get());
-                }
-                return result;
-            }
-            else{
-                return buffer.array();
-                //int[] result = new int[this.length];
-                //buffer.rewind();
-                //buffer.asIntBuffer().get(result);
-                //buffer.asIntBuffer().get(result);
-                //return result;
-            }
-        }
-        else{
-            float[] result = new float[this.length];
-            buffer.rewind();
-            buffer.asFloatBuffer().get(result);
-            return result;
-        }
-    }
-
-    @Override
-    public ByteBuffer getBackingByteBuffer() {
-        return buffer;
-    }
+    //endRegion
 
     /**
      * Given the output vector of a tensor, returns labeled outputs using `labels`.
@@ -216,15 +156,17 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
      */
 
     public Map<String, Float> labeledValues(float[] vector) {
-        if (!isLabeled()){
+        if (!isLabeled()) {
             return null;
         }
+
         Map<String, Float> result = new HashMap<>(vector.length);
+
         for (int i = 0; i < labels.length; i++){
             result.put(labels[i], vector[i]);
         }
+
         return result;
     }
-
 
 }

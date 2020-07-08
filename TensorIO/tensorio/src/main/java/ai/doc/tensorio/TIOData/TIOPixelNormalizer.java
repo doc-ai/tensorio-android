@@ -1,3 +1,23 @@
+/*
+ * TIOPixelNormalizer.java
+ * TensorIO
+ *
+ * Created by Philip Dow on 7/6/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.doc.tensorio.TIOData;
 
 /**
@@ -9,6 +29,7 @@ package ai.doc.tensorio.TIOData;
  * <p>
  * Pixel normalization is like quantization but in the opposite direction.
  */
+
 public abstract class TIOPixelNormalizer {
     /**
      * A `TIOPixelNormalizer` transforms a pixel value in the range `[0,255]`
@@ -18,8 +39,8 @@ public abstract class TIOPixelNormalizer {
      * @param channel The RGB channel of the pixel value being transformed.
      * @return float The transformed value.
      */
-    public abstract float normalize(int value, int channel);
 
+    public abstract float normalize(int value, int channel);
 
     /**
      * A TIOPixelNormalizer that applies a scaling factor and equal bias to each pixel channel.
@@ -33,7 +54,6 @@ public abstract class TIOPixelNormalizer {
             }
         };
     }
-
 
     /**
      * A TIOPixelNormalizer that applies a scaling factor and different biases to each pixel channel.
@@ -54,7 +74,6 @@ public abstract class TIOPixelNormalizer {
             }
         };
     }
-
 
     /**
      * Normalizes pixel values from a range of `[0,255]` to `[0,1]`.

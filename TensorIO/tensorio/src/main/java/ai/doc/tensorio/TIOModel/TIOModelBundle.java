@@ -1,133 +1,206 @@
+/*
+ * TIOModelBundle.java
+ * TensorIO
+ *
+ * Created by Philip Dow on 7/6/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import ai.doc.tensorio.TIOData.TIODataDequantizer;
-import ai.doc.tensorio.TIOData.TIODataQuantizer;
-import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
-import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
-import ai.doc.tensorio.TIOTensorflowLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.utils.FileIO;
+import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
+import ai.doc.tensorio.TIOUtilities.FileIO;
 
 /**
- * Encapsulates information about a @see TIOModel without actually loading the model.
- * <p>
- * A TIOModelBundle is used by the UI to show model details and is used to instantiate model instances as a model factory. There is currently a one-to-one correspondence between a TIOModelBundle and a .mobilenet_V1_0.25_128.tfbundle folder in the models directory.
- * <p>
- * A model bundle folder must contain at least a model.json file, which contains information about the model. Some information is required, such as the identifier and name field, while other information may be added as needed by your use case.
+ * Encapsulates information about a `TIOModel` without actually loading the model.
+ *
+ * A `TIOModelBundle` is used by the UI to show model details and is used to instantiate model
+ * instances as a model factory. There is currently a one-to-one correspondence between a
+ * `TIOModelBundle` and a .tiobundle folder in the models directory.
+ *
+ * A model bundle folder must contain at least a model.json file, which contains information
+ * about the model. Some information is required, such as the identifier and name field,
+ * while other information may be added as needed by your use case.
  */
 
 public class TIOModelBundle {
 
+    /**
+     * The name of the file inside a TensorIO bundle that contains the model spec, currently 'model.json'.
+     */
+
     private static final String TFMODEL_INFO_FILE = "model.json";
+
+    /**
+     * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
+     */
+
     private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
-    private static final String TENSOR_TYPE_VECTOR = "array";
-    private static final String TENSOR_TYPE_IMAGE = "image";
+
+    /**
+     * The directory extension for TF bundles, considered deprecated, using .tiobundle instead
+     */
+
+    public static final String TF_BUNDLE_EXTENSION = ".tfbundle";
+
+    /**
+     * The directory extension for TIO bundles
+     */
+
+    public static final String TIO_BUNDLE_EXTENSION = ".tiobundle";
+
+    /**
+     * The application or activity context
+     */
+
     private final Context context;
 
     /**
      * The deserialized information contained in the model.json file.
      */
+
     private String info;
 
     /**
      * The full path to the model bundle folder.
      */
+
     private String path;
 
     /**
      * A string uniquely identifying the model represented by this bundle.
      */
+
     private String identifier;
 
     /**
      * Human readable name of the model represented by this bundle
      */
+
     private String name;
 
     /**
-     * The version of the model reprsented by this bundle.
-     * <p>
-     * A model’s unique identifier may remain the same as the version is incremented.
+     * The version of the model represented by this bundle.
+     *
+     * A model's unique identifier may remain the same as the version is incremented.
      */
+
     private String version;
 
     /**
      * Additional information about the model represented by this bundle.
      */
+
     private String details;
 
     /**
      * The authors of the model represented by this bundle.
      */
+
     private String author;
 
     /**
      * The license of the model represented by this bundle.
      */
+
     private String license;
 
     /**
-     * boolean value indicating if this is a placeholder bundle.
-     * <p>
-     * A placeholder bundle has no underlying model and instantiates a @see TIOModel that does nothing. Placeholders bundles are used to collect labeled data for models that haven’t been trained yet.
+     * A boolean value indicating if this is a placeholder bundle.
+     *
+     * A placeholder bundle has no underlying model and instantiates a `TIOModel` that does nothing.
+     * Placeholders bundles are used to collect labeled data for models that haven't been trained yet.
      */
+
     private boolean placeholder;
 
     /**
-     * A boolean value indicating if the model represented by this bundle is quantized or not.
+     * A boolean value indicating if the model represnted by this bundle is quantized or not.
      */
+
     private boolean quantized;
 
     /**
-     * A string indicating the kind of model this is, e.g. image.classification.imagenet
+     * A string indicating the kind of model this is, e.g. "image.classification.imagenet"
      */
+
     private String type;
 
     /**
      * Options associated with the model represented by this bundle.
      */
+
     private TIOModelOptions options;
 
     /**
-     * The file path to the actual underlying model contained in this bundle.
-     * <p>
-     * Currently, only tflite models are supported. If this placeholder is YES this property returns nil.
+     * Modes associated with the model, e.g. whether it has support for prediction, training, and evaluation
      */
+
+    private TIOModelModes modes;
+
+    /**
+     * Contains the descriptions of the model's inputs, outputs, and placeholders
+     * accessible by numeric index or by name. Not all model backends support
+     * placeholders.
+     *
+     * @code
+     * io.inputs[0]
+     * io.inputs[@"image"]
+     * io.outputs[0]
+     * io.outputs[@"label"]
+     * io.placeholders[0]
+     * io.placeholders[@"label"]
+     * @endcode
+     */
+
+    private TIOModelIO io;
+
+    /**
+     * The file path to the actual underlying model contained in this bundle.
+     *
+     * Currently, only tflite models are supported. If this `placeholder` is `YES` this property
+     * returns `nil`.
+     */
+
     private String modelFilePath;
 
     /**
      * The class name of the @see TIOModel that should be used to implement this network.
      */
-    private String modelClassName;
-    private List<TIOLayerInterface> indexedInputInterfaces;
-    private Map<String, TIOLayerInterface> namedInputInterfaces;
-    private Map<String, Integer> namedInputToIndex;
-    private List<TIOLayerInterface> indexedOutputInterfaces;
-    private Map<String, TIOLayerInterface> namedOutputInterfaces;
-    private Map<String, Integer> namedOutputToIndex;
 
+    private String modelClassName;
 
     /**
+     * The designated initializer, responsible for parsing a bundle's model.json and especially
+     * for setting up the description of a model's inputs and outputs.
+     * @param context The application or activity context
      * @param path Fully qualified path to the model bundle folder.
+     * @throws TIOModelBundleException
      */
+
     public TIOModelBundle(Context context, String path) throws TIOModelBundleException {
         this.context = context;
 
@@ -149,7 +222,7 @@ public class TIOModelBundle {
         this.path = path;
         this.info = json;
 
-        JSONObject modelJsonObject;
+        // Parse basic top level properties
 
         try {
             this.identifier = bundle.getString("id");
@@ -158,14 +231,11 @@ public class TIOModelBundle {
             this.details = bundle.getString("details");
             this.author = bundle.getString("author");
             this.license = bundle.getString("license");
-
-            modelJsonObject = bundle.getJSONObject("model");
-
-            this.quantized = modelJsonObject.getBoolean("quantized");
-
         } catch (JSONException e) {
             throw new TIOModelBundleException("Incomplete JSON model file", e);
         }
+
+        // Parse optional options
 
         try {
             if (bundle.has("options")) {
@@ -178,22 +248,39 @@ public class TIOModelBundle {
             throw new TIOModelBundleException("Incomplete options field, expected 'device_position' entry");
         }
 
-
-        this.type = modelJsonObject.optString("type", "unknown");
-        this.modelClassName = modelJsonObject.optString("class", TIOTFLiteModel.class.getName());
-        this.placeholder = modelJsonObject.optBoolean("placeholder", false);
-
-
-        if (!this.placeholder) {
-            try {
-                this.modelFilePath = path + "/" + modelJsonObject.getString("file");
-            } catch (JSONException e) {
-                throw new TIOModelBundleException("Incomplete JSON model file, could not find model file declaration", e);
-            }
-        }
+        // Parse model properties
 
         try {
-            parseInputs(context, bundle.getJSONArray("inputs"));
+            JSONObject modelJsonObject = bundle.getJSONObject("model");
+
+            this.quantized = modelJsonObject.getBoolean("quantized");
+            this.type = modelJsonObject.optString("type", "unknown");
+            this.modelClassName = modelJsonObject.optString("class", TIOTFLiteModel.class.getName());
+            this.placeholder = modelJsonObject.optBoolean("placeholder", false);
+
+            if (modelJsonObject.has("modes")) {
+                this.modes = new TIOModelModes(modelJsonObject.getJSONArray("modes"));
+            } else {
+                this.modes = new TIOModelModes();
+            }
+
+            // Determine model file path
+
+            if (!this.placeholder) {
+                this.modelFilePath = path + "/" + modelJsonObject.getString("file");
+            }
+
+        } catch (JSONException e) {
+            throw new TIOModelBundleException("Incomplete JSON model file", e);
+        }
+
+        // Parse Inputs and Outputs
+
+        List<TIOLayerInterface> inputs;
+        List<TIOLayerInterface> outputs;
+
+        try {
+            inputs = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("inputs"), TIOLayerInterface.Mode.Input);
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing inputs field", e);
         } catch (IOException e) {
@@ -201,55 +288,36 @@ public class TIOModelBundle {
         }
 
         try {
-            parseOutputs(context, bundle.getJSONArray("outputs"));
+            outputs = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("outputs"), TIOLayerInterface.Mode.Output);
         } catch (JSONException e) {
             throw new TIOModelBundleException("Error parsing outputs field", e);
         } catch (IOException e) {
             throw new TIOModelBundleException("Error reading labels file", e);
         }
-    }
 
-    /**
-     * @return a new instance of the TIOModel represented by this bundle.
-     */
-    public TIOModel newModel() throws TIOModelBundleException {
-        try {
-            return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
-            throw new TIOModelBundleException("Error creating TIOModel", e);
+        // Parse Placeholders, may be null
+
+        List<TIOLayerInterface> placeholders = null;
+
+        if ( bundle.has("placeholders") ) {
+
+            try {
+                placeholders = TIOModelJSONParsing.parseIO(this, bundle.getJSONArray("placeholders"), TIOLayerInterface.Mode.Placeholder);
+            } catch (JSONException e) {
+                throw new TIOModelBundleException("Error parsing outputs field", e);
+            } catch (IOException e) {
+                throw new TIOModelBundleException("Error reading labels file", e);
+            }
+
         }
+
+        this.io = new TIOModelIO(inputs, outputs, placeholders);
     }
 
-    /**
-     * Returns the path to an asset in the bundle
-     *
-     * @param filename Asset’s filename, including extension
-     * @return The full path to the file
-     */
-    public String pathToAsset(String filename) {
-        return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
-    }
+    //region Getters and Setters
 
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "TIOModelBundle{" +
-                "info='" + info + '\'' +
-                ", path='" + path + '\'' +
-                ", identifier='" + identifier + '\'' +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", details='" + details + '\'' +
-                ", author='" + author + '\'' +
-                ", license='" + license + '\'' +
-                ", placeholder=" + placeholder +
-                ", quantized=" + quantized +
-                ", type='" + type + '\'' +
-                ", options=" + options +
-                ", modelFilePath='" + modelFilePath + '\'' +
-                ", modelClassName='" + modelClassName + '\'' +
-                '}';
+    public Context getContext() {
+        return context;
     }
 
     public String getPath() {
@@ -296,338 +364,62 @@ public class TIOModelBundle {
         return options;
     }
 
+    public TIOModelModes getModes() {
+        return modes;
+    }
+
+    public TIOModelIO getIO() {
+        return io;
+    }
+
     public String getModelFilePath() {
         return modelFilePath;
     }
 
-    public List<TIOLayerInterface> getIndexedInputInterfaces() {
-        return indexedInputInterfaces;
-    }
+    //endregion
 
-    public Map<String, TIOLayerInterface> getNamedInputInterfaces() {
-        return namedInputInterfaces;
-    }
+    /**
+     * @return a new instance of the TIOModel represented by this bundle.
+     */
 
-    public Map<String, Integer> getNamedInputToIndex() {
-        return namedInputToIndex;
-    }
-
-    public List<TIOLayerInterface> getIndexedOutputInterfaces() {
-        return indexedOutputInterfaces;
-    }
-
-    public Map<String, TIOLayerInterface> getNamedOutputInterfaces() {
-        return namedOutputInterfaces;
-    }
-
-    public Map<String, Integer> getNamedOutputToIndex() {
-        return namedOutputToIndex;
-    }
-
-    private void parseInputs(Context c, JSONArray inputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedInputInterfaces = new ArrayList<>();
-        HashMap<String, TIOLayerInterface> namedInputInterfaces = new HashMap<>();
-        HashMap<String, Integer> namedInputToIndex = new HashMap<>();
-
-        boolean isQuantized = this.isQuantized();
-
-
-        for (int i = 0; i < inputs.length(); i++) {
-            JSONObject inputObject = inputs.getJSONObject(i);
-            String type = inputObject.getString("type");
-            String name = inputObject.getString("name");
-
-            TIOLayerInterface tioLayerInterface;
-
-            switch (type) {
-                case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(c, inputObject, true, isQuantized, this);
-                    break;
-                case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(inputObject, true, isQuantized);
-                    break;
-                default:
-                    throw new TIOModelBundleException("Unsupported input layer type: " + type);
-            }
-
-            indexedInputInterfaces.add(tioLayerInterface);
-            namedInputInterfaces.put(name, tioLayerInterface);
-            namedInputToIndex.put(name, i);
-        }
-
-        this.indexedInputInterfaces = indexedInputInterfaces;
-        this.namedInputInterfaces = namedInputInterfaces;
-        this.namedInputToIndex = namedInputToIndex;
-    }
-
-    private void parseOutputs(Context c, JSONArray outputs) throws JSONException, TIOModelBundleException, IOException {
-        ArrayList<TIOLayerInterface> indexedOutputInterfaces = new ArrayList<>();
-        HashMap<String, TIOLayerInterface> namedOutputInterfaces = new HashMap<>();
-        HashMap<String, Integer> namedOutputToIndex = new HashMap<>();
-
-        boolean isQuantized = this.isQuantized();
-
-        for (int i = 0; i < outputs.length(); i++) {
-            JSONObject outputObject = outputs.getJSONObject(i);
-            String type = outputObject.getString("type");
-            String name = outputObject.getString("name");
-
-            TIOLayerInterface tioLayerInterface;
-
-            switch (type) {
-                case TENSOR_TYPE_VECTOR:
-                    tioLayerInterface = parseTIOVectorDescription(c, outputObject, false, isQuantized, this);
-                    break;
-                case TENSOR_TYPE_IMAGE:
-                    tioLayerInterface = parseTIOPixelBufferDescription(outputObject, false, isQuantized);
-                    break;
-                default:
-                    throw new TIOModelBundleException("Unsupported input layer type: " + type);
-            }
-
-            indexedOutputInterfaces.add(tioLayerInterface);
-            namedOutputInterfaces.put(name, tioLayerInterface);
-            namedOutputToIndex.put(name, i);
-        }
-
-        this.indexedOutputInterfaces = indexedOutputInterfaces;
-        this.namedOutputInterfaces = namedOutputInterfaces;
-        this.namedOutputToIndex = namedOutputToIndex;
-    }
-
-    private TIOLayerInterface parseTIOVectorDescription(Context c, JSONObject dict, boolean isInput, boolean quantized, TIOModelBundle bundle) throws JSONException, TIOModelBundleException, IOException {
-        int[] shape = parseIntArray(dict.getJSONArray("shape"));
-        String name = dict.getString("name");
-        boolean isOutput = !isInput;
-
-        // Labels
-        String[] labels = null;
-        if (dict.optString("labels", null) != null) {
-            try {
-                String contents = FileIO.readFile(c, path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + dict.getString("labels"));
-                contents = contents.trim();
-                labels = contents.split("\\n");
-            }
-            catch (IOException e){
-                throw new TIOModelBundleException("There was a problem reading the labels file, no labels were loaded", e);
-            }
-        }
-
-        // Quantization
-        TIODataQuantizer quantizer = null;
-        if (isInput && dict.has("quantize")) {
-            quantizer = TIODataQuantizerForDict(dict.getJSONObject("quantize"));
-        }
-
-        // Dequantization
-        TIODataDequantizer dequantizer = null;
-        if (isOutput && dict.has("dequantize")) {
-            dequantizer = TIODataDequantizerForDict(dict.getJSONObject("dequantize"));
-        }
-
-        // Interface
-        return new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOVectorLayerDescription(shape, labels, quantized, quantizer, dequantizer)
-        );
-    }
-
-    private TIOLayerInterface parseTIOPixelBufferDescription(JSONObject dict, boolean isInput, boolean quantized) throws TIOModelBundleException, JSONException {
-
-        String name = dict.getString("name");
-        boolean isOutput = !isInput;
-
-        // Image Volume
-        TIOImageVolume imageVolume;
+    public TIOModel newModel() throws TIOModelBundleException {
         try {
-            int[] shape = parseIntArray(dict.getJSONArray("shape"));
-            imageVolume = TIOImageVolumeForShape(shape);
-        } catch (JSONException e) {
-            throw new TIOModelBundleException("Expected input.shape array field in model.json, none found", e);
+            return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
+            throw new TIOModelBundleException("Error creating TIOModel", e);
         }
-
-        // Pixel Format
-        TIOPixelFormat pixelFormat;
-        try {
-            pixelFormat = TIOPixelFormatForString(dict.getString("format"));
-        } catch (JSONException e) {
-            throw new TIOModelBundleException("Expected input.format string in model.json, none found", e);
-        }
-
-
-        // Normalization
-        TIOPixelNormalizer normalizer = null;
-        if (isInput && dict.has("normalize")) {
-                normalizer = TIOPixelNormalizerForDictionary(dict.getJSONObject("normalize"));
-        }
-
-        // Denormalization
-
-        TIOPixelDenormalizer denormalizer = null;
-
-        if (isOutput && dict.has("denormalize")) {
-            denormalizer = TIOPixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
-        }
-
-        // Description
-        TIOLayerInterface layerInterface = new TIOLayerInterface(
-                name,
-                isInput,
-                new TIOPixelBufferLayerDescription(
-                        pixelFormat,
-                        imageVolume,
-                        normalizer,
-                        denormalizer,
-                        quantized
-                )
-        );
-
-        return layerInterface ;
-    }
-
-
-
-    private TIOPixelFormat TIOPixelFormatForString(String format) throws TIOModelBundleException {
-        switch (format) {
-            case "RGB":
-                return TIOPixelFormat.RGB;
-            case "BGR":
-                return TIOPixelFormat.BGR;
-        }
-        throw new TIOModelBundleException("Expected dict.format string to be RGB or BGR in model.json, found " + format);
-    }
-
-    private TIODataQuantizer TIODataQuantizerForDict(JSONObject dict) throws JSONException, TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
-            switch (standard) {
-                case "[0,1]":
-                    return TIODataQuantizer.TIODataQuantizerZeroToOne();
-                case "[-1,1]":
-                    return TIODataQuantizer.TIODataQuantizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Invalid Quantizer, expected standard quantization to be [0,1] or [1,1]");
-            }
-        } else {
-            if (dict.has("scale") && dict.has("bias")) {
-                float scale = (float) dict.getDouble("scale");
-                float bias = (float) dict.getDouble("bias");
-                return TIODataQuantizer.TIODataQuantizerWithQuantization(scale, bias);
-            } else {
-                throw new TIOModelBundleException("Invalid Quantizer, expected scale and bias for quantizer");
-            }
-        }
-    }
-
-    private TIODataDequantizer TIODataDequantizerForDict(JSONObject dict) throws TIOModelBundleException, JSONException {
-        if (dict == null) {
-            return null;
-        }
-
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
-            switch (standard) {
-                case "[0,1]":
-                    return TIODataDequantizer.TIODataDequantizerZeroToOne();
-                case "[-1,1]":
-                    return TIODataDequantizer.TIODataDequantizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Invalid Dequantizer, expected standard dequantization to be [0,1] or [1,1]");
-            }
-        } else {
-            if (dict.has("scale") && dict.has("bias")) {
-                float scale = (float) dict.getDouble("scale");
-                float bias = (float) dict.getDouble("bias");
-                return TIODataDequantizer.TIODataDequantizerWithDequantization(scale, bias);
-            } else {
-                throw new TIOModelBundleException("Invalid Dequantizer, expected scale and bias for quantizer");
-            }
-        }
-    }
-
-
-    private int[] parseIntArray(JSONArray a) throws JSONException {
-        int[] result = new int[a.length()];
-        for (int i = 0; i < a.length(); i++) {
-            result[i] = a.getInt(i);
-        }
-        return result;
-    }
-
-    private TIOImageVolume TIOImageVolumeForShape(int[] shape) throws TIOModelBundleException {
-        if (shape.length != 3) {
-            throw new TIOModelBundleException("Expected shape with three elements, actual count is " + shape.length);
-        }
-        if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
-            throw new TIOModelBundleException("Invalid image input shape, shape elements can not be <= 0");
-        }
-        return new TIOImageVolume(shape[0], shape[1], shape[2]);
     }
 
     /**
-     * Returns the TIOPixelNormalizer given an input dictionary.
+     * Returns the path to an asset in the bundle
+     *
+     * @param filename Asset’s filename, including extension
+     * @return The full path to the file
      */
 
-    private TIOPixelNormalizer TIOPixelNormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
-            switch (normalizerString) {
-                case "[0,1]":
-                    return TIOPixelNormalizer.TIOPixelNormalizerZeroToOne();
-                case "[-1,1]":
-                    return TIOPixelNormalizer.TIOPixelNormalizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Expected input.normalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
-            }
-        } else if (dict.has("scale") || dict.has("bias")) {
-            float scale = (float)dict.optDouble("scale", 1.0);
-            float redBias = (float)dict.optDouble("r", 0.0);
-            float greenBias = (float)dict.optDouble("g", 0.0);
-            float blueBias = (float)dict.optDouble("b", 0.0);
-            return TIOPixelNormalizer.TIOPixelNormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
-        } else {
-            return null;
-        }
+    public String pathToAsset(String filename) {
+        return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
     }
 
-    private TIOPixelDenormalizer TIOPixelDenormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
-        if (dict == null) {
-            return null;
-        }
-
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
-            switch (normalizerString) {
-                case "[0,1]":
-                    return TIOPixelDenormalizer.TIOPixelDenormalizerZeroToOne();
-                case "[-1,1]":
-                    return TIOPixelDenormalizer.TIOPixelDenormalizerNegativeOneToOne();
-                default:
-                    throw new TIOModelBundleException("Expected input.denormalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
-            }
-        } else if (dict.has("scale") || dict.has("bias")) {
-            float scale = (float)dict.optDouble("scale", 1.0);
-            float redBias = (float)dict.optDouble("r", 0.0);
-            float greenBias = (float)dict.optDouble("g", 0.0);
-            float blueBias = (float)dict.optDouble("b", 0.0);
-            return TIOPixelDenormalizer.TIOPixelDenormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
-        } else {
-            return null;
-        }
+    @NonNull
+    @Override
+    public String toString() {
+        return "TIOModelBundle{" +
+                "info='" + info + '\'' +
+                ", path='" + path + '\'' +
+                ", identifier='" + identifier + '\'' +
+                ", name='" + name + '\'' +
+                ", version='" + version + '\'' +
+                ", details='" + details + '\'' +
+                ", author='" + author + '\'' +
+                ", license='" + license + '\'' +
+                ", placeholder=" + placeholder +
+                ", quantized=" + quantized +
+                ", type='" + type + '\'' +
+                ", options=" + options +
+                ", modelFilePath='" + modelFilePath + '\'' +
+                ", modelClassName='" + modelClassName + '\'' +
+                '}';
     }
-
 
 }

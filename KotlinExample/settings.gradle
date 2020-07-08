@@ -1,1 +1,7 @@
 include ':app'
+
+includeBuild('../TensorIO') {
+    dependencySubstitution {
+        substitute module('com.github.doc-ai:tensorio-android') with project(':tensorio')
+    }
+}
