@@ -22,7 +22,6 @@ package ai.doc.tensorio.TIOUtilities;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -37,8 +36,20 @@ public class TIOClassificationHelper {
      */
 
     public static List<Map.Entry<String, Float>> topN(Map<String,Float> map, int N) {
-        PriorityQueue<Map.Entry<String, Float>> queue = topNqueued(map, N);
-        List<Map.Entry<String, Float>> list = new ArrayList<Map.Entry<String, Float>>(5);
+        return topN(map, N, 0);
+    }
+
+    /**
+     * Orders top N results of a classification whose values are greater than the threshold
+     * @param map Map of labeled floating point classification outputs
+     * @param N The number of values to keep
+     * @param threshold The minimum value to keep
+     * @return A list of the top N key-values beginning with the highest one
+     */
+
+    public static List<Map.Entry<String, Float>> topN(Map<String,Float> map, int N, float threshold) {
+        PriorityQueue<Map.Entry<String, Float>> queue = topNqueued(map, N, threshold);
+        List<Map.Entry<String, Float>> list = new ArrayList<>(5);
 
         while (queue.size() > 0) {
             Map.Entry<String, Float> entry = (Map.Entry<String, Float>) queue.poll();
@@ -57,10 +68,13 @@ public class TIOClassificationHelper {
      * @return A PriorityQueue of the top N key-values
      */
 
-    public static PriorityQueue<Map.Entry<String, Float>> topNqueued(Map<String,Float> map, int N) {
+    public static PriorityQueue<Map.Entry<String, Float>> topNqueued(Map<String,Float> map, int N, float threshold) {
         PriorityQueue<Map.Entry<String, Float>> queue = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
 
         for (Map.Entry<String,Float> entry : map.entrySet()) {
+            if (entry.getValue() < threshold) {
+                continue;
+            }
             queue.add(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
             if (queue.size() > N) {
                 queue.poll();
