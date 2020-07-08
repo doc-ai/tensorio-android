@@ -1,3 +1,3 @@
-include ':tensorio:kotlinexample'
-include ':tensorio:javaexample'
+include ':kotlinexample'
+include ':javaexample'
 include ':tensorio'
