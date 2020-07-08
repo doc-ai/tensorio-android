@@ -113,16 +113,16 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
     @Override
     public Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
 
-        // Prepare buffer for reading
-
-        buffer.rewind();
-
         // Acquire needed properties from layer description
 
         TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
         TIODataDequantizer dequantizer = vectorLayerDescription.getDequantizer();
         boolean quantized = vectorLayerDescription.isQuantized();
         int length = vectorLayerDescription.getLength();
+
+        // Prepare buffer for reading
+
+        buffer.rewind();
 
         // Fork on quantized
 

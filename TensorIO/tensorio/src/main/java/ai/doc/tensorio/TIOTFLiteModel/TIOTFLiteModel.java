@@ -32,10 +32,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
+import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
@@ -44,8 +47,6 @@ import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
-
-// TODO: Have the TFLite model hold onto the long lived buffer data converters itself and pass layer descriptions to them as needed
 
 public class TIOTFLiteModel extends TIOModel {
 
@@ -61,6 +62,11 @@ public class TIOTFLiteModel extends TIOModel {
     private boolean useGPU = false;
     private boolean useNNAPI = false;
     private boolean use16bit = false;
+
+    // Buffer Caching
+
+    private boolean cacheBuffers = true;
+    private Map<TIOLayerDescription, ByteBuffer> bufferCache = null;
 
     // Data Converters
 
@@ -81,6 +87,8 @@ public class TIOTFLiteModel extends TIOModel {
             return;
         }
 
+        // Prepare Model
+
         try {
             tfliteModel = loadModelFile(getContext(), getBundle().getModelFilePath());
         } catch (IOException e) {
@@ -88,6 +96,12 @@ public class TIOTFLiteModel extends TIOModel {
         }
 
         interpreter = new Interpreter(tfliteModel);
+
+        // Prepare Buffer Cache
+
+        if (cacheBuffers) {
+            prepareBufferCache();
+        }
 
         super.load();
     }
@@ -108,7 +122,34 @@ public class TIOTFLiteModel extends TIOModel {
             this.gpuDelegate = null;
         }
 
+        if (this.bufferCache != null) {
+            this.bufferCache = null;
+        }
+
         super.unload();
+    }
+
+    /**
+     * Create buffer caches that are used for model inputs and outputs
+     */
+
+    void prepareBufferCache() {
+        bufferCache = new HashMap<>();
+
+        List<TIOLayerInterface> layers = new ArrayList<>();
+        layers.addAll(getIO().getInputs().all());
+        layers.addAll(getIO().getOutputs().all());
+
+        for (TIOLayerInterface layer : layers) {
+            TIOLayerDescription description = layer.getLayerDescription();
+
+            if (description instanceof TIOVectorLayerDescription) {
+                bufferCache.put(description, vectorDataConverter.createBackingBuffer(description));
+            }
+            else if (description instanceof  TIOPixelBufferLayerDescription) {
+                bufferCache.put(description, pixelDataConverter.createBackingBuffer(description));
+            }
+        }
     }
 
     //endRegion
@@ -164,7 +205,8 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     /**
-     * @return yes if models has either of more than one input or output, false otherwise
+     * Used to determined if an unmapped input should be mapped and a mapped input unmapped
+     * @return true if models has either of more than one input or output, false otherwise
      */
 
     private boolean hasMultipleInputsOrOutputs() {
@@ -282,39 +324,49 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     /**
-     * Prepares a ByteBuffer that will be used for input to a model.
+     * Prepares a ByteBuffer that will be used for input to a model. If buffer caching is used
+     * then buffers that have been associated with each layer will be resued.
      *
-     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
      * @param input The input to convert to a byte buffer
      * @param inputLayer A description of the layer this buffer will be used with
      * @return ByteBuffer ready for input to a model
      */
 
     private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
-        // Note we are not using the backing input buffer here but recreating it every time
         ByteBuffer inputBuffer = null;
+        ByteBuffer cachedBuffer = null;
+
+        if (cacheBuffers) {
+            cachedBuffer = bufferCache.get(inputLayer);
+            cachedBuffer.rewind();
+        }
 
         if ( inputLayer instanceof TIOVectorLayerDescription ) {
-            inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, null);
+            inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, cachedBuffer);
         }
         else if ( inputLayer instanceof TIOPixelBufferLayerDescription ) {
-            inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, null);
+            inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, cachedBuffer);
         }
 
         return inputBuffer;
     }
 
     /**
-     * Prepares a ByteBuffer that can be used for output from a model.
+     * Prepares a ByteBuffer that can be used for output from a model. If buffer caching is used
+     * then buffers that have been associated with each layer will be resued.
      *
-     * TODO: Test if ByteBuffers should be cached and if so return cached buffers here
      * @param outputLayer A description of the layer this buffer will be used with
      * @return ByteBuffer ready for model output
      */
 
     private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
-        // Note we are not using the backing output buffer here but recreating it every time
         ByteBuffer outputBuffer = null;
+
+        if (cacheBuffers) {
+            outputBuffer = bufferCache.get(outputLayer);
+            outputBuffer.rewind();
+            return outputBuffer;
+        }
 
         if ( outputLayer instanceof TIOVectorLayerDescription ) {
             outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
@@ -322,9 +374,6 @@ public class TIOTFLiteModel extends TIOModel {
         else if ( outputLayer instanceof TIOPixelBufferLayerDescription ) {
             outputBuffer = pixelDataConverter.createBackingBuffer(outputLayer);
         }
-
-        // If returning cached outputBuffer be sure to rewind it
-        // outputBuffer.rewind();
 
         return outputBuffer;
     }

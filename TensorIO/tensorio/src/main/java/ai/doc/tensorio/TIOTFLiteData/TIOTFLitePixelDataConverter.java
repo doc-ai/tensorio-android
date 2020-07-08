@@ -57,7 +57,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
     @Override
     public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+
+        // Create a buffer if no reusable cache is provided
+
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
 
         TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
         TIOImageVolume shape = pixelBufferLayerDescription.getShape();
@@ -69,6 +75,8 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         } else if (!(o instanceof Bitmap)) {
             throw new IllegalArgumentException("Image input should be bitmap");
         }
+
+        // Bitmap Operations
 
         Bitmap bitmap = (Bitmap) o;
         if (bitmap.getWidth() != shape.width || bitmap.getHeight() != shape.height){
@@ -83,7 +91,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         buffer.rewind();
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight()); // Returns ARGB pixels
 
-        // Convert the image to floating point
+        // Write Individual Pixels to Buffer
 
         int pixel = 0;
         for (int y = 0; y < bitmap.getHeight(); y++) {
@@ -100,15 +108,20 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
 
     @Override
     public Bitmap fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
+
+        // Acquire needed properties from layer description
+
         TIOPixelBufferLayerDescription pixelBufferLayerDescription = (TIOPixelBufferLayerDescription) description;
         TIOImageVolume shape = pixelBufferLayerDescription.getShape();
         boolean quantized = pixelBufferLayerDescription.isQuantized();
         TIOPixelDenormalizer denormalizer = pixelBufferLayerDescription.getDenormalizer();
 
+        // Write the buffer into a bitmap
+
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
+        Bitmap bmp = Bitmap.createBitmap(shape.width, shape.height, Bitmap.Config.ARGB_8888);
 
         buffer.rewind();
-        Bitmap bmp = Bitmap.createBitmap(shape.width, shape.height, Bitmap.Config.ARGB_8888);
 
         for (int i = 0; i < shape.width * shape.height; i++) {
             intValues[i] = readPixelFromBuffer(buffer, quantized, denormalizer);
