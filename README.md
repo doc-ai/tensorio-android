@@ -10,55 +10,54 @@ This implementation is part of the [TensorIO project](https://doc-ai.github.io/t
 
 With TensorIO you can perform inference in just a few lines of code:
 
-> Java
+**Java**
+
 ```java
+// Load the Model
 
-// Load the image
-InputStream bitmap = getAssets().open("picture2.jpg");
-Bitmap bMap = BitmapFactory.decodeStream(bitmap);
-
-// load the model
-TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), path);
-TIOModelBundle bundle = manager.bundleWithId(bundleId);
+TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
 TIOModel model = bundle.newModel();
-model.load();
 
-// Run the model on the input
-float[] result =  (float[]) model.runOn(bMap);
+// Load an Image
 
-// Show the most likely predictions
-String[] labels = ((TIOVectorLayerDescription) model.descriptionOfOutputAtIndex(0)).getLabels();
+InputStream stream = testContext.getAssets().open("example-image.jpg");
+Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+// Run the Model
+
+Map<String,Object> output = model.runOn(bitmap);
+
+// Get the Results
+
+Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+Map.Entry<String, Float> top = top5.get(0);
+String label = top.getKey();
 ```
 
-
-> Kotlin
+**Kotlin**
 
 ```kotlin
+// Load the Model
 
-// Load the image
-val bitmap = assets.open("picture2.jpg")
-val bMap = BitmapFactory.decodeStream(bitmap)
-
-// load the model
-val manager = TIOModelBundleManager(applicationContext, path)
-val bundle = manager.bundleWithId(bundleId)
+val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
-model.load()
 
-// Run the model on the input
-val result = model.runOn(bMap) as FloatArray
+// Load an Image
+
+val stream = assets.open("elephant.jpg")
+val bitmap = BitmapFactory.decodeStream(stream)
+
+// Run the Model
+
+val output = model.runOn(bitmap)
+
+// Get the Results
+
+val classification = output.get("classification") as MutableMap<String, Float>
+val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
+val label = top5.get(0).key
 ```
-
-* [ Overview ](#overview)
-* [ Example ](#example)
-* [ Requirements ](#requirements)
-* [ Installation ](#installation)
-* [ License ](#license)
-* [ Usage ](#usage)
-    * [ Basic Usage ](#basic-usage)
-    * [ Model Bundles ](#model-bundles)
-    * [ The Model JSON File ](#model-json)
-
 
 <a name="overview"></a>
 ## Overview
@@ -75,37 +74,61 @@ Although TensorIO supports both full TensorFlow and TF Lite models, this README 
 <a name="example"></a>
 ## Example
 
-To run the example project, clone the repo, sync the build.gradle in the Example directory and run the Example App.
-
-- See the MainActivity.java for sample code.
+To run the example project, clone the repo, sync the build.gradle in one of the example directories and run the example app. See specifically the MainActivity in either the javaexample or kotlinexample.
 
 <a name="requirements"></a>
 ## Requirements
 
-TensorIO requires Android 5.1(Lollipop)+ or minSdkVersion 22 or higher 
+TensorIO requires Android 5.1(Lollipop)+ or minSdkVersion 22 or higher.
+
+You should always target Java 8 as a compile option for compatibility, and if you are using an SKD Version less than 26 you must add desugaring instructions to your app's gradle.build file:
+
+```gradle
+compileOptions {
+	coreLibraryDesugaringEnabled true
+	sourceCompatibility JavaVersion.VERSION_1_8
+	targetCompatibility JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
+    ...
+}
+```
+
 
 <a name="installation"></a>
 ## Installation
 
-TensorIO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android). Add the following to your build.gradle file:
+TensorIO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.9.4 
 
-``` build.gradle
-implementation 'com.github.doc-ai:tensorio-android:0.1.0'
+It will look something like:
+
+```gradle
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+
+dependencies {
+	implementation 'com.github.doc-ai:tensorio-android:0.9.4'
+	...
+}
 ```
 
-For instructions on how to add dependencies using Jitpack please follow:
-https://jitpack.io/#doc-ai/tensorio-android/0.1.0
-
-The .tflite files are compressed by default. Please add the following to the build.gradle file so that the tflite files are not stored compressed in the APK.
+TF Lite binaries are compressed by default, which we don't want. Add the following to the build.gradle file so that the tflite files are not compressed in the APK.
 
 ```build.gradle
 aaptOptions {
     noCompress "tflite"
 }
 ```
-Add the following to the build.gradle file if the build command complains that "More than one file was found with OS independent path".
 
-```build.gradle
+If you encounter the error *"More than one file was found with OS independent path"*, add the following to the build.gradle:
+
+```gradle
 packagingOptions {
     pickFirst 'META-INF/ASL-2.0.txt'
     pickFirst 'draftv4/schema'
@@ -133,47 +156,65 @@ TensorIO is available under the Apache 2 license. See the LICENSE file for more 
 <a name="basic-usage"></a>
 ### Basic Usage
 
-You can import individual class from the tensorio directory. For importing a bundle:
+Add a tensor/io compatible model to your project's assets directory and run the following lines of code. Here we're using the *mobilenet_v2_1.4_224.tiobundle* model, which you can find in the example project's assets directory.
 
-> Java
+**Java**
+
 ```java
-import ai.doc.tensorio.TIOModel.TIOModelBundleManager;
-import ai.doc.tensorio.TIOModel.TIOModelBundle;
+// Load the Model
 
-
-TIOModelBundleManager manager = new TIOModelBundleManager(getApplicationContext(), "");
-
-// load the model
-TIOModelBundle bundle = manager.bundleWithId(id);
+TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
 TIOModel model = bundle.newModel();
-model.load();
 
-// Run the model on the input
-float[] result =  (float[]) model.runOn(bMap);
+// Load an Image
+
+InputStream stream = testContext.getAssets().open("example-image.jpg");
+Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+// Run the Model
+
+Map<String,Object> output = model.runOn(bitmap);
+
+// Get the Results
+
+Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+Map.Entry<String, Float> top = top5.get(0);
+String label = top.getKey();
 ```
 
-
-
-> Kotlin
+**Kotlin**
 
 ```kotlin
-import ai.doc.tensorio.TIOModel.TIOModelBundleManager
+// Load the Model
 
-
-val manager = TIOModelBundleManager(applicationContext, "")
-
-// load the model
-val bundle = manager.bundleWithId(id)
+val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
-model.load()
 
-// Run the model on the input
-var result = model.runOn(bMap) as FloatArray
+// Load an Image
+
+val stream = assets.open("elephant.jpg")
+val bitmap = BitmapFactory.decodeStream(stream)
+
+// Run the Model
+
+val output = model.runOn(bitmap)
+
+// Get the Results
+
+val classification = output.get("classification") as MutableMap<String, Float>
+val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
+val label = top5.get(0).key
 ```
-
 
 <a name="model-bundles"></a>
 ### Model Bundles
+
+For additional information about Model Bundles and converting your models to the TF Lite format, refer to the [Tensor/IO Wiki](https://github.com/doc-ai/tensorio-ios/wiki):
+
+- [Packaging Models](https://github.com/doc-ai/tensorio-ios/wiki/Packaging-Models)
+- [TF Lite Backend](https://github.com/doc-ai/tensorio-ios/wiki/TensorFlow-Lite-Backend)
+
 
 TensorIO currently includes support for TensorFlow Lite (TF Lite) models. Although the library is built with support for other machine learning frameworks in mind, we'll focus on TF Lite models here.
 
