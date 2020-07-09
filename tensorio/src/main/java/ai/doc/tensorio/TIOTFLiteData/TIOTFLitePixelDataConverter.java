@@ -86,7 +86,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     public ByteBuffer toByteBuffer(@NonNull Bitmap bitmap, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
         buffer.rewind();
 
         // Acquire needed properties from layer description

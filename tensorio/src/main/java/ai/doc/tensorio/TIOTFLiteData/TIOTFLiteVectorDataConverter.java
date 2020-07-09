@@ -57,13 +57,64 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
 
     @Override
     public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
-        if ( !((o instanceof byte[]) || (o instanceof float[])) ) {
+        if (o instanceof byte[]) {
+            return toByteBuffer((byte[])o, description, cache);
+        } else if (o instanceof float[]) {
+            return toByteBuffer((float[])o, description, cache);
+        } else {
             throw TIOTFLiteVectorDataConverter.BadInputException();
         }
+    }
 
+    /**
+     * Writes an array of bytes to a ByteBuffer and returns it, using the cache if one is provided.
+     *
+     * @param bytes array of bytes to write to ByteBuffer
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return ByteBuffer ready for use with a TFLite model
+     */
+
+    public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOVectorLayerDescription)description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
+
+        TIOVectorLayerDescription vectorLayerDescription = (TIOVectorLayerDescription) description;
+        int length = vectorLayerDescription.getLength();
+
+        // Validate input
+
+        if (bytes.length != length) {
+            throw TIOTFLiteVectorDataConverter.BadLengthException(bytes.length, length);
+        }
+
+        // Write the bytes
+
+        buffer.put(bytes);
+
+        return buffer;
+    }
+
+    /**
+     * Writes an array of floats to a ByteBuffer and returns it, quantizing the values if necessary,
+     * and using the cache if one is provided.
+     *
+     * @param floats array of floats to write to ByteBuffer
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return ByteBuffer ready for use with a TFLite model
+     */
+
+    public ByteBuffer toByteBuffer(@NonNull float[] floats, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
         buffer.rewind();
 
         // Acquire needed properties from layer description
@@ -73,36 +124,23 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
         boolean quantized = vectorLayerDescription.isQuantized();
         int length = vectorLayerDescription.getLength();
 
-        // Fork on float[] and bytes[]
+        // Validate input
 
-        if (o instanceof float[]) {
-            float[] floats = (float[]) o;
-
-            if (floats.length != length) {
-                throw TIOTFLiteVectorDataConverter.BadLengthException(floats.length, length);
-            }
-
-            // Fork on quantized
-
-            if (quantized && quantizer == null) {
-                throw TIOTFLiteVectorDataConverter.MissingQuantizeException();
-            } else if (quantized) {
-                for (float v: floats) {
-                    buffer.put((byte)quantizer.quantize(v));
-                }
-            } else {
-                FloatBuffer f = buffer.asFloatBuffer();
-                f.put(floats);
-            }
+        if (floats.length != length) {
+            throw TIOTFLiteVectorDataConverter.BadLengthException(floats.length, length);
         }
-        else if (o instanceof byte[]) {
-            byte[] bytes = (byte[])o;
 
-            if (bytes.length != length) {
-                throw TIOTFLiteVectorDataConverter.BadLengthException(bytes.length, length);
+        // Fork on quantized and write bytes
+
+        if (quantized && quantizer == null) {
+            throw TIOTFLiteVectorDataConverter.MissingQuantizeException();
+        } else if (quantized) {
+            for (float v: floats) {
+                buffer.put((byte)quantizer.quantize(v));
             }
-
-            buffer.put(bytes);
+        } else {
+            FloatBuffer f = buffer.asFloatBuffer();
+            f.put(floats);
         }
 
         return buffer;

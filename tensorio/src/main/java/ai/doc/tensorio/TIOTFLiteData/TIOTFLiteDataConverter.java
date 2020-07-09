@@ -51,7 +51,7 @@ public interface TIOTFLiteDataConverter {
      * @param description A description of the layer with instructions on how to make the conversion
      * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
      *              is provided it will be rewound before being used.
-     * @return a ByteBuffer ready for use with a TFLite model
+     * @return ByteBuffer ready for use with a TFLite model
      */
 
     public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache);
