@@ -21,7 +21,7 @@
 package ai.doc.tensorio.TIOTFLiteData;
 
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
