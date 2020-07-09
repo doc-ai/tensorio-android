@@ -22,7 +22,7 @@ package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.Map;
 

@@ -20,7 +20,7 @@
 
 package ai.doc.tensorio.TIOTFLiteData;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 

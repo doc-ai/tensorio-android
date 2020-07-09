@@ -26,7 +26,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
@@ -55,8 +55,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TFLiteModelIntegrationTests {
-    private Context appContext = InstrumentationRegistry.getTargetContext();
-    private Context testContext = InstrumentationRegistry.getContext();
+    private Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
 
     private float epsilon = 0.01f;
 
