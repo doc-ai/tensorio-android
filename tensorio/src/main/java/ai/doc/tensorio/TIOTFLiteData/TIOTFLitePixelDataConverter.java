@@ -22,6 +22,7 @@ package ai.doc.tensorio.TIOTFLiteData;
 
 import android.graphics.Bitmap;
 import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -56,8 +57,15 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     @Override
-    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+        if (!(o instanceof Bitmap)) {
+            throw new IllegalArgumentException("Image input should be bitmap");
+        } else {
+            return toByteBuffer((Bitmap)o, description, cache);
+        }
+    }
 
+    public ByteBuffer toByteBuffer(Bitmap bitmap, TIOLayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
 
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
@@ -70,21 +78,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         boolean quantized = pixelBufferLayerDescription.isQuantized();
         TIOPixelNormalizer normalizer = pixelBufferLayerDescription.getNormalizer();
 
-        if (o == null) {
-            throw new NullPointerException("Input to a model can not be null");
-        } else if (!(o instanceof Bitmap)) {
-            throw new IllegalArgumentException("Image input should be bitmap");
-        }
+        // Resize Bitmap
 
-        // Bitmap Operations
-
-        Bitmap bitmap = (Bitmap) o;
         if (bitmap.getWidth() != shape.width || bitmap.getHeight() != shape.height){
-            throw new IllegalArgumentException("Image input has the wrong shape, expected width="+shape.width+" " +
-                    "and height="+shape.height+" " +
-                    "got width="+bitmap.getWidth()+" " +
-                    "and height="+bitmap.getHeight());
+            bitmap = Bitmap.createScaledBitmap(bitmap,shape.width,shape.height,true);
         }
+
+        // Read Bitmap into int array
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 

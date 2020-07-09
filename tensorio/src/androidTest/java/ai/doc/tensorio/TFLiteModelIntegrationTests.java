@@ -438,15 +438,6 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
-            }
-
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
             fail();
@@ -494,15 +485,6 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
-            }
-
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
             fail();
@@ -524,10 +506,7 @@ public class TFLiteModelIntegrationTests {
             InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
+            Map<String,Object> output = model.runOn(bitmap);
             assertTrue(output instanceof Map);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
@@ -558,10 +537,7 @@ public class TFLiteModelIntegrationTests {
             InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
+            Map<String,Object> output = model.runOn(bitmap);
             assertTrue(output instanceof Map);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");

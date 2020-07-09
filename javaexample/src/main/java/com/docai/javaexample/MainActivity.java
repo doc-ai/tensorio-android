@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
             InputStream stream = getAssets().open("elephant.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
-            final Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
 
             ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(bitmap);
@@ -79,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
             mHandler.post(() -> {
                 try {
-                    Map<String,Object> output = model.runOn(scaled);
+                    Map<String,Object> output = model.runOn(bitmap);
                     Map<String, Float> classification = (Map<String, Float>)output.get("classification");
                     List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5, 0.1f);
 

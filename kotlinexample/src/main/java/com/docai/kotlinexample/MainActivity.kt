@@ -24,7 +24,6 @@ import ai.doc.tensorio.TIOModel.TIOModelBundle
 import ai.doc.tensorio.TIOModel.TIOModelBundleException
 import ai.doc.tensorio.TIOModel.TIOModelException
 import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
@@ -56,7 +55,6 @@ class MainActivity : AppCompatActivity() {
 
             val stream = assets.open("elephant.jpg")
             val bitmap = BitmapFactory.decodeStream(stream)
-            val scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false)
 
             val imageView = findViewById<ImageView>(R.id.imageView)
             imageView.setImageBitmap(bitmap)
@@ -73,7 +71,7 @@ class MainActivity : AppCompatActivity() {
 
             mHandler.post {
                 try {
-                    val output = model.runOn(scaled)
+                    val output = model.runOn(bitmap)
                     val classification = output.get("classification") as MutableMap<String, Float>
                     val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
 
