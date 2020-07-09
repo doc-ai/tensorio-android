@@ -34,6 +34,14 @@ import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
 
+/**
+ * The TFLite pixel data converter transforms bitmaps into byte buffers for use as inputs to
+ * TFLite models and byte buffers outputs back into bitmaps.
+ *
+ * The `toByteBuffer` method will scale the Bitmap you provide if necessary using
+ * `createScaledBitmap`, or you may scale the Bitmap before hand.
+ */
+
 public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
     @Override
@@ -64,6 +72,16 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
             return toByteBuffer((Bitmap)o, description, cache);
         }
     }
+
+    /**
+     * Converts a Bitmap to a byte buffer. Resizes the Bitmap if necessary using `createScaledBitmap`.
+     *
+     * @param bitmap The bitmap to convert
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return A ByteBuffer ready for use with a TFLite model
+     */
 
     public ByteBuffer toByteBuffer(Bitmap bitmap, TIOLayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
@@ -141,6 +159,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      *
      * Before calling this method the first time in a loop, rewind the buffer. The buffer then
      * increments its index with every call to put.
+     *
      * @param pixelValue 4 byte pixel value to write with ARGB or BGRA format wit
      * @param buffer The buffer to write to
      * @param quantized true if the buffer expects quantized (byte) data, false otherwise (float)
@@ -172,6 +191,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      *
      * Before calling this method the first time in a loop, rewind the buffer. The buffer then
      * increments its index with every call to get.
+     *
      * @param buffer The buffer to read from
      * @param quantized True if the buffer contains quantized (byte) data, false otherwise (float)
      * @param denormalizer The denormalizer than converts a floating point pixel-channel value to a
