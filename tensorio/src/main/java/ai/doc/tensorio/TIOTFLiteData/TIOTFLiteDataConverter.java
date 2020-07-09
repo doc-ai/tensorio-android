@@ -20,6 +20,7 @@
 
 package ai.doc.tensorio.TIOTFLiteData;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
@@ -41,7 +42,7 @@ public interface TIOTFLiteDataConverter {
      * @return ByteBuffer ready to be filled with input or output data.
      */
 
-    public ByteBuffer createBackingBuffer(TIOLayerDescription description);
+    public ByteBuffer createBackingBuffer(@NonNull TIOLayerDescription description);
 
     /**
      * Converts an Object to a ByteBuffer, used to prepare data for a writing into a model.
@@ -53,7 +54,7 @@ public interface TIOTFLiteDataConverter {
      * @return a ByteBuffer ready for use with a TFLite model
      */
 
-    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache);
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache);
 
     /**
      * Converts a ByteBuffer to an object, used to read data from a model.
@@ -63,5 +64,5 @@ public interface TIOTFLiteDataConverter {
      * @return One of a number of native types such as an array of floats or a Bitmap
      */
 
-    public Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description);
+    public Object fromByteBuffer(@NonNull ByteBuffer buffer, @NonNull TIOLayerDescription description);
 }

@@ -21,6 +21,7 @@
 package ai.doc.tensorio.TIOTFLiteData;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -35,7 +36,7 @@ import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
     @Override
-    public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
+    public ByteBuffer createBackingBuffer(@NonNull TIOLayerDescription description) {
         ByteBuffer buffer;
 
         boolean quantized = ((TIOVectorLayerDescription)description).isQuantized();
@@ -55,7 +56,7 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
     }
 
     @Override
-    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
         if ( !((o instanceof byte[]) || (o instanceof float[])) ) {
             throw TIOTFLiteVectorDataConverter.BadInputException();
         }
@@ -111,7 +112,7 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
     // might get negative values. So we first have to unsign the byte with & 0xFF and then cast to int.
 
     @Override
-    public Object fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
+    public Object fromByteBuffer(@NonNull ByteBuffer buffer, @NonNull TIOLayerDescription description) {
 
         // Acquire needed properties from layer description
 
