@@ -93,7 +93,7 @@ public class TFLiteModelIntegrationTests {
             float[] input = new float[]{2};
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -107,7 +107,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", new float[]{2});
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -122,7 +122,6 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
-
             }
 
         } catch (TIOModelBundleException | TIOModelException e) {
@@ -155,7 +154,7 @@ public class TFLiteModelIntegrationTests {
             // Run the model on a vector
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -169,7 +168,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", input);
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -221,7 +220,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", new float[]{10, 20, 30, 40});
 
             Map<String, Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -315,7 +314,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", input2);
 
             Map<String,Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -375,7 +374,7 @@ public class TFLiteModelIntegrationTests {
             };
 
             Map<String,Object> output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             float[] result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -423,7 +422,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String, Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -436,15 +435,6 @@ public class TFLiteModelIntegrationTests {
                     assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
                 }
-            }
-
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
             }
 
         } catch (TIOModelBundleException | TIOModelException e) {
@@ -479,7 +469,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String,Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -492,15 +482,6 @@ public class TFLiteModelIntegrationTests {
                     assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
                     assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
                 }
-            }
-
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
             }
 
         } catch (TIOModelBundleException | TIOModelException e) {
@@ -524,11 +505,8 @@ public class TFLiteModelIntegrationTests {
             InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
-            assertTrue(output instanceof Map);
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
@@ -558,11 +536,8 @@ public class TFLiteModelIntegrationTests {
             InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
-            assertTrue(output instanceof Map);
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);

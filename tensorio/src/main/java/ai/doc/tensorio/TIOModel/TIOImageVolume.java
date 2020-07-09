@@ -1,5 +1,5 @@
 /*
- * TIOPixelFormat.java
+ * TIOImageVolume.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -18,9 +18,17 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOModel.TIOVisionModel;
+package ai.doc.tensorio.TIOModel;
 
-public enum TIOPixelFormat {
-    BGR,
-    RGB
+public class TIOImageVolume {
+    public int height;
+    public int width;
+    public int channels;
+
+    public TIOImageVolume(int height, int width, int channels) {
+        this.height = height;
+        this.width = width;
+        this.channels = channels;
+    }
 }
+
