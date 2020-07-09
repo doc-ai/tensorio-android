@@ -22,8 +22,8 @@ package ai.doc.tensorio.TIOLayerInterface;
 
 import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
+import ai.doc.tensorio.TIOModel.TIOImageVolume;
+import ai.doc.tensorio.TIOModel.TIOPixelFormat;
 
 /**
  * The description of a pixel buffer input or output layer.

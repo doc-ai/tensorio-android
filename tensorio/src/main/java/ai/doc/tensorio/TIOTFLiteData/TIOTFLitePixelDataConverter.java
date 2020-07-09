@@ -32,7 +32,7 @@ import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
+import ai.doc.tensorio.TIOModel.TIOImageVolume;
 
 /**
  * The TFLite pixel data converter transforms bitmaps into byte buffers for use as inputs to
