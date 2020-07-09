@@ -93,7 +93,7 @@ public class TFLiteModelIntegrationTests {
             float[] input = new float[]{2};
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -107,7 +107,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", new float[]{2});
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -122,7 +122,6 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
-
             }
 
         } catch (TIOModelBundleException | TIOModelException e) {
@@ -155,7 +154,7 @@ public class TFLiteModelIntegrationTests {
             // Run the model on a vector
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -169,7 +168,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", input);
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -221,7 +220,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", new float[]{10, 20, 30, 40});
 
             Map<String, Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -315,7 +314,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", input2);
 
             Map<String,Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -375,7 +374,7 @@ public class TFLiteModelIntegrationTests {
             };
 
             Map<String,Object> output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             float[] result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -423,7 +422,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String, Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -470,7 +469,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String,Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -507,7 +506,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
             Map<String,Object> output = model.runOn(bitmap);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
@@ -538,7 +537,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
             Map<String,Object> output = model.runOn(bitmap);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
