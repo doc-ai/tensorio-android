@@ -56,13 +56,13 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
     }
 
     @Override
-    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         if (o instanceof byte[]) {
             return toByteBuffer((byte[])o, description, cache);
         } else if (o instanceof float[]) {
             return toByteBuffer((float[])o, description, cache);
         } else {
-            throw TIOTFLiteVectorDataConverter.BadInputException();
+            throw BadInputException();
         }
     }
 
@@ -76,7 +76,7 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
      * @return ByteBuffer ready for use with a TFLite model
      */
 
-    public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
@@ -90,7 +90,7 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
         // Validate input
 
         if (bytes.length != length) {
-            throw TIOTFLiteVectorDataConverter.BadLengthException(bytes.length, length);
+            throw BadLengthException(bytes.length, length);
         }
 
         // Write the bytes
@@ -111,7 +111,7 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
      * @return ByteBuffer ready for use with a TFLite model
      */
 
-    public ByteBuffer toByteBuffer(@NonNull float[] floats, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull float[] floats, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
         ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
@@ -127,13 +127,13 @@ public class TIOTFLiteVectorDataConverter implements TIODataConverter, TIOTFLite
         // Validate input
 
         if (floats.length != length) {
-            throw TIOTFLiteVectorDataConverter.BadLengthException(floats.length, length);
+            throw BadLengthException(floats.length, length);
         }
 
         // Fork on quantized and write bytes
 
         if (quantized && quantizer == null) {
-            throw TIOTFLiteVectorDataConverter.MissingQuantizeException();
+            throw MissingQuantizeException();
         } else if (quantized) {
             for (float v: floats) {
                 buffer.put((byte)quantizer.quantize(v));
