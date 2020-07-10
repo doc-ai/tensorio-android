@@ -26,12 +26,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.docai.javaexample.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,9 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Load the Test Image
 
-            InputStream stream = getAssets().open("picture2.jpg");
+            InputStream stream = getAssets().open("elephant.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
-            final Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
 
             ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(bitmap);
@@ -81,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
             mHandler.post(() -> {
                 try {
-                    Map<String,Object> output = model.runOn(scaled);
+                    Map<String,Object> output = model.runOn(bitmap);
                     Map<String, Float> classification = (Map<String, Float>)output.get("classification");
                     List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5, 0.1f);
 

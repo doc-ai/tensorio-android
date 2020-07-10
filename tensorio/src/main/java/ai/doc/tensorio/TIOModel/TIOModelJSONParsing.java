@@ -20,7 +20,7 @@
 
 package ai.doc.tensorio.TIOModel;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,8 +37,6 @@ import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOPixelFormat;
 import ai.doc.tensorio.TIOUtilities.FileIO;
 
 import static ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface.*;

@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.TIOLayerInterface;
 
+import java.util.function.Consumer;
+
 /**
  * Encapsulates information about the input, output, and placeholder layers of a model, fully described by a
  * `TIOLayerDescription`. Used internally by a model when parsing its description. Also used to
@@ -126,10 +128,35 @@ public class TIOLayerInterface {
         return mode;
     }
 
-    public TIOLayerDescription getLayerDescription() {
-        return layerDescription;
-    }
-
     //endregion
 
+    /**
+     * The primary interface to the underlying layer description. Rather than accessing the description
+     * directly, call this function, which effectively switches on the type of the layer and calls
+     * back to the lambdas you have provided for each type.
+     *
+     * For example:
+     *
+     * <code>
+     *     layer.doCase((vectorLayer) -> {
+     *         // your code
+     *     }, (pixelLayer) -> {
+     *         // your code
+     *     });
+     * </code>
+     *
+     * @param vectorLayer A consuming lambda that takes the vector layer description as a parameter
+     * @param pixelLayer A consuming lambda that takes the pixel layer description as a parameter
+     */
+
+    public void doCase(Consumer<TIOVectorLayerDescription> vectorLayer, Consumer<TIOPixelBufferLayerDescription> pixelLayer) {
+        switch (this.type) {
+            case Vector:
+                vectorLayer.accept((TIOVectorLayerDescription)this.layerDescription);
+                break;
+            case PixelBuffer:
+                pixelLayer.accept((TIOPixelBufferLayerDescription)this.layerDescription);
+                break;
+        }
+    }
 }

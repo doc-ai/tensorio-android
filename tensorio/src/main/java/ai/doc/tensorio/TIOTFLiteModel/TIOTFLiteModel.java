@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
@@ -66,7 +67,7 @@ public class TIOTFLiteModel extends TIOModel {
     // Buffer Caching
 
     private boolean cacheBuffers = true;
-    private Map<TIOLayerDescription, ByteBuffer> bufferCache = null;
+    private Map<TIOLayerInterface, ByteBuffer> bufferCache = null;
 
     // Data Converters
 
@@ -141,14 +142,11 @@ public class TIOTFLiteModel extends TIOModel {
         layers.addAll(getIO().getOutputs().all());
 
         for (TIOLayerInterface layer : layers) {
-            TIOLayerDescription description = layer.getLayerDescription();
-
-            if (description instanceof TIOVectorLayerDescription) {
-                bufferCache.put(description, vectorDataConverter.createBackingBuffer(description));
-            }
-            else if (description instanceof  TIOPixelBufferLayerDescription) {
-                bufferCache.put(description, pixelDataConverter.createBackingBuffer(description));
-            }
+            layer.doCase((vectorLayer) -> {
+                bufferCache.put(layer, vectorDataConverter.createBackingBuffer(vectorLayer));
+            }, (pixelLayer) -> {
+                bufferCache.put(layer, pixelDataConverter.createBackingBuffer(pixelLayer));
+            });
         }
     }
 
@@ -254,8 +252,8 @@ public class TIOTFLiteModel extends TIOModel {
 
         // Fetch the input and output layer descriptions from the model
 
-        TIOLayerDescription inputLayer = getIO().getInputs().get(0).getLayerDescription();
-        TIOLayerDescription outputLayer = getIO().getOutputs().get(0).getLayerDescription();
+        TIOLayerInterface inputLayer = getIO().getInputs().get(0);
+        TIOLayerInterface outputLayer = getIO().getOutputs().get(0);
 
         // Prepare input buffer
 
@@ -296,8 +294,8 @@ public class TIOTFLiteModel extends TIOModel {
         Object[] inputBuffers = new Object[inputList.size()];
 
         for (int i = 0; i < inputList.size(); i++){
-            TIOLayerDescription inputLayer = inputList.get(i).getLayerDescription();
-            Object input = inputs.get(inputList.get(i).getName());
+            TIOLayerInterface inputLayer = inputList.get(i);
+            Object input = inputs.get(inputLayer.getName());
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
 
             inputBuffers[i] = inputBuffer;
@@ -308,7 +306,7 @@ public class TIOTFLiteModel extends TIOModel {
         Map<Integer, Object> outputBuffers = new HashMap<>(outputList.size());
 
         for (int i = 0; i < outputList.size(); i++){
-            TIOLayerDescription outputLayer = outputList.get(i).getLayerDescription();
+            TIOLayerInterface outputLayer = outputList.get(i);
             ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
 
             outputBuffers.put(i, outputBuffer);
@@ -328,54 +326,51 @@ public class TIOTFLiteModel extends TIOModel {
      * then buffers that have been associated with each layer will be resued.
      *
      * @param input The input to convert to a byte buffer
-     * @param inputLayer A description of the layer this buffer will be used with
+     * @param inputLayer The interface to the layer that this buffer will be used with
      * @return ByteBuffer ready for input to a model
      */
 
-    private ByteBuffer prepareInputBuffer(Object input, TIOLayerDescription inputLayer) {
-        ByteBuffer inputBuffer = null;
-        ByteBuffer cachedBuffer = null;
+    private ByteBuffer prepareInputBuffer(Object input, TIOLayerInterface inputLayer) {
+        final AtomicReference<ByteBuffer> inputBuffer = new AtomicReference<>();
+        final ByteBuffer cachedBuffer = cacheBuffers ? bufferCache.get(inputLayer) : null;
 
-        if (cacheBuffers) {
-            cachedBuffer = bufferCache.get(inputLayer);
-            cachedBuffer.rewind();
-        }
-
-        if ( inputLayer instanceof TIOVectorLayerDescription ) {
-            inputBuffer = vectorDataConverter.toByteBuffer(input, inputLayer, cachedBuffer);
-        }
-        else if ( inputLayer instanceof TIOPixelBufferLayerDescription ) {
-            inputBuffer = pixelDataConverter.toByteBuffer(input, inputLayer, cachedBuffer);
-        }
-
-        return inputBuffer;
+        inputLayer.doCase((vectorLayer) -> {
+            ByteBuffer buffer = vectorDataConverter.toByteBuffer(input, vectorLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        }, (pixelLayer) -> {
+            ByteBuffer buffer = pixelDataConverter.toByteBuffer(input, pixelLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        });
+        
+        return inputBuffer.get();
     }
 
     /**
      * Prepares a ByteBuffer that can be used for output from a model. If buffer caching is used
      * then buffers that have been associated with each layer will be resued.
      *
-     * @param outputLayer A description of the layer this buffer will be used with
+     * @param outputLayer The interface to the layer layer that this buffer will be used with
      * @return ByteBuffer ready for model output
      */
 
-    private ByteBuffer prepareOutputBuffer(TIOLayerDescription outputLayer) {
-        ByteBuffer outputBuffer = null;
-
+    private ByteBuffer prepareOutputBuffer(TIOLayerInterface outputLayer) {
         if (cacheBuffers) {
-            outputBuffer = bufferCache.get(outputLayer);
-            outputBuffer.rewind();
-            return outputBuffer;
+            ByteBuffer cached = bufferCache.get(outputLayer);
+            cached.rewind();
+            return cached;
         }
 
-        if ( outputLayer instanceof TIOVectorLayerDescription ) {
-            outputBuffer = vectorDataConverter.createBackingBuffer(outputLayer);
-        }
-        else if ( outputLayer instanceof TIOPixelBufferLayerDescription ) {
-            outputBuffer = pixelDataConverter.createBackingBuffer(outputLayer);
-        }
+        final AtomicReference<ByteBuffer> outputBuffer = new AtomicReference<>();
 
-        return outputBuffer;
+        outputLayer.doCase((vectorLayer) -> {
+            ByteBuffer buffer = vectorDataConverter.createBackingBuffer(vectorLayer);
+            outputBuffer.set(buffer);
+        }, (pixelLayer) -> {
+            ByteBuffer buffer = pixelDataConverter.createBackingBuffer(pixelLayer);
+            outputBuffer.set(buffer);
+        });
+
+        return outputBuffer.get();
     }
 
     /**
@@ -389,8 +384,8 @@ public class TIOTFLiteModel extends TIOModel {
         Map<String, Object> outputMap = new HashMap<>(outputList.size());
 
         for (int i = 0; i < outputList.size(); i++){
-            TIOLayerDescription layer = outputList.get(i).getLayerDescription();
-            String name = outputList.get(i).getName();
+            TIOLayerInterface layer = outputList.get(i);
+            String name = layer.getName();
 
             ByteBuffer buffer = (ByteBuffer)outputs.get(i);
             Object o = captureOutput(buffer, layer);
@@ -404,25 +399,16 @@ public class TIOTFLiteModel extends TIOModel {
     /**
      * Converts a single ByteBuffer to a user land object
      * @param buffer The buffer to capture and convert
-     * @param layer A layer describing the output
+     * @param layer The interface to the output
      * @return An object in accordance with the layer description, usually one of byte[], float[],
      * or Bitmap
      */
 
-    private Object captureOutput(ByteBuffer buffer, TIOLayerDescription layer) {
-        Object o = null;
+    private Object captureOutput(ByteBuffer buffer, TIOLayerInterface layer) {
+        final AtomicReference<Object> output = new AtomicReference<>();
 
-        if ( layer instanceof TIOVectorLayerDescription ) {
-            o = vectorDataConverter.fromByteBuffer(buffer, layer);
-        }
-        else if ( layer instanceof TIOPixelBufferLayerDescription ) {
-            o = pixelDataConverter.fromByteBuffer(buffer, layer);
-        }
-
-        // Perform any additional transformations on the captured output
-
-        if (layer instanceof TIOVectorLayerDescription) {
-            TIOVectorLayerDescription vectorLayer = (TIOVectorLayerDescription)layer;
+        layer.doCase((vectorLayer) -> {
+            Object o = vectorDataConverter.fromByteBuffer(buffer, vectorLayer);
 
             // If the vector's output is labeled, return a Map of keys to values rather than raw values
 
@@ -435,9 +421,14 @@ public class TIOTFLiteModel extends TIOModel {
             // if (((float[])o).length == 1) {
             //    o = ((float[])o)[0];
             // }
-        }
 
-        return o;
+            output.set(o);
+        }, (pixelLayer) -> {
+            Object o = pixelDataConverter.fromByteBuffer(buffer, pixelLayer);
+            output.set(o);
+        });
+
+        return output.get();
     }
 
     //endRegion

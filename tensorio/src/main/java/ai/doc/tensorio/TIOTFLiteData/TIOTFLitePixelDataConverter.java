@@ -21,7 +21,8 @@
 package ai.doc.tensorio.TIOTFLiteData;
 
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,12 +32,20 @@ import ai.doc.tensorio.TIOData.TIOPixelDenormalizer;
 import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
-import ai.doc.tensorio.TIOModel.TIOVisionModel.TIOImageVolume;
+import ai.doc.tensorio.TIOModel.TIOImageVolume;
+
+/**
+ * The TFLite pixel data converter transforms bitmaps into byte buffers for use as inputs to
+ * TFLite models and byte buffers outputs back into bitmaps.
+ *
+ * The `toByteBuffer` method will scale the Bitmap you provide if necessary using
+ * `createScaledBitmap`, or you may scale the Bitmap before hand.
+ */
 
 public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteDataConverter {
 
     @Override
-    public ByteBuffer createBackingBuffer(TIOLayerDescription description) {
+    public ByteBuffer createBackingBuffer(@NonNull TIOLayerDescription description) {
         ByteBuffer buffer;
 
         boolean quantized = ((TIOPixelBufferLayerDescription)description).isQuantized();
@@ -56,11 +65,28 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     @Override
-    public ByteBuffer toByteBuffer(Object o, TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+        if (!(o instanceof Bitmap)) {
+            throw new IllegalArgumentException("Image input should be bitmap");
+        } else {
+            return toByteBuffer((Bitmap)o, description, cache);
+        }
+    }
 
+    /**
+     * Converts a Bitmap to a byte buffer. Resizes the Bitmap if necessary using `createScaledBitmap`.
+     *
+     * @param bitmap The bitmap to convert
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return A ByteBuffer ready for use with a TFLite model
+     */
+
+    public ByteBuffer toByteBuffer(@NonNull Bitmap bitmap, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer((TIOPixelBufferLayerDescription)description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
         buffer.rewind();
 
         // Acquire needed properties from layer description
@@ -70,21 +96,13 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
         boolean quantized = pixelBufferLayerDescription.isQuantized();
         TIOPixelNormalizer normalizer = pixelBufferLayerDescription.getNormalizer();
 
-        if (o == null) {
-            throw new NullPointerException("Input to a model can not be null");
-        } else if (!(o instanceof Bitmap)) {
-            throw new IllegalArgumentException("Image input should be bitmap");
-        }
+        // Resize Bitmap
 
-        // Bitmap Operations
-
-        Bitmap bitmap = (Bitmap) o;
         if (bitmap.getWidth() != shape.width || bitmap.getHeight() != shape.height){
-            throw new IllegalArgumentException("Image input has the wrong shape, expected width="+shape.width+" " +
-                    "and height="+shape.height+" " +
-                    "got width="+bitmap.getWidth()+" " +
-                    "and height="+bitmap.getHeight());
+            bitmap = Bitmap.createScaledBitmap(bitmap,shape.width,shape.height,true);
         }
+
+        // Read Bitmap into int array
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
 
@@ -107,7 +125,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     @Override
-    public Bitmap fromByteBuffer(ByteBuffer buffer, TIOLayerDescription description) {
+    public Bitmap fromByteBuffer(@NonNull ByteBuffer buffer, @NonNull TIOLayerDescription description) {
 
         // Acquire needed properties from layer description
 
@@ -141,6 +159,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      *
      * Before calling this method the first time in a loop, rewind the buffer. The buffer then
      * increments its index with every call to put.
+     *
      * @param pixelValue 4 byte pixel value to write with ARGB or BGRA format wit
      * @param buffer The buffer to write to
      * @param quantized true if the buffer expects quantized (byte) data, false otherwise (float)
@@ -148,7 +167,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      *                   floating point value
      */
 
-    private void writePixelToBuffer(int pixelValue, ByteBuffer buffer, boolean quantized, @Nullable TIOPixelNormalizer normalizer) {
+    private void writePixelToBuffer(int pixelValue, @NonNull ByteBuffer buffer, boolean quantized, @Nullable TIOPixelNormalizer normalizer) {
         if (quantized) {
             buffer.put((byte) ((pixelValue >> 16) & 0xFF));
             buffer.put((byte) ((pixelValue >> 8) & 0xFF));
@@ -172,6 +191,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      *
      * Before calling this method the first time in a loop, rewind the buffer. The buffer then
      * increments its index with every call to get.
+     *
      * @param buffer The buffer to read from
      * @param quantized True if the buffer contains quantized (byte) data, false otherwise (float)
      * @param denormalizer The denormalizer than converts a floating point pixel-channel value to a
@@ -179,7 +199,7 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
      * @return The 4 byte representation of the pixel.
      */
 
-    private int readPixelFromBuffer(ByteBuffer buffer, boolean quantized, @Nullable TIOPixelDenormalizer denormalizer) {
+    private int readPixelFromBuffer(@NonNull ByteBuffer buffer, boolean quantized, @Nullable TIOPixelDenormalizer denormalizer) {
         if (quantized) {
             int r = buffer.get();
             int g = buffer.get();

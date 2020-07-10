@@ -26,7 +26,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
@@ -55,7 +55,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TFLiteModelIntegrationTests {
-    private Context context = InstrumentationRegistry.getTargetContext();
+    private Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
+
     private float epsilon = 0.01f;
 
     @Before
@@ -71,7 +73,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1In1OutNumberModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_number_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_number_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -91,7 +93,7 @@ public class TFLiteModelIntegrationTests {
             float[] input = new float[]{2};
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -105,7 +107,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", new float[]{2});
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -120,7 +122,6 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
-
             }
 
         } catch (TIOModelBundleException | TIOModelException e) {
@@ -132,7 +133,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_vectors_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -153,7 +154,7 @@ public class TFLiteModelIntegrationTests {
             // Run the model on a vector
 
             output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -167,7 +168,7 @@ public class TFLiteModelIntegrationTests {
             input_dict.put("input", input);
 
             output = model.runOn(input_dict);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -202,7 +203,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_vectors_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "2_in_2_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -219,7 +220,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", new float[]{10, 20, 30, 40});
 
             Map<String, Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -268,7 +269,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "2_in_2_out_matrices_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "2_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -313,7 +314,7 @@ public class TFLiteModelIntegrationTests {
             inputs.put("input2", input2);
 
             Map<String,Object> output = model.runOn(inputs);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             assertEquals(2, output.size());
             assertTrue(output.containsKey("output1"));
@@ -348,7 +349,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_tensors_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_tensors_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -373,7 +374,7 @@ public class TFLiteModelIntegrationTests {
             };
 
             Map<String,Object> output = model.runOn(input);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             float[] result = (float[]) output.get("output");
             assertTrue(result instanceof float[]);
@@ -398,7 +399,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -421,7 +422,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String, Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -436,15 +437,6 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
-            }
-
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
             fail();
@@ -454,7 +446,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
@@ -477,7 +469,7 @@ public class TFLiteModelIntegrationTests {
             canvas.drawRect(0F, 0F, width, height, paint);
 
             Map<String,Object> output = model.runOn(bmp);
-            assertTrue(output instanceof Map);
+            assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
             assertTrue(outputBitmap instanceof Bitmap);
@@ -492,15 +484,6 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-            // Try running on input image of wrong size, should throw IllegalArgumentException
-
-            try {
-                Bitmap small = Bitmap.createScaledBitmap(bmp, 128, 128, true);
-                model.runOn(small);
-                fail();
-            } catch (IllegalArgumentException e) {
-            }
-
         } catch (TIOModelBundleException | TIOModelException e) {
             e.printStackTrace();
             fail();
@@ -512,21 +495,18 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testMobileNetClassificationModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "mobilenet_v2_1.4_224.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
-            InputStream stream = context.getAssets().open("example-image.jpg");
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
-            assertTrue(output instanceof Map);
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
@@ -546,21 +526,18 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testQuantizedMobileNetClassificationModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(context, "mobilenet_v1_1.0_224_quant.tiobundle");
+            TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
             assertNotNull(bundle);
 
             TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
-            InputStream stream = context.getAssets().open("example-image.jpg");
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-            // TODO: Vision pipeline for resizing and normalizing bitmaps
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,224,224,true);
-
-            Map<String,Object> output = model.runOn(resizedBitmap);
-            assertTrue(output instanceof Map);
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
@@ -583,16 +560,14 @@ public class TFLiteModelIntegrationTests {
 
     @Test
     public void testTIOModelBundleValidator() {
-        Context context = InstrumentationRegistry.getTargetContext();
-
         try {
-            String[] assets = context.getAssets().list("");
+            String[] assets = appContext.getAssets().list("");
             for (String s: assets) {
                 if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
                     continue;
                 }
 
-                InputStream inputStream = context.getAssets().open(s + "/model.json");
+                InputStream inputStream = appContext.getAssets().open(s + "/model.json");
                 int size = inputStream.available();
                 byte[] buffer = new byte[size];
 
@@ -600,7 +575,7 @@ public class TFLiteModelIntegrationTests {
                 inputStream.close();
 
                 String modelJSON = new String(buffer, "UTF-8");
-                assertEquals(true, TIOModelBundleValidator.ValidateTFLite(context, modelJSON));
+                assertEquals(true, TIOModelBundleValidator.ValidateTFLite(appContext, modelJSON));
             }
         } catch (IOException | ProcessingException ex) {
             ex.printStackTrace();

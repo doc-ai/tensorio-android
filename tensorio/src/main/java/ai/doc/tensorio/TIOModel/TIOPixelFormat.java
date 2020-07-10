@@ -1,5 +1,5 @@
 /*
- * TIOVisionModelHelpers.java
+ * TIOPixelFormat.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -18,9 +18,9 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.TIOModel.TIOVisionModel;
+package ai.doc.tensorio.TIOModel;
 
-public class TIOVisionModelHelpers {
-
-
+public enum TIOPixelFormat {
+    BGR,
+    RGB
 }
