@@ -48,6 +48,12 @@ import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 
 public class TIOTFLiteModel extends TIOModel {
 
+    public enum HardwareBacking {
+        CPU,
+        GPU,
+        NNAPI
+    }
+
     // TFLite Backend
 
     private Interpreter interpreter;
@@ -56,10 +62,9 @@ public class TIOTFLiteModel extends TIOModel {
 
     // TFLite Backend Options
 
-    private int numThreads = 1;
-    private boolean useGPU = false;
-    private boolean useNNAPI = false;
-    private boolean use16bit = false;
+    private HardwareBacking hardwareBacking = HardwareBacking.CPU;
+    private boolean use16bitPrecision = false;
+    private int numThreads = -1;
 
     // Buffer Caching
 
@@ -70,6 +75,38 @@ public class TIOTFLiteModel extends TIOModel {
 
     final private TIOTFLiteVectorDataConverter vectorDataConverter = new TIOTFLiteVectorDataConverter();
     final private TIOTFLitePixelDataConverter pixelDataConverter = new TIOTFLitePixelDataConverter();
+
+    // Backend Options Getters and Setters
+
+    /** Sets hardware backend. After calling this method you must call reload() for changes to take effect. */
+
+    public void setHardwareBacking(HardwareBacking hardwareBacking) {
+        this.hardwareBacking = hardwareBacking;
+    }
+
+    public HardwareBacking getHardwareBacking() {
+        return hardwareBacking;
+    }
+
+    /** Sets number of model threads, default is -1. After calling this method you must call reload() for changes to take effect. */
+
+    public void setNumThreads(int numThreads) {
+        this.numThreads = numThreads;
+    }
+
+    public int getNumThreads() {
+        return numThreads;
+    }
+
+    /** Sets floating point precision. After calling this method you must call reload() for changes to take effect. */
+
+    public void setUse16bitPrecision(boolean use16bitprecision) {
+        this.use16bitPrecision = use16bitprecision;
+    }
+
+    public boolean use16bitPrecision() {
+        return use16bitPrecision;
+    }
 
     // Constructor
 
@@ -85,7 +122,13 @@ public class TIOTFLiteModel extends TIOModel {
             return;
         }
 
-        // Prepare Model
+        // Prepare Buffer Cache
+
+        if (cacheBuffers) {
+            prepareBufferCache();
+        }
+
+        // Load Model
 
         try {
             tfliteModel = loadModelFile(getContext(), getBundle().getModelFilePath());
@@ -93,15 +136,29 @@ public class TIOTFLiteModel extends TIOModel {
             throw new TIOModelException("Error loading model file", e);
         }
 
-        interpreter = new Interpreter(tfliteModel);
+        // Prepare Interpreter
 
-        // Prepare Buffer Cache
-
-        if (cacheBuffers) {
-            prepareBufferCache();
-        }
+        createInterpreter();
 
         super.load();
+    }
+
+    /** Recreate the interpreter without reloading the model from disk **/
+
+    @Override
+    public void reload() throws TIOModelException {
+        if (interpreter != null ) {
+            interpreter.close();
+            interpreter = null;
+        }
+
+        if (gpuDelegate != null) {
+            gpuDelegate.close();
+            gpuDelegate = null;
+        }
+
+        createInterpreter();
+        super.reload();
     }
 
     @Override
@@ -127,9 +184,29 @@ public class TIOTFLiteModel extends TIOModel {
         super.unload();
     }
 
-    /**
-     * Create buffer caches that are used for model inputs and outputs
-     */
+    private void createInterpreter() {
+
+        // Options
+
+        Interpreter.Options options = new Interpreter.Options();
+
+        options.setNumThreads(numThreads);
+        options.setUseNNAPI(hardwareBacking == HardwareBacking.NNAPI);
+        options.setAllowFp16PrecisionForFp32(use16bitPrecision);
+
+        // GPU Delegate
+
+        if (hardwareBacking == HardwareBacking.GPU && GpuDelegateHelper.isGpuDelegateAvailable()) {
+            gpuDelegate = (GpuDelegate) GpuDelegateHelper.createGpuDelegate();
+            options.addDelegate(gpuDelegate);
+        }
+
+        // Interpreter
+
+        interpreter = new Interpreter(tfliteModel, options);
+    }
+
+    /** Create buffer caches that are used for model inputs and outputs */
 
     void prepareBufferCache() {
         bufferCache = new HashMap<>();
@@ -436,73 +513,19 @@ public class TIOTFLiteModel extends TIOModel {
 
     //region Utilities
 
-    private MappedByteBuffer loadModelFile(Context context, String path) throws IOException {
-        AssetFileDescriptor fileDescriptor = context.getAssets().openFd(path);
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-        FileChannel fileChannel = inputStream.getChannel();
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-    }
-
-    private void recreateInterpreter() {
-        unload();
-        Interpreter.Options tfliteOptions = new Interpreter.Options();
-        tfliteOptions.setAllowFp16PrecisionForFp32(use16bit);
-        tfliteOptions.setUseNNAPI(useNNAPI);
-        tfliteOptions.setNumThreads(numThreads);
-        if (useGPU && GpuDelegateHelper.isGpuDelegateAvailable()){
-            tfliteOptions.addDelegate((GpuDelegate)GpuDelegateHelper.createGpuDelegate());
-        }
-
-        interpreter = new Interpreter(tfliteModel, tfliteOptions);
-    }
-
-    public void useGPU() {
-        if (GpuDelegateHelper.isGpuDelegateAvailable()){
-            useGPU = true;
-            recreateInterpreter();
-        }
-    }
-
-    public void useCPU() {
-        useGPU = false;
-        useNNAPI = false;
-        recreateInterpreter();
-    }
-
-    public void useNNAPI() {
-        useGPU = false;
-        useNNAPI = true;
-        recreateInterpreter();
-    }
-
-    public void setNumThreads(int numThreads) {
-        this.numThreads = numThreads;
-        recreateInterpreter();
-    }
-
-    public void setAllow16BitPrecision(boolean use16Bit) {
-        this.use16bit = use16Bit;
-        recreateInterpreter();
-    }
-
     public long getLastInferenceDuration(){
         return interpreter.getLastNativeInferenceDurationNanoseconds();
     }
 
-    public void setOptions(boolean use16bit, boolean useGPU, boolean useNNAPI, int numThreads){
-        this.use16bit = use16bit;
-        if (useGPU && GpuDelegateHelper.isGpuDelegateAvailable()){
-            this.useGPU = true;
-            this.useNNAPI = false;
-        }
-        else if (useNNAPI){
-            this.useGPU = false;
-            this.useNNAPI = true;
-        }
-        this.numThreads = numThreads;
-        recreateInterpreter();
+    private MappedByteBuffer loadModelFile(Context context, String path) throws IOException {
+        AssetFileDescriptor fileDescriptor = context.getAssets().openFd(path);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
     //endRegion
