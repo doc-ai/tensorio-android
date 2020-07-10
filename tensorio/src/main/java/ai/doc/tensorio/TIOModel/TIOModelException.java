@@ -28,16 +28,4 @@ public class TIOModelException extends Exception {
     public TIOModelException(String message, Throwable cause) {
         super(message, cause);
     }
-
-    //region Well Defined Exceptions
-
-    static TIOModelException InputCountMismatchException(int actual, int expected) {
-        return new TIOModelException("The model has " + expected + " input layers but received " + actual + " inputs");
-    }
-
-    static TIOModelException MissingInput(String name) {
-        return new TIOModelException("The model received no input for layer \"" + name + "\"");
-    }
-
-    //endRegion
 }

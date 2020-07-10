@@ -38,10 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
-import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import ai.doc.tensorio.TIOModel.TIOModel;
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
@@ -155,7 +152,7 @@ public class TIOTFLiteModel extends TIOModel {
     //region Run
 
     @Override
-    public Map<String, Object> runOn(float[] input) throws TIOModelException {
+    public Map<String, Object> runOn(float[] input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -167,7 +164,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     @Override
-    public Map<String, Object> runOn(byte[] input) throws TIOModelException {
+    public Map<String, Object> runOn(byte[] input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -179,7 +176,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     @Override
-    public Map<String, Object> runOn(Bitmap input) throws TIOModelException {
+    public Map<String, Object> runOn(Bitmap input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -191,7 +188,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     @Override
-    public Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException {
+    public Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -245,10 +242,11 @@ public class TIOTFLiteModel extends TIOModel {
      * Actually performs inference on a single input with a single output
      * @param input An input in one of the supported types, e.g. byte[], float[], or Bitmap
      * @return The model's single output mapped by the output layers name
-     * @throws TIOModelException
+     * @throws IllegalArgumentException raised if the input cannot be transformed to the format
+     *                                  expected by the model
      */
 
-    private Map<String, Object> runSingleInputSingleOutput(Object input) throws TIOModelException {
+    private Map<String, Object> runSingleInputSingleOutput(Object input) throws IllegalArgumentException {
 
         // Fetch the input and output layer descriptions from the model
 
@@ -279,10 +277,11 @@ public class TIOTFLiteModel extends TIOModel {
      * Actually performs inference on multiple inputs or multiple outputs
      * @param inputs A mapping from input layer names to input values
      * @return The model's outputs mapped by the output layer names
-     * @throws TIOModelException
+     * @throws IllegalArgumentException raised if the input cannot be transformed to the format
+     *                                  expected by the model
      */
 
-    private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws TIOModelException {
+    private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws IllegalArgumentException {
 
         // Fetch the input and output layer descriptions from the model
 
@@ -328,9 +327,11 @@ public class TIOTFLiteModel extends TIOModel {
      * @param input The input to convert to a byte buffer
      * @param inputLayer The interface to the layer that this buffer will be used with
      * @return ByteBuffer ready for input to a model
+     * @throws IllegalArgumentException raised if the input cannot be transformed to the format
+     *                                  expected by the model
      */
 
-    private ByteBuffer prepareInputBuffer(Object input, TIOLayerInterface inputLayer) {
+    private ByteBuffer prepareInputBuffer(Object input, TIOLayerInterface inputLayer) throws IllegalArgumentException {
         final AtomicReference<ByteBuffer> inputBuffer = new AtomicReference<>();
         final ByteBuffer cachedBuffer = cacheBuffers ? bufferCache.get(inputLayer) : null;
 
