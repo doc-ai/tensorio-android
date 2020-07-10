@@ -273,6 +273,20 @@ public abstract class TIOModel {
     }
 
     /**
+     * Reloads a model. Use this method when you have changed model configuration and must reload
+     * the model in order for those changes to take effect.
+     *
+     * Conforming classes should override this method to perform custom reloading and set loaded=true
+     * or call super's implementation after loading has been successful.
+     *
+     * @throws TIOModelException
+     */
+
+    public void reload() throws TIOModelException {
+        loaded = true;
+    }
+
+    /**
      * Unloads a model from memory
      *
      * A model will unload its resources automatically when it is deallocated, but the unload function
