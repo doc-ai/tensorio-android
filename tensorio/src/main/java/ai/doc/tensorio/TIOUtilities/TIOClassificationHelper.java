@@ -22,9 +22,13 @@ package ai.doc.tensorio.TIOUtilities;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.stream.Collectors;
+
+import androidx.annotation.NonNull;
 
 public class TIOClassificationHelper {
 
@@ -82,5 +86,63 @@ public class TIOClassificationHelper {
         }
 
         return queue;
+    }
+
+    /**
+     * Applies an exponential decay function to classification results with a decay rate of 0.8 and
+     * a threshold of 0.1. May be applied to any list of String to Float values. So that:
+     *
+     * <code>
+     *     x_out = 0.8 * x_previous + 0.2 * x_new
+     *     x_out = 0 if x_out < 0.1
+     * </code>
+     *
+     * @param previousValues The previous classification results, or more likely the results of applying this function
+     * @param newValues The current classification results
+     * @return A list of entries whose values are greater than the default threshold of 0.1
+     */
+
+    public static List<Map.Entry<String, Float>> smoothClassification(@NonNull  List<Map.Entry<String, Float>> previousValues, @NonNull List<Map.Entry<String, Float>> newValues) {
+        return smoothClassification(previousValues, newValues, 0.8f, 0.1f);
+    }
+
+    /**
+     * Applies an exponential decay function to classification results with a given decay rate and
+     * threshold. May be applied to any list of String to Float values. So that:
+     *
+     * <code>
+     *     x_out = decay * x_previous + (1-decay) * x_new
+     *     x_out = 0 if x_out < threshold
+     * </code>
+     *
+     * @param previousValues The previous classification results, or more likely the results of applying this function
+     * @param newValues The current classification results
+     * @param decay The exponential decay rate to apply
+     * @param threshold The threshold below which result will be removed from the output
+     * @return A list of entries whose values are greater than the threshold
+     */
+
+    public static List<Map.Entry<String, Float>> smoothClassification(@NonNull List<Map.Entry<String, Float>> previousValues, @NonNull List<Map.Entry<String, Float>> newValues, float decay, float threshold) {
+        Map<String, Float> previousMap = previousValues.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, Float> newMap = newValues.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, Float> combinedMap = new HashMap<>();
+        Map<String, Float> outMap = new HashMap<>();
+        float update = 1.0f - decay;
+
+        for (Map.Entry<String, Float> entry : previousMap.entrySet()) {
+            combinedMap.put(entry.getKey(), entry.getValue() * decay);
+        }
+
+        for (Map.Entry<String, Float> entry : newMap.entrySet()) {
+            combinedMap.put(entry.getKey(), combinedMap.getOrDefault(entry.getKey(), 0.0f) + entry.getValue() * update);
+        }
+
+        for (Map.Entry<String, Float> entry : combinedMap.entrySet()) {
+            if (entry.getValue() >= threshold) {
+                outMap.put(entry.getKey(), combinedMap.get(entry.getKey()));
+            }
+        }
+
+        return new ArrayList<>(outMap.entrySet());
     }
 }

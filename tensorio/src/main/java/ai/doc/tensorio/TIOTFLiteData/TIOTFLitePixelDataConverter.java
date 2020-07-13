@@ -65,9 +65,9 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     @Override
-    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) {
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         if (!(o instanceof Bitmap)) {
-            throw new IllegalArgumentException("Image input should be bitmap");
+            throw BadInputException();
         } else {
             return toByteBuffer((Bitmap)o, description, cache);
         }
@@ -228,4 +228,12 @@ public class TIOTFLitePixelDataConverter implements TIODataConverter, TIOTFLiteD
     }
 
     // endRegion
+
+    //region Exceptions
+
+    private static IllegalArgumentException BadInputException() {
+        return new IllegalArgumentException("Expected Bitmap input to the converter");
+    }
+
+    //endRegion
 }

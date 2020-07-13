@@ -100,7 +100,7 @@ dependencies {
 <a name="installation"></a>
 ## Installation
 
-TensorIO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.9.4 
+TensorIO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.9.5 
 
 It will look something like:
 
@@ -113,7 +113,7 @@ allprojects {
 }
 
 dependencies {
-	implementation 'com.github.doc-ai:tensorio-android:0.9.4'
+	implementation 'com.github.doc-ai:tensorio-android:0.9.5'
 	...
 }
 ```

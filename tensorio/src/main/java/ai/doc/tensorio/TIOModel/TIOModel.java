@@ -273,6 +273,20 @@ public abstract class TIOModel {
     }
 
     /**
+     * Reloads a model. Use this method when you have changed model configuration and must reload
+     * the model in order for those changes to take effect.
+     *
+     * Conforming classes should override this method to perform custom reloading and set loaded=true
+     * or call super's implementation after loading has been successful.
+     *
+     * @throws TIOModelException
+     */
+
+    public void reload() throws TIOModelException {
+        loaded = true;
+    }
+
+    /**
      * Unloads a model from memory
      *
      * A model will unload its resources automatically when it is deallocated, but the unload function
@@ -323,45 +337,48 @@ public abstract class TIOModel {
      * Perform inference on an map of bytes
      * @param input A mapping of layer names to arbitrary objects
      * @return results of running the model mapped from the output layer names to the values
-     * @throws TIOModelException
+     * @throws TIOModelException Raised if the model has not yet been loaded and the attempt to
+     *                           load it fails
+     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
+     *                                  expected inputs
      */
 
-    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException;
+    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException, IllegalArgumentException;
 
     //endRegion
 
     //region Input Validation
 
-    protected void validateInput(float[] input) throws TIOModelException {
+    protected void validateInput(float[] input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
-            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+            throw InputCountMismatchException(1, io.getInputs().size());
         }
     }
 
-    protected void validateInput(byte[] input) throws TIOModelException {
+    protected void validateInput(byte[] input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
-            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+            throw InputCountMismatchException(1, io.getInputs().size());
         }
     }
 
-    protected void validateInput(Bitmap input) throws TIOModelException {
+    protected void validateInput(Bitmap input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
-            throw TIOModelException.InputCountMismatchException(1, io.getInputs().size());
+            throw InputCountMismatchException(1, io.getInputs().size());
         }
     }
 
-    protected void validateInput(Map<String, Object> input) throws TIOModelException {
+    protected void validateInput(Map<String, Object> input) throws IllegalArgumentException {
         int expectedSize = io.getInputs().size();
         int actualSize = input.size();
 
         if (expectedSize != actualSize) {
-            throw TIOModelException.InputCountMismatchException(actualSize, expectedSize);
+            throw InputCountMismatchException(actualSize, expectedSize);
         }
 
         if ( !input.keySet().equals(io.getInputs().keys()) ) {
             for (TIOLayerInterface layer : io.getInputs().all()) {
                 if ( !input.containsKey(layer.getName()) ) {
-                    throw TIOModelException.MissingInput(layer.getName());
+                    throw MissingInput(layer.getName());
                 }
             }
         }
@@ -391,5 +408,17 @@ public abstract class TIOModel {
     }
 
     //endRegion
+
+    //region Exceptions
+
+    private static IllegalArgumentException InputCountMismatchException(int actual, int expected) {
+        return new IllegalArgumentException("The model has " + expected + " input layers but received " + actual + " inputs");
+    }
+
+    private static IllegalArgumentException MissingInput(String name) {
+        return new IllegalArgumentException("The model received no input for layer \"" + name + "\"");
+    }
+
+    // endRegion
 
 }

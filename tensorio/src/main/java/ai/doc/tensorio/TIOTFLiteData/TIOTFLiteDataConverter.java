@@ -47,19 +47,21 @@ public interface TIOTFLiteDataConverter {
     /**
      * Converts an Object to a ByteBuffer, used to prepare data for a writing into a model.
      *
-     * @param o One of a number of types that can be converted into a ByteBuffer
+     * @param o           One of a number of types that can be converted into a ByteBuffer
      * @param description A description of the layer with instructions on how to make the conversion
-     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
-     *              is provided it will be rewound before being used.
+     * @param cache       A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *                    is provided it will be rewound before being used.
      * @return ByteBuffer ready for use with a TFLite model
+     * @throws IllegalArgumentException Raised if the input object o is not of one of the supported
+     *                                  types or is the wrong length
      */
 
-    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache);
+    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull TIOLayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException;
 
     /**
      * Converts a ByteBuffer to an object, used to read data from a model.
      *
-     * @param buffer A ByteBuffer read from a TFLite model
+     * @param buffer      A ByteBuffer read from a TFLite model
      * @param description A description of the layer with instructions on how to make the conversion
      * @return One of a number of native types such as an array of floats or a Bitmap
      */
