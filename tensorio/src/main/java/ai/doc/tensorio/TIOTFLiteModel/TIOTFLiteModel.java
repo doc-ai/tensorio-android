@@ -45,6 +45,7 @@ import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
+import androidx.annotation.NonNull;
 
 public class TIOTFLiteModel extends TIOModel {
 
@@ -110,7 +111,7 @@ public class TIOTFLiteModel extends TIOModel {
 
     // Constructor
 
-    public TIOTFLiteModel(Context context, TIOModelBundle bundle) {
+    public TIOTFLiteModel(@NonNull Context context, @NonNull TIOModelBundle bundle) {
         super(context, bundle);
     }
 
@@ -253,7 +254,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     @Override
-    public Map<String, Object> runOn(Bitmap input) throws TIOModelException, IllegalArgumentException {
+    public Map<String, Object> runOn(@NonNull Bitmap input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -265,7 +266,7 @@ public class TIOTFLiteModel extends TIOModel {
     }
 
     @Override
-    public Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException, IllegalArgumentException {
+    public Map<String, Object> runOn(@NonNull Map<String, Object> input) throws TIOModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -295,7 +296,7 @@ public class TIOTFLiteModel extends TIOModel {
      * @return A map from the input layer's name to the input
      */
 
-    private Map<String, Object> mappedInput(Object input) {
+    private Map<String, Object> mappedInput(@NonNull Object input) {
         Map<String, Object> map = new HashMap<>();
         map.put(getIO().getInputs().get(0).getName(), input);
         return map;
@@ -311,7 +312,7 @@ public class TIOTFLiteModel extends TIOModel {
      * @return The value in the map
      */
 
-    private Object unmappedInput(Map<String, Object> input) {
+    private Object unmappedInput(@NonNull Map<String, Object> input) {
         return input.get(getIO().getInputs().get(0).getName());
     }
 
@@ -323,7 +324,7 @@ public class TIOTFLiteModel extends TIOModel {
      *                                  expected by the model
      */
 
-    private Map<String, Object> runSingleInputSingleOutput(Object input) throws IllegalArgumentException {
+    private Map<String, Object> runSingleInputSingleOutput(@NonNull Object input) throws IllegalArgumentException {
 
         // Fetch the input and output layer descriptions from the model
 
@@ -358,7 +359,7 @@ public class TIOTFLiteModel extends TIOModel {
      *                                  expected by the model
      */
 
-    private Map<String, Object> runMultipleInputMultipleOutput(Map<String, Object> inputs) throws IllegalArgumentException {
+    private Map<String, Object> runMultipleInputMultipleOutput(@NonNull Map<String, Object> inputs) throws IllegalArgumentException {
 
         // Fetch the input and output layer descriptions from the model
 
@@ -408,7 +409,7 @@ public class TIOTFLiteModel extends TIOModel {
      *                                  expected by the model
      */
 
-    private ByteBuffer prepareInputBuffer(Object input, TIOLayerInterface inputLayer) throws IllegalArgumentException {
+    private ByteBuffer prepareInputBuffer(@NonNull Object input, @NonNull TIOLayerInterface inputLayer) throws IllegalArgumentException {
         final AtomicReference<ByteBuffer> inputBuffer = new AtomicReference<>();
         final ByteBuffer cachedBuffer = cacheBuffers ? bufferCache.get(inputLayer) : null;
 
@@ -431,7 +432,7 @@ public class TIOTFLiteModel extends TIOModel {
      * @return ByteBuffer ready for model output
      */
 
-    private ByteBuffer prepareOutputBuffer(TIOLayerInterface outputLayer) {
+    private ByteBuffer prepareOutputBuffer(@NonNull TIOLayerInterface outputLayer) {
         if (cacheBuffers) {
             ByteBuffer cached = bufferCache.get(outputLayer);
             cached.rewind();
@@ -457,7 +458,7 @@ public class TIOTFLiteModel extends TIOModel {
      * @return A Map of keys to user land objects capturing the model's outputs
      */
 
-    private Map<String, Object> captureOutputs(Map<Integer, Object> outputs) {
+    private Map<String, Object> captureOutputs(@NonNull Map<Integer, Object> outputs) {
         TIOModelIO.TIOModelIOList outputList = getIO().getOutputs();
         Map<String, Object> outputMap = new HashMap<>(outputList.size());
 
@@ -482,7 +483,7 @@ public class TIOTFLiteModel extends TIOModel {
      * or Bitmap
      */
 
-    private Object captureOutput(ByteBuffer buffer, TIOLayerInterface layer) {
+    private Object captureOutput(@NonNull ByteBuffer buffer, @NonNull TIOLayerInterface layer) {
         final AtomicReference<Object> output = new AtomicReference<>();
 
         layer.doCase((vectorLayer) -> {
@@ -517,7 +518,7 @@ public class TIOTFLiteModel extends TIOModel {
         return interpreter.getLastNativeInferenceDurationNanoseconds();
     }
 
-    private MappedByteBuffer loadModelFile(Context context, String path) throws IOException {
+    private MappedByteBuffer loadModelFile(@NonNull Context context, @NonNull String path) throws IOException {
         AssetFileDescriptor fileDescriptor = context.getAssets().openFd(path);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();

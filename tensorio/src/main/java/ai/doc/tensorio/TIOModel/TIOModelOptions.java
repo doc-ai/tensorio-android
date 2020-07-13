@@ -20,6 +20,10 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import javax.annotation.Nonnull;
+
+import androidx.annotation.NonNull;
+
 /**
  * Encapsulates additional options that a model would like to communicate to it consumers.
  */
@@ -43,7 +47,7 @@ public class TIOModelOptions {
      *                   the only values currently supported.
      */
 
-    public TIOModelOptions(String descriptor) {
+    public TIOModelOptions(@NonNull String descriptor) {
         if (descriptor.equals("front")) {
             this.devicePosition = "1";
         } else {

@@ -180,7 +180,7 @@ public abstract class TIOModel {
      * @return instancetype An instance of the conforming class, may be `nil`.
      */
 
-    public TIOModel(Context context, TIOModelBundle bundle) {
+    public TIOModel(@NonNull Context context, @NonNull TIOModelBundle bundle) {
         this.context = context;
         this.bundle = bundle;
 
@@ -331,7 +331,7 @@ public abstract class TIOModel {
      * @throws TIOModelException
      */
 
-    public abstract Map<String, Object> runOn(Bitmap input) throws TIOModelException;
+    public abstract Map<String, Object> runOn(@NonNull Bitmap input) throws TIOModelException;
 
     /**
      * Perform inference on an map of bytes
@@ -343,7 +343,7 @@ public abstract class TIOModel {
      *                                  expected inputs
      */
 
-    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException, IllegalArgumentException;
+    public abstract Map<String, Object> runOn(@NonNull Map<String, Object> input) throws TIOModelException, IllegalArgumentException;
 
     //endRegion
 
@@ -361,13 +361,13 @@ public abstract class TIOModel {
         }
     }
 
-    protected void validateInput(Bitmap input) throws IllegalArgumentException {
+    protected void validateInput(@NonNull Bitmap input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
         }
     }
 
-    protected void validateInput(Map<String, Object> input) throws IllegalArgumentException {
+    protected void validateInput(@NonNull Map<String, Object> input) throws IllegalArgumentException {
         int expectedSize = io.getInputs().size();
         int actualSize = input.size();
 
@@ -415,7 +415,7 @@ public abstract class TIOModel {
         return new IllegalArgumentException("The model has " + expected + " input layers but received " + actual + " inputs");
     }
 
-    private static IllegalArgumentException MissingInput(String name) {
+    private static IllegalArgumentException MissingInput(@NonNull String name) {
         return new IllegalArgumentException("The model received no input for layer \"" + name + "\"");
     }
 

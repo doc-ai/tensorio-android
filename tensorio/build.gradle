@@ -46,6 +46,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.jetbrains:annotations:15.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])

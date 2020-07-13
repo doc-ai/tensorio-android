@@ -39,7 +39,7 @@ public class TIOClassificationHelper {
      * @return A list of the top N key-values beginning with the highest one
      */
 
-    public static List<Map.Entry<String, Float>> topN(Map<String,Float> map, int N) {
+    public static List<Map.Entry<String, Float>> topN(@NonNull Map<String,Float> map, int N) {
         return topN(map, N, 0);
     }
 
@@ -51,8 +51,8 @@ public class TIOClassificationHelper {
      * @return A list of the top N key-values beginning with the highest one
      */
 
-    public static List<Map.Entry<String, Float>> topN(Map<String,Float> map, int N, float threshold) {
-        PriorityQueue<Map.Entry<String, Float>> queue = topNqueued(map, N, threshold);
+    public static List<Map.Entry<String, Float>> topN(@NonNull Map<String,Float> map, int N, float threshold) {
+        PriorityQueue<Map.Entry<String, Float>> queue = topNQueued(map, N, threshold);
         List<Map.Entry<String, Float>> list = new ArrayList<>(5);
 
         while (queue.size() > 0) {
@@ -72,7 +72,7 @@ public class TIOClassificationHelper {
      * @return A PriorityQueue of the top N key-values
      */
 
-    public static PriorityQueue<Map.Entry<String, Float>> topNqueued(Map<String,Float> map, int N, float threshold) {
+    public static PriorityQueue<Map.Entry<String, Float>> topNQueued(@NonNull Map<String,Float> map, int N, float threshold) {
         PriorityQueue<Map.Entry<String, Float>> queue = new PriorityQueue<>(N, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
 
         for (Map.Entry<String,Float> entry : map.entrySet()) {

@@ -20,12 +20,14 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import androidx.annotation.NonNull;
+
 public class TIOModelBundleException extends Exception {
-    public TIOModelBundleException(String message, Throwable cause) {
+    public TIOModelBundleException(@NonNull String message, @NonNull Throwable cause) {
         super(message, cause);
     }
 
-    public TIOModelBundleException(String message) {
+    public TIOModelBundleException(@NonNull String message) {
         super(message);
     }
 }
