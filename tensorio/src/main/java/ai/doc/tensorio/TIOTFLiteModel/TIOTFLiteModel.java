@@ -63,7 +63,7 @@ public class TIOTFLiteModel extends TIOModel {
     // TFLite Backend Options
 
     private HardwareBacking hardwareBacking = HardwareBacking.CPU;
-    private boolean use16bitPrecision = false;
+    private boolean use16BitPrecision = false;
     private int numThreads = -1;
 
     // Buffer Caching
@@ -100,12 +100,12 @@ public class TIOTFLiteModel extends TIOModel {
 
     /** Sets floating point precision. After calling this method you must call reload() for changes to take effect. */
 
-    public void setUse16bitPrecision(boolean use16bitprecision) {
-        this.use16bitPrecision = use16bitprecision;
+    public void setUse16BitPrecision(boolean use16bitPrecision) {
+        this.use16BitPrecision = use16bitPrecision;
     }
 
-    public boolean use16bitPrecision() {
-        return use16bitPrecision;
+    public boolean use16BitPrecision() {
+        return use16BitPrecision;
     }
 
     // Constructor
@@ -192,7 +192,7 @@ public class TIOTFLiteModel extends TIOModel {
 
         options.setNumThreads(numThreads);
         options.setUseNNAPI(hardwareBacking == HardwareBacking.NNAPI);
-        options.setAllowFp16PrecisionForFp32(use16bitPrecision);
+        options.setAllowFp16PrecisionForFp32(use16BitPrecision);
 
         // GPU Delegate
 
