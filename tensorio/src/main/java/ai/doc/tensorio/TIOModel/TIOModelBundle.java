@@ -201,7 +201,7 @@ public class TIOModelBundle {
      * @throws TIOModelBundleException
      */
 
-    public TIOModelBundle(Context context, String path) throws TIOModelBundleException {
+    public TIOModelBundle(@NonNull Context context, @NonNull String path) throws TIOModelBundleException {
         this.context = context;
 
         String json;

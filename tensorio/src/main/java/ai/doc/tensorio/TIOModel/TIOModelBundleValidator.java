@@ -32,6 +32,8 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import java.io.IOException;
 import java.io.InputStream;
 
+import androidx.annotation.NonNull;
+
 public abstract class TIOModelBundleValidator {
 
     /**
@@ -46,7 +48,7 @@ public abstract class TIOModelBundleValidator {
      * @throws ProcessingException ProcessingException is thrown if the JsonSchemaFactory cannot get the JsonSchema from the schemaNode.
      */
 
-    public static boolean ValidateTFLite(Context context, String json) throws IOException, ProcessingException {
+    public static boolean ValidateTFLite(@NonNull Context context, @NonNull String json) throws IOException, ProcessingException {
         InputStream inputStream = context.getAssets().open("TFLite/model-schema.json");
         int size = inputStream.available();
         byte[] buffer = new byte[size];

@@ -26,9 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import androidx.annotation.NonNull;
+
 public class FileIO {
 
-    public static String readFile(Context c, String filename) throws IOException {
+    public static String readFile(@NonNull Context c, @NonNull String filename) throws IOException {
         InputStream is = c.getAssets().open(filename);
         int size = is.available();
         byte[] buffer = new byte[size];

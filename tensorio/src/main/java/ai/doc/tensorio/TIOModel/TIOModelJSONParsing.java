@@ -20,6 +20,7 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -76,7 +77,7 @@ public abstract class TIOModelJSONParsing {
      * @throws IOException
      */
 
-    public static List<TIOLayerInterface> parseIO(@Nullable TIOModelBundle modelBundle, JSONArray io, Mode mode) throws JSONException, TIOModelBundleException, IOException {
+    public static List<TIOLayerInterface> parseIO(@Nullable TIOModelBundle modelBundle, @NonNull JSONArray io, Mode mode) throws JSONException, TIOModelBundleException, IOException {
         ArrayList<TIOLayerInterface> interfaces = new ArrayList<>();
         boolean isQuantized = modelBundle.isQuantized(); // Always false if modelBundle is nil
 
@@ -119,7 +120,7 @@ public abstract class TIOModelJSONParsing {
      * @return TIOLayerInterface An interface that describes this vector input or output.
      */
 
-    public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
+    public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");
 
@@ -193,7 +194,7 @@ public abstract class TIOModelJSONParsing {
      * @return TIOLayerInterface An interface that describes this pixel buffer input or output.
      */
 
-    public static TIOLayerInterface parseTIOPixelBufferDescription(JSONObject dict, Mode mode, boolean quantized) throws TIOModelBundleException, JSONException {
+    public static TIOLayerInterface parseTIOPixelBufferDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws TIOModelBundleException, JSONException {
         String name = dict.getString("name");
 
         // Image Volume
@@ -249,22 +250,20 @@ public abstract class TIOModelJSONParsing {
 
         // Description
 
-        TIOLayerInterface layerInterface = new TIOLayerInterface(name, mode, new TIOPixelBufferLayerDescription(
+        return new TIOLayerInterface(name, mode, new TIOPixelBufferLayerDescription(
                 pixelFormat,
                 imageVolume,
                 normalizer,
                 denormalizer,
                 quantized)
         );
-
-        return layerInterface ;
     }
 
     /**
      * Converts a pixel format string such as `"RGB"` or `"BGR"` to a `TIOPixelFormat` pixel format type.
      */
 
-    public static TIOPixelFormat TIOPixelFormatForString(String format) throws TIOModelBundleException {
+    public static TIOPixelFormat TIOPixelFormatForString(@NonNull String format) throws TIOModelBundleException {
         switch (format) {
             case "RGB":
                 return TIOPixelFormat.RGB;
@@ -278,7 +277,7 @@ public abstract class TIOModelJSONParsing {
      * Parses the `quantization` key of an input description and returns an associated data quantizer.
      */
 
-    public static TIODataQuantizer TIODataQuantizerForDict(JSONObject dict) throws JSONException, TIOModelBundleException {
+    public static TIODataQuantizer TIODataQuantizerForDict(@Nullable JSONObject dict) throws JSONException, TIOModelBundleException {
         if (dict == null) {
             return null;
         }
@@ -309,7 +308,7 @@ public abstract class TIOModelJSONParsing {
      * Parses the `dequantization` key of an output description and returns an associated data dequantizer.
      */
 
-    public static TIODataDequantizer TIODataDequantizerForDict(JSONObject dict) throws TIOModelBundleException, JSONException {
+    public static TIODataDequantizer TIODataDequantizerForDict(@Nullable JSONObject dict) throws TIOModelBundleException, JSONException {
         if (dict == null) {
             return null;
         }
@@ -343,7 +342,7 @@ public abstract class TIOModelJSONParsing {
      * @throws JSONException
      */
 
-    public static int[] parseIntArray(JSONArray a) throws JSONException {
+    public static int[] parseIntArray(@NonNull JSONArray a) throws JSONException {
         int[] result = new int[a.length()];
         for (int i = 0; i < a.length(); i++) {
             result[i] = a.getInt(i);
@@ -369,7 +368,7 @@ public abstract class TIOModelJSONParsing {
      * Returns the TIOPixelNormalizer given an input dictionary.
      */
 
-    public static TIOPixelNormalizer TIOPixelNormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
+    public static TIOPixelNormalizer TIOPixelNormalizerForDictionary(@Nullable JSONObject dict) throws TIOModelBundleException {
         if (dict == null) {
             return null;
         }
@@ -400,7 +399,7 @@ public abstract class TIOModelJSONParsing {
      * Returns the denormalizer for a given input dictionary.
      */
 
-    public static TIOPixelDenormalizer TIOPixelDenormalizerForDictionary(JSONObject dict) throws TIOModelBundleException {
+    public static TIOPixelDenormalizer TIOPixelDenormalizerForDictionary(@Nullable JSONObject dict) throws TIOModelBundleException {
         if (dict == null) {
             return null;
         }
