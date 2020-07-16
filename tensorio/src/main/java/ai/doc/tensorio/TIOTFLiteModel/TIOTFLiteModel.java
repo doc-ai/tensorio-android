@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.gpu.GpuDelegate;
+import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -60,6 +61,7 @@ public class TIOTFLiteModel extends TIOModel {
     private Interpreter interpreter;
     private MappedByteBuffer tfliteModel;
     private GpuDelegate gpuDelegate = null;
+    private NnApiDelegate nnApiDelgate = null;
 
     // TFLite Backend Options
 
@@ -158,6 +160,11 @@ public class TIOTFLiteModel extends TIOModel {
             gpuDelegate = null;
         }
 
+        if (nnApiDelgate != null) {
+            nnApiDelgate.close();
+            nnApiDelgate = null;
+        }
+
         createInterpreter();
         super.reload();
     }
@@ -170,16 +177,21 @@ public class TIOTFLiteModel extends TIOModel {
 
         if (interpreter != null ) {
             interpreter.close();
-            this.interpreter = null;
+            interpreter = null;
         }
 
-        if (this.gpuDelegate != null) {
-            this.gpuDelegate.close();
-            this.gpuDelegate = null;
+        if (gpuDelegate != null) {
+            gpuDelegate.close();
+            gpuDelegate = null;
         }
 
-        if (this.bufferCache != null) {
-            this.bufferCache = null;
+        if (nnApiDelgate != null) {
+            nnApiDelgate.close();
+            nnApiDelgate = null;
+        }
+
+        if (bufferCache != null) {
+            bufferCache = null;
         }
 
         super.unload();
@@ -200,6 +212,13 @@ public class TIOTFLiteModel extends TIOModel {
         if (hardwareBacking == HardwareBacking.GPU && GpuDelegateHelper.isGpuDelegateAvailable()) {
             gpuDelegate = (GpuDelegate) GpuDelegateHelper.createGpuDelegate();
             options.addDelegate(gpuDelegate);
+        }
+
+        // NNAPI Delegate
+
+        if (hardwareBacking == HardwareBacking.NNAPI && NnApiDelegateHelper.isNnApiDelegateAvailable()) {
+            nnApiDelgate = (NnApiDelegate) NnApiDelegateHelper.createNnApiDelegate();
+            options.addDelegate(nnApiDelgate);
         }
 
         // Interpreter
