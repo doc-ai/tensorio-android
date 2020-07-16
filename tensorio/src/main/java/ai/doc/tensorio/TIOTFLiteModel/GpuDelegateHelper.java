@@ -46,7 +46,7 @@ public class GpuDelegateHelper {
 
     public static Delegate createGpuDelegate() {
         try {
-            return Class.forName("org.tensorflow.lite.experimental.GpuDelegate")
+            return Class.forName("org.tensorflow.lite.gpu.GpuDelegate")
                     .asSubclass(Delegate.class)
                     .getDeclaredConstructor()
                     .newInstance();
