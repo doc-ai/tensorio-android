@@ -52,8 +52,11 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
+
     // Tensorflow dependency
-    implementation 'org.tensorflow:tensorflow-lite:0.0.0-gpu-experimental'
+    implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly'
+
     // JSON Schema validator library dependencies
     implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
     implementation 'io.apisense:rhino-android:1.0'
