@@ -25,7 +25,7 @@ import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 
 import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.experimental.GpuDelegate;
+import org.tensorflow.lite.gpu.GpuDelegate;
 
 import java.io.FileInputStream;
 import java.io.IOException;
