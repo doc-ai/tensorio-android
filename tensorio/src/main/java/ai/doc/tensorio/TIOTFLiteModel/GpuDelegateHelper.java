@@ -33,7 +33,7 @@ public class GpuDelegateHelper {
 
     public static boolean isGpuDelegateAvailable() {
         try {
-            Class.forName("org.tensorflow.lite.experimental.GpuDelegate");
+            Class.forName("org.tensorflow.lite.gpu.GpuDelegate");
             return true;
         } catch (Exception e) {
             return false;
