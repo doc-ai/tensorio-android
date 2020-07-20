@@ -120,6 +120,8 @@ public abstract class TIOModelJSONParsing {
      * @return TIOLayerInterface An interface that describes this vector input or output.
      */
 
+    // TODO: Must also be able to read labels from a File that is not in context.getAssets
+
     public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");

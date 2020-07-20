@@ -113,6 +113,8 @@ public class TIOTFLiteModel extends TIOModel {
 
     // Constructor
 
+    // TODO: Must also be able to initialize from a File that is not in context.getAssets
+
     public TIOTFLiteModel(@NonNull Context context, @NonNull TIOModelBundle bundle) {
         super(context, bundle);
     }

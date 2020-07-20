@@ -52,13 +52,13 @@ public class TIOModelBundle {
      * The name of the file inside a TensorIO bundle that contains the model spec, currently 'model.json'.
      */
 
-    private static final String TFMODEL_INFO_FILE = "model.json";
+    public static final String TFMODEL_INFO_FILE = "model.json";
 
     /**
      * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
      */
 
-    private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
+    public static final String TFMODEL_ASSETS_DIRECTORY = "assets";
 
     /**
      * The directory extension for TF bundles, considered deprecated, using .tiobundle instead
@@ -200,6 +200,8 @@ public class TIOModelBundle {
      * @param path Fully qualified path to the model bundle folder.
      * @throws TIOModelBundleException
      */
+
+    // TODO: Must also be able to initialize from a File that is not in context.getAssets
 
     public TIOModelBundle(@NonNull Context context, @NonNull String path) throws TIOModelBundleException {
         this.context = context;

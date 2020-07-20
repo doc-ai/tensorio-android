@@ -26,9 +26,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +42,6 @@ import java.util.Map;
 
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
-import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
@@ -550,35 +548,6 @@ public class TFLiteModelIntegrationTests {
 
         } catch (TIOModelBundleException | TIOModelException | IOException e) {
             e.printStackTrace();
-            fail();
-        }
-    }
-
-    //endRegion
-
-    //region Validation Tests
-
-    @Test
-    public void testTIOModelBundleValidator() {
-        try {
-            String[] assets = appContext.getAssets().list("");
-            for (String s: assets) {
-                if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
-                    continue;
-                }
-
-                InputStream inputStream = appContext.getAssets().open(s + "/model.json");
-                int size = inputStream.available();
-                byte[] buffer = new byte[size];
-
-                inputStream.read(buffer);
-                inputStream.close();
-
-                String modelJSON = new String(buffer, "UTF-8");
-                assertEquals(true, TIOModelBundleValidator.ValidateTFLite(appContext, modelJSON));
-            }
-        } catch (IOException | ProcessingException ex) {
-            ex.printStackTrace();
             fail();
         }
     }
