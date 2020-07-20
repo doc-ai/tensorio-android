@@ -21,18 +21,21 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
+
+import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
+import ai.doc.tensorio.TIOUtilities.TIOFileIO;
 import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.TIOUtilities.FileIO;
 
 /**
  * Encapsulates information about a `TIOModel` without actually loading the model.
@@ -48,17 +51,26 @@ import ai.doc.tensorio.TIOUtilities.FileIO;
 
 public class TIOModelBundle {
 
+    /** Source is an asset from a context or a file. Barf */
+
+    public enum Source {
+        Asset,
+        File
+    };
+
+    private Source source;
+
     /**
      * The name of the file inside a TensorIO bundle that contains the model spec, currently 'model.json'.
      */
 
-    private static final String TFMODEL_INFO_FILE = "model.json";
+    public static final String TFMODEL_INFO_FILE = "model.json";
 
     /**
      * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
      */
 
-    private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
+    public static final String TFMODEL_ASSETS_DIRECTORY = "assets";
 
     /**
      * The directory extension for TF bundles, considered deprecated, using .tiobundle instead
@@ -85,10 +97,16 @@ public class TIOModelBundle {
     private String info;
 
     /**
-     * The full path to the model bundle folder.
+     * The filename of the model bundle folder for a context.assets source. See also modelFilename
      */
 
-    private String path;
+    private String filename;
+
+    /**
+     * The File corresponding to the model bundle folder when using a fully qualified path. See also modelFile
+     */
+
+    private File file;
 
     /**
      * A string uniquely identifying the model represented by this bundle.
@@ -179,13 +197,24 @@ public class TIOModelBundle {
     private TIOModelIO io;
 
     /**
-     * The file path to the actual underlying model contained in this bundle.
+     * The file path to the actual underlying model contained in this bundle when using a
+     * context.source model bundle. See also filename.
      *
-     * Currently, only tflite models are supported. If this `placeholder` is `YES` this property
-     * returns `nil`.
+     * Currently, only tflite models are supported. If `placeholder` is `true` this property
+     * returns `null`.
      */
 
-    private String modelFilePath;
+    private String modelFilename;
+
+    /**
+     * The File corresponding to the actual underlying model contained in this bundle when using a
+     * context.source model bundle. See also file.
+     *
+     * Currently, only tflite models are supported. If `placeholder` is `true` this property
+     * returns `null`.
+     */
+
+    private File modelFile;
 
     /**
      * The class name of the @see TIOModel that should be used to implement this network.
@@ -193,22 +222,65 @@ public class TIOModelBundle {
 
     private String modelClassName;
 
+
+
+    // TODO: Must also be able to initialize from a File that is not in context.getAssets
+
     /**
-     * The designated initializer, responsible for parsing a bundle's model.json and especially
+     * One of two designated initializers, responsible for parsing a bundle's model.json and especially
      * for setting up the description of a model's inputs and outputs.
-     * @param context The application or activity context
-     * @param path Fully qualified path to the model bundle folder.
-     * @throws TIOModelBundleException
+     *
+     * @param f The File pointing to this model bundle with a fully qualified filepath
+     * @throws TIOModelBundleException On any failure to read the model bundle
      */
 
-    public TIOModelBundle(@NonNull Context context, @NonNull String path) throws TIOModelBundleException {
-        this.context = context;
+    public TIOModelBundle(@NonNull File f) throws TIOModelBundleException {
+        this.source = Source.File;
 
-        String json;
+        this.file = f;
+
+        this.context = null;
+        this.filename = filename;
+        this.modelFilename = null;
+
+        initBundle();
+    }
+
+    /**
+     * One of two designated initializers, responsible for parsing a bundle's model.json and especially
+     * for setting up the description of a model's inputs and outputs.
+     *
+     * @param context The application or activity context
+     * @param filename Filename or path to the model bundle folder as a context.assets source
+     * @throws TIOModelBundleException On any failure to read the model bundle
+     */
+
+    public TIOModelBundle(@NonNull Context context, @NonNull String filename) throws TIOModelBundleException {
+        this.source = Source.Asset;
+
+        this.context = context;
+        this.filename = filename;
+
+        this.file = null;
+        this.modelFile = null;
+
+        initBundle();
+    }
+
+    private void initBundle() throws TIOModelBundleException {
+        String json = null;
         JSONObject bundle;
 
         try {
-            json = FileIO.readFile(context, path + "/" + TFMODEL_INFO_FILE);
+            // Barf
+            switch (source) {
+                case Asset:
+                    json = TIOAndroidAssets.readTextFile(context, filename + "/" + TFMODEL_INFO_FILE);
+                    break;
+                case File:
+                    json = TIOFileIO.readTextFile(new File(file, TFMODEL_INFO_FILE));
+                    break;
+            }
         } catch (IOException e) {
             throw new TIOModelBundleException("Error reading model file", e);
         }
@@ -219,7 +291,6 @@ public class TIOModelBundle {
             throw new TIOModelBundleException("Error parsing model file as JSON", e);
         }
 
-        this.path = path;
         this.info = json;
 
         // Parse basic top level properties
@@ -264,10 +335,21 @@ public class TIOModelBundle {
                 this.modes = new TIOModelModes();
             }
 
-            // Determine model file path
+            // Determine model file filename
 
             if (!this.placeholder) {
-                this.modelFilePath = path + "/" + modelJsonObject.getString("file");
+                String n = modelJsonObject.getString("file");
+                // So barf
+                switch (source) {
+                    case Asset:
+                        this.modelFilename = filename + "/" + n;
+                        this.modelFile = null;
+                        break;
+                    case File:
+                        this.modelFile = new File(file, n);
+                        this.modelFilename = null;
+                        break;
+                }
             }
 
         } catch (JSONException e) {
@@ -316,12 +398,28 @@ public class TIOModelBundle {
 
     //region Getters and Setters
 
+    public Source getSource() {
+        return source;
+    }
+
     public Context getContext() {
         return context;
     }
 
-    public String getPath() {
-        return path;
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getModelFilename() {
+        return modelFilename;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public File getModelFile() {
+        return modelFile;
     }
 
     public String getIdentifier() {
@@ -372,10 +470,6 @@ public class TIOModelBundle {
         return io;
     }
 
-    public String getModelFilePath() {
-        return modelFilePath;
-    }
-
     //endregion
 
     /**
@@ -384,29 +478,46 @@ public class TIOModelBundle {
 
     public TIOModel newModel() throws TIOModelBundleException {
         try {
-            return (TIOModel) Class.forName(modelClassName).getConstructor(Context.class, TIOModelBundle.class).newInstance(context, this);
+            return (TIOModel) Class.forName(modelClassName).getConstructor(TIOModelBundle.class).newInstance( this);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
             throw new TIOModelBundleException("Error creating TIOModel", e);
         }
     }
 
     /**
-     * Returns the path to an asset in the bundle
+     * Returns the path to an asset in the bundle, used for a context.asset source
      *
-     * @param filename Asset’s filename, including extension
-     * @return The full path to the file
+     * @param assetName Asset’s filename, including extension
+     * @return The relative path to the file
      */
 
-    public String pathToAsset(String filename) {
-        return "assets" + path + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + filename;
+    public String pathToAsset(String assetName) {
+        return filename + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + assetName;
     }
 
-    @NonNull
-    @Override
+    /**
+     * Returns the File to an asset in the bundle, used for a File source
+     *
+     * @param assetName Asset’s filename, including extension
+     * @return The file for the asset
+     */
+
+    public File fileToAsset(String assetName) {
+        return new File(new File(file, TFMODEL_ASSETS_DIRECTORY), assetName);
+    }
+
+    @NonNull @Override
     public String toString() {
+        String fname = getSource() == Source.Asset
+                ? ", filename='" + filename + '\''
+                : ", file='" + file.getPath() + '\'';
+        String modelfname = getSource() == Source.Asset
+                ? ", filename='" + modelFilename + '\''
+                : ", file='" + modelFile.getPath() + '\'';
+
         return "TIOModelBundle{" +
                 "info='" + info + '\'' +
-                ", path='" + path + '\'' +
+                fname +
                 ", identifier='" + identifier + '\'' +
                 ", name='" + name + '\'' +
                 ", version='" + version + '\'' +
@@ -417,7 +528,7 @@ public class TIOModelBundle {
                 ", quantized=" + quantized +
                 ", type='" + type + '\'' +
                 ", options=" + options +
-                ", modelFilePath='" + modelFilePath + '\'' +
+                modelfname +
                 ", modelClassName='" + modelClassName + '\'' +
                 '}';
     }

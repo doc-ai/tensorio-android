@@ -26,16 +26,18 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystemException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +45,6 @@ import java.util.Map;
 
 import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelBundleException;
-import ai.doc.tensorio.TIOModel.TIOModelBundleValidator;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
@@ -60,14 +61,44 @@ public class TFLiteModelIntegrationTests {
 
     private float epsilon = 0.01f;
 
+    /** Set up a models directory to copy assets to for testing */
+
     @Before
     public void setUp() throws Exception {
-
+        File f = new File(testContext.getFilesDir(), "models");
+        if (!f.mkdirs()) {
+            throw new FileSystemException("on create: " + f.getPath());
+        }
     }
+
+    /** Tear down the models directory */
 
     @After
     public void tearDown() throws Exception {
+        File f = new File(testContext.getFilesDir(), "models");
+        deleteRecursive(f);
+    }
 
+    /** Create a model bundle from a file, copying the asset to models */
+
+    private TIOModelBundle bundleForFile(String filename) throws IOException, TIOModelBundleException {
+        File dir = new File(testContext.getFilesDir(), "models");
+        File file = new File(dir, filename);
+
+        TIOAndroidAssets.copyAsset(testContext, filename, file);
+        return new TIOModelBundle(file);
+    }
+
+    /** Delete a directory and all its contents */
+
+    private void deleteRecursive(File f) throws FileSystemException {
+        if (f.isDirectory())
+            for (File child : f.listFiles())
+                deleteRecursive(child);
+
+        if (!f.delete()) {
+            throw new FileSystemException("on delete: " + f.getPath());
+        }
     }
 
     @Test
@@ -493,7 +524,7 @@ public class TFLiteModelIntegrationTests {
     //region MobileNet tests
 
     @Test
-    public void testMobileNetClassificationModel() {
+    public void testMobileNetClassificationModel_asset() {
         try {
             TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
@@ -524,7 +555,7 @@ public class TFLiteModelIntegrationTests {
     }
 
     @Test
-    public void testQuantizedMobileNetClassificationModel() {
+    public void testQuantizedMobileNetClassificationModel_asset() {
         try {
             TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
             assertNotNull(bundle);
@@ -556,32 +587,73 @@ public class TFLiteModelIntegrationTests {
 
     //endRegion
 
-    //region Validation Tests
+    // FILES
 
     @Test
-    public void testTIOModelBundleValidator() {
+    public void testMobileNetClassificationModel_file() {
         try {
-            String[] assets = appContext.getAssets().list("");
-            for (String s: assets) {
-                if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
-                    continue;
-                }
+            TIOModelBundle bundle = bundleForFile("mobilenet_v2_1.4_224.tiobundle");
+            assertNotNull(bundle);
 
-                InputStream inputStream = appContext.getAssets().open(s + "/model.json");
-                int size = inputStream.available();
-                byte[] buffer = new byte[size];
+            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
 
-                inputStream.read(buffer);
-                inputStream.close();
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
-                String modelJSON = new String(buffer, "UTF-8");
-                assertEquals(true, TIOModelBundleValidator.ValidateTFLite(appContext, modelJSON));
-            }
-        } catch (IOException | ProcessingException ex) {
-            ex.printStackTrace();
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
+
+            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+            assertTrue(classification instanceof Map);
+
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
+
+            assertEquals("rocking chair", label);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        } catch (TIOModelBundleException | TIOModelException e) {
+            e.printStackTrace();
             fail();
         }
     }
 
-    //endRegion
+    @Test
+    public void testQuantizedMobileNetClassificationModel_file() {
+        try {
+            TIOModelBundle bundle = bundleForFile("mobilenet_v1_1.0_224_quant.tiobundle");
+            assertNotNull(bundle);
+
+            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
+
+            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
+            assertTrue(classification instanceof Map);
+
+            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            Map.Entry<String, Float> top = top5.get(0);
+            String label = top.getKey();
+
+            assertEquals("rocking chair", label);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        } catch (TIOModelBundleException | TIOModelException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 }
