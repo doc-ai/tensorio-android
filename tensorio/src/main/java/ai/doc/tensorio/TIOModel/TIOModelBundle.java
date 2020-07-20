@@ -21,6 +21,8 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
+
+import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
 import androidx.annotation.NonNull;
 
 import org.json.JSONException;
@@ -32,7 +34,6 @@ import java.util.List;
 
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.TIOUtilities.FileIO;
 
 /**
  * Encapsulates information about a `TIOModel` without actually loading the model.
@@ -210,7 +211,7 @@ public class TIOModelBundle {
         JSONObject bundle;
 
         try {
-            json = FileIO.readFile(context, path + "/" + TFMODEL_INFO_FILE);
+            json = TIOAndroidAssets.readTextFile(context, path + "/" + TFMODEL_INFO_FILE);
         } catch (IOException e) {
             throw new TIOModelBundleException("Error reading model file", e);
         }

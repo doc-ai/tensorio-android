@@ -22,20 +22,25 @@ package ai.doc.tensorio.TIOUtilities;
 
 import android.content.Context;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import androidx.annotation.NonNull;
 
-public class FileIO {
+public class TIOFileIO {
 
-    public static String readFile(@NonNull Context c, @NonNull String filename) throws IOException {
-        InputStream is = c.getAssets().open(filename);
+    public static String readTextFile(@NonNull File f) throws IOException {
+        InputStream is = new FileInputStream(f);
+
         int size = is.available();
         byte[] buffer = new byte[size];
+
         is.read(buffer);
         is.close();
+
         return new String(buffer, StandardCharsets.UTF_8);
     }
 }

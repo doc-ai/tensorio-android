@@ -20,6 +20,7 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -38,7 +39,6 @@ import ai.doc.tensorio.TIOData.TIOPixelNormalizer;
 import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
 import ai.doc.tensorio.TIOLayerInterface.TIOPixelBufferLayerDescription;
 import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
-import ai.doc.tensorio.TIOUtilities.FileIO;
 
 import static ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface.*;
 
@@ -132,8 +132,8 @@ public abstract class TIOModelJSONParsing {
 
         if (dict.optString("labels", null) != null) {
             try {
-                // TODO: Better path building
-                String contents = FileIO.readFile(modelBundle.getContext(), modelBundle.getPath() + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + dict.getString("labels"));
+                // TODO: Better path building Move to Model Bundle
+                String contents = TIOAndroidAssets.readTextFile(modelBundle.getContext(), modelBundle.getPath() + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + dict.getString("labels"));
                 contents = contents.trim();
                 labels = contents.split("\\n");
             }
