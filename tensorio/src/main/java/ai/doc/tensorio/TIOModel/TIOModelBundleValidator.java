@@ -49,7 +49,7 @@ public class TIOModelBundleValidator {
 
     /** Source is an asset from a context or a file. Barf */
 
-    enum Source {
+    public enum Source {
         Asset,
         File
     }

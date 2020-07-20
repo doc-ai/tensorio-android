@@ -21,6 +21,7 @@
 package ai.doc.tensorio.TIOModel;
 
 import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
+import ai.doc.tensorio.TIOUtilities.TIOFileIO;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -43,12 +44,6 @@ import ai.doc.tensorio.TIOLayerInterface.TIOVectorLayerDescription;
 import static ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface.*;
 
 public abstract class TIOModelJSONParsing {
-
-    /**
-     * The name of the directory inside a TensorIO bundle that contains additional data, currently 'assets'.
-     */
-
-    private static final String TFMODEL_ASSETS_DIRECTORY = "assets";
 
     /**
      * Key identifying an array (vector) layer
@@ -120,8 +115,6 @@ public abstract class TIOModelJSONParsing {
      * @return TIOLayerInterface An interface that describes this vector input or output.
      */
 
-    // TODO: Must also be able to read labels from a File that is not in context.getAssets
-
     public static TIOLayerInterface parseTIOVectorDescription(@Nullable TIOModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");
@@ -132,8 +125,16 @@ public abstract class TIOModelJSONParsing {
 
         if (dict.optString("labels", null) != null) {
             try {
-                // TODO: Better path building Move to Model Bundle
-                String contents = TIOAndroidAssets.readTextFile(modelBundle.getContext(), modelBundle.getPath() + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + dict.getString("labels"));
+                String contents = null;
+                // So barf
+                switch (modelBundle.getSource()) {
+                    case Asset:
+                        contents = TIOAndroidAssets.readTextFile(modelBundle.getContext(), modelBundle.pathToAsset(dict.getString("labels")));
+                        break;
+                    case File:
+                        contents = TIOFileIO.readTextFile((modelBundle.fileToAsset(dict.getString("labels"))));
+                        break;
+                }
                 contents = contents.trim();
                 labels = contents.split("\\n");
             }

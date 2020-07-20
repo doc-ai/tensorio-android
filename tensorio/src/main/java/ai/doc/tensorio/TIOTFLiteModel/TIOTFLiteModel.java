@@ -20,7 +20,6 @@
 
 package ai.doc.tensorio.TIOTFLiteModel;
 
-import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 
@@ -29,6 +28,7 @@ import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -113,10 +113,8 @@ public class TIOTFLiteModel extends TIOModel {
 
     // Constructor
 
-    // TODO: Must also be able to initialize from a File that is not in context.getAssets
-
-    public TIOTFLiteModel(@NonNull Context context, @NonNull TIOModelBundle bundle) {
-        super(context, bundle);
+    public TIOTFLiteModel(@NonNull TIOModelBundle bundle) {
+        super(bundle);
     }
 
     //region Lifecycle
@@ -136,7 +134,7 @@ public class TIOTFLiteModel extends TIOModel {
         // Load Model
 
         try {
-            tfliteModel = loadModelFile(getContext(), getBundle().getModelFilePath());
+            tfliteModel = loadModelFile();
         } catch (IOException e) {
             throw new TIOModelException("Error loading model file", e);
         }
@@ -539,15 +537,33 @@ public class TIOTFLiteModel extends TIOModel {
         return interpreter.getLastNativeInferenceDurationNanoseconds();
     }
 
-    private MappedByteBuffer loadModelFile(@NonNull Context context, @NonNull String path) throws IOException {
-        AssetFileDescriptor fileDescriptor = context.getAssets().openFd(path);
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-        FileChannel fileChannel = inputStream.getChannel();
+    private MappedByteBuffer loadModelFile() throws IOException {
 
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
+        // So barf
+        switch (getBundle().getSource()) {
+            case Asset: {
+                AssetFileDescriptor fileDescriptor = getBundle().getContext().getAssets().openFd(getBundle().getModelFilename());
+                FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+                FileChannel fileChannel = inputStream.getChannel();
 
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+                long startOffset = fileDescriptor.getStartOffset();
+                long length = fileDescriptor.getDeclaredLength();
+
+                return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
+            }
+            case File: {
+                FileInputStream inputStream = new FileInputStream(getBundle().getModelFile());
+                FileChannel fileChannel = inputStream.getChannel();
+
+                long startOffset = 0;
+                long length = fileChannel.size();
+
+                return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
+            }
+            default:
+                throw new FileNotFoundException();
+        }
+
     }
 
     //endRegion

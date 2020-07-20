@@ -20,7 +20,6 @@
 
 package ai.doc.tensorio.TIOModel;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
@@ -63,12 +62,6 @@ import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
  */
 
 public abstract class TIOModel {
-
-    /**
-     * The application or activity context
-     */
-
-    private final Context context;
 
     /**
      * The `TIOModelBundle` object from which this model was instantiated.
@@ -175,13 +168,11 @@ public abstract class TIOModel {
      * calls this `initWithBundle:` factory initialization method, which conforming classes may override
      * to support custom initialization.
      *
-     * @param context The application or activity context
      * @param bundle `TIOModelBundle` containing information about the model and its path
      * @return instancetype An instance of the conforming class, may be `nil`.
      */
 
-    public TIOModel(@NonNull Context context, @NonNull TIOModelBundle bundle) {
-        this.context = context;
+    public TIOModel(@NonNull TIOModelBundle bundle) {
         this.bundle = bundle;
 
         this.options = bundle.getOptions();
@@ -198,10 +189,6 @@ public abstract class TIOModel {
     }
 
     //region Getters and Setters
-
-    public Context getContext() {
-        return context;
-    }
 
     public TIOModelBundle getBundle() {
         return bundle;

@@ -1,3 +1,23 @@
+/*
+ * TIOModelBundleValidatorTest.java
+ * TensorIO
+ *
+ * Created by Philip Dow on 7/17/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
@@ -43,7 +63,7 @@ public class TIOModelBundleValidatorTest {
         return new TIOModelBundleValidator(testContext, filename);
     }
 
-    /** Create a file source validator from an asset, copying the asset to models */
+    /** Create a file source validator from a file, copying the asset to models */
 
     private TIOModelBundleValidator validatorForFile(String filename) throws IOException {
         File dir = new File(testContext.getFilesDir(), "models");
@@ -51,6 +71,18 @@ public class TIOModelBundleValidatorTest {
 
         TIOAndroidAssets.copyAsset(testContext, filename, file);
         return new TIOModelBundleValidator(testContext, file);
+    }
+
+   /** Delete a directory and all its contents */
+
+    private void deleteRecursive(File f) throws FileSystemException {
+        if (f.isDirectory())
+            for (File child : f.listFiles())
+                deleteRecursive(child);
+
+        if (!f.delete()) {
+            throw new FileSystemException("on delete: " + f.getPath());
+        }
     }
 
     // ASSETS DIRECTORY
@@ -438,17 +470,4 @@ public class TIOModelBundleValidatorTest {
             fail();
         }
     }
-
-    // Utility Methods
-
-    void deleteRecursive(File f) throws FileSystemException {
-        if (f.isDirectory())
-            for (File child : f.listFiles())
-                deleteRecursive(child);
-
-        if (!f.delete()) {
-            throw new FileSystemException("on delete: " + f.getPath());
-        }
-    }
-
 }
