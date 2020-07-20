@@ -20,7 +20,6 @@
 
 package ai.doc.tensorio.TIOModel;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
@@ -63,12 +62,6 @@ import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
  */
 
 public abstract class TIOModel {
-
-    /**
-     * The application or activity context
-     */
-
-    private final Context context;
 
     /**
      * The `TIOModelBundle` object from which this model was instantiated.
@@ -175,13 +168,11 @@ public abstract class TIOModel {
      * calls this `initWithBundle:` factory initialization method, which conforming classes may override
      * to support custom initialization.
      *
-     * @param context The application or activity context
      * @param bundle `TIOModelBundle` containing information about the model and its path
      * @return instancetype An instance of the conforming class, may be `nil`.
      */
 
-    public TIOModel(Context context, TIOModelBundle bundle) {
-        this.context = context;
+    public TIOModel(@NonNull TIOModelBundle bundle) {
         this.bundle = bundle;
 
         this.options = bundle.getOptions();
@@ -198,10 +189,6 @@ public abstract class TIOModel {
     }
 
     //region Getters and Setters
-
-    public Context getContext() {
-        return context;
-    }
 
     public TIOModelBundle getBundle() {
         return bundle;
@@ -331,7 +318,7 @@ public abstract class TIOModel {
      * @throws TIOModelException
      */
 
-    public abstract Map<String, Object> runOn(Bitmap input) throws TIOModelException;
+    public abstract Map<String, Object> runOn(@NonNull Bitmap input) throws TIOModelException;
 
     /**
      * Perform inference on an map of bytes
@@ -343,7 +330,7 @@ public abstract class TIOModel {
      *                                  expected inputs
      */
 
-    public abstract Map<String, Object> runOn(Map<String, Object> input) throws TIOModelException, IllegalArgumentException;
+    public abstract Map<String, Object> runOn(@NonNull Map<String, Object> input) throws TIOModelException, IllegalArgumentException;
 
     //endRegion
 
@@ -361,13 +348,13 @@ public abstract class TIOModel {
         }
     }
 
-    protected void validateInput(Bitmap input) throws IllegalArgumentException {
+    protected void validateInput(@NonNull Bitmap input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
         }
     }
 
-    protected void validateInput(Map<String, Object> input) throws IllegalArgumentException {
+    protected void validateInput(@NonNull Map<String, Object> input) throws IllegalArgumentException {
         int expectedSize = io.getInputs().size();
         int actualSize = input.size();
 
@@ -415,7 +402,7 @@ public abstract class TIOModel {
         return new IllegalArgumentException("The model has " + expected + " input layers but received " + actual + " inputs");
     }
 
-    private static IllegalArgumentException MissingInput(String name) {
+    private static IllegalArgumentException MissingInput(@NonNull String name) {
         return new IllegalArgumentException("The model received no input for layer \"" + name + "\"");
     }
 

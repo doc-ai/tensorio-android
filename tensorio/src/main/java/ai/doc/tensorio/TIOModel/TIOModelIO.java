@@ -20,6 +20,7 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class TIOModelIO {
      * Initializes an instance of TIOModelIO with input and output interfaces.
      */
 
-    public TIOModelIO(List<TIOLayerInterface> inputInterfaces, List<TIOLayerInterface> outputInterfaces) {
+    public TIOModelIO(@NonNull List<TIOLayerInterface> inputInterfaces, @NonNull List<TIOLayerInterface> outputInterfaces) {
         this.inputs = new TIOModelIOList(inputInterfaces);
         this.outputs = new TIOModelIOList(outputInterfaces);
     }
@@ -139,7 +140,7 @@ public class TIOModelIO {
      * Initializes an instance of TIOModelIO with input, output, and placeholder interfaces.
      */
 
-    public TIOModelIO(List<TIOLayerInterface> inputInterfaces, List<TIOLayerInterface> outputInterfaces, List<TIOLayerInterface> placeholderInterfaces) {
+    public TIOModelIO(@NonNull List<TIOLayerInterface> inputInterfaces, @NonNull List<TIOLayerInterface> outputInterfaces, @Nullable List<TIOLayerInterface> placeholderInterfaces) {
         this(inputInterfaces, outputInterfaces);
         this.placeholders = new TIOModelIOList(placeholderInterfaces);
     }
