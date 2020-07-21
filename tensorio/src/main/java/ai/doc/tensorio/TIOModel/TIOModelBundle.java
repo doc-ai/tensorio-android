@@ -94,7 +94,7 @@ public class TIOModelBundle {
      * The deserialized information contained in the model.json file.
      */
 
-    private String info;
+    private JSONObject info;
 
     /**
      * The filename of the model bundle folder for a context.assets source. See also modelFilename
@@ -291,7 +291,7 @@ public class TIOModelBundle {
             throw new TIOModelBundleException("Error parsing model file as JSON", e);
         }
 
-        this.info = json;
+        this.info = bundle;
 
         // Parse basic top level properties
 
@@ -420,6 +420,10 @@ public class TIOModelBundle {
 
     public File getModelFile() {
         return modelFile;
+    }
+
+    public JSONObject getInfo() {
+        return info;
     }
 
     public String getIdentifier() {
