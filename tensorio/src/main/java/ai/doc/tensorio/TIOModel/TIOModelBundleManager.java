@@ -23,7 +23,11 @@ package ai.doc.tensorio.TIOModel;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,10 +35,11 @@ import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * The `TIOModelBundleManager` manages model bundles in a provided directory. Use the returned
- * `TIOModelBundle` classes to instantiante `TIOModel` objects.
+ * `TIOModelBundle` classes to instantiate `TIOModel` objects.
  */
 
 public class TIOModelBundleManager {
@@ -46,12 +51,13 @@ public class TIOModelBundleManager {
     private Map<String, TIOModelBundle> modelBundles;
 
     /**
-     * Loads the available models at the specified path, e.g. folders that end in .tiobundle or
-     * the now deprecated .tfbundle and assigns them to the models property. Models will be sorted
+     * Loads the available models at the relative path in context, e.g. folders that end in .tiobundle or
+     * the now deprecated .tfbundle, and assigns them to the models property. Models will be sorted
      * by name by default.
      *
-     * @param path Directory where model bundles are located, may be in the application bundle,
-     *             application documents directory, or elsewhere.
+     * @param c The `Context` containing an assets folder and models at path
+     * @param path Directory in the context's assets folder where model bundles are located. Only
+     *             a shallow search is performed.
      */
 
     public TIOModelBundleManager(@NonNull Context c, @NonNull String path) throws IOException {
@@ -59,7 +65,11 @@ public class TIOModelBundleManager {
 
         String[] assets = c.getAssets().list("");
 
-        for(String s: assets) {
+        if (assets == null) {
+            return;
+        }
+
+        for (String s: assets) {
             if ( !(s.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION)) ) {
                 continue;
             }
@@ -69,6 +79,36 @@ public class TIOModelBundleManager {
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (TIOModelBundleException e) {
                 Log.i("TIOModelBundleManager", "Invalid bundle: " + s);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Loads the available models in the directory specified by the file, e.g. folders that end in
+     * .tiobundle or the now deprecated .tfbundle, and assigns them to the models property. Models
+     * will be sorted by name by default.
+     *
+     * @param file The directory containing the model bundles. Only a shallow search is performed.
+     * @throws IOException
+     */
+
+    public TIOModelBundleManager(@NonNull File file) throws IOException {
+        modelBundles = new HashMap<>();
+
+        if (!file.isDirectory()) {
+            throw new FileNotFoundException("Not a directory");
+        }
+
+        FilenameFilter filter = (dir, name) -> name.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION) || name.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION);
+        File[] contents = file.listFiles(filter);
+
+        for (File f : contents) {
+            try {
+                TIOModelBundle bundle = new TIOModelBundle(f);
+                modelBundles.put(bundle.getIdentifier(), bundle);
+            } catch (TIOModelBundleException e) {
+                Log.i("TIOModelBundleManager", "Invalid bundle: " + f.getPath());
                 e.printStackTrace();
             }
         }
@@ -94,18 +134,15 @@ public class TIOModelBundleManager {
     /**
      * Returns the single model that matches the provided id.
      *
-     * You must call `loadModelsAtPath:error:` before calling this method.
-     *
      * @param modelId The single model id whose bundle you would like.
      * @return The `TIOModelBundle` matching the model id.
      */
 
-    public TIOModelBundle bundleWithId(@NonNull String modelId) {
+    public @Nullable TIOModelBundle bundleWithId(@NonNull String modelId) {
         return modelBundles.get(modelId);
     }
 
     /**
-     *
      * @return a Set of String IDs of all bundles known to the manager.
      */
 
