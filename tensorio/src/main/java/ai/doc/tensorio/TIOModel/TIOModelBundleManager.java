@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,9 +43,25 @@ import androidx.annotation.Nullable;
 
 public class TIOModelBundleManager {
 
-    /**
-     * Map of Model Bundle identifiers to Model Bundles
-     */
+    /** Source is an asset from a context or a file. Barf */
+
+    public enum Source {
+        Asset,
+        File
+    };
+
+    private Source source;
+
+    /** Context and path are used when the manager targets assets in an application package */
+
+    private Context context;
+    private String path;
+
+    /** File is used when the manager targets files at an arbitrary file location */
+
+    private File file;
+
+    /** Map of Model Bundle identifiers to Model Bundles */
 
     private Map<String, TIOModelBundle> modelBundles;
 
@@ -61,9 +76,17 @@ public class TIOModelBundleManager {
      */
 
     public TIOModelBundleManager(@NonNull Context c, @NonNull String path) throws IOException {
+        this.source = Source.Asset;
+        this.context = c;
+        this.path = path;
+
+        loadAssets();
+    }
+
+    private void loadAssets() throws IOException {
         modelBundles = new HashMap<>();
 
-        String[] assets = c.getAssets().list("");
+        String[] assets = context.getAssets().list(path);
 
         if (assets == null) {
             return;
@@ -75,7 +98,7 @@ public class TIOModelBundleManager {
             }
 
             try {
-                TIOModelBundle bundle = new TIOModelBundle(c, s);
+                TIOModelBundle bundle = new TIOModelBundle(context, s);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (TIOModelBundleException e) {
                 Log.i("TIOModelBundleManager", "Invalid bundle: " + s);
@@ -94,11 +117,18 @@ public class TIOModelBundleManager {
      */
 
     public TIOModelBundleManager(@NonNull File file) throws IOException {
-        modelBundles = new HashMap<>();
-
         if (!file.isDirectory()) {
             throw new FileNotFoundException("Not a directory");
         }
+
+        this.source = Source.File;
+        this.file = file;
+
+        loadFiles();
+    }
+
+    private void loadFiles() {
+        modelBundles = new HashMap<>();
 
         FilenameFilter filter = (dir, name) -> name.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION) || name.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION);
         File[] contents = file.listFiles(filter);
@@ -112,6 +142,25 @@ public class TIOModelBundleManager {
                 e.printStackTrace();
             }
         }
+    }
+
+    /** Reload the managed model bundles */
+
+    public void reload() {
+        try {
+            switch (source) {
+                case Asset:
+                    loadAssets();
+                    break;
+                case File:
+                    loadFiles();
+                    break;
+            }
+        } catch (IOException e) {
+            // This should never happen, initialization would have already caught the exception
+            Log.e("TIOModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
+        }
+
     }
 
     /**
