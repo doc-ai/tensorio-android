@@ -54,12 +54,12 @@ public class TIOModelBundleManager {
 
     /** Context and path are used when the manager targets assets in an application package */
 
-    private Context context;
-    private String path;
+    private @Nullable Context context;
+    private @Nullable String path;
 
     /** File is used when the manager targets files at an arbitrary file location */
 
-    private File file;
+    private @Nullable File file;
 
     /** Map of Model Bundle identifiers to Model Bundles */
 
@@ -79,11 +79,14 @@ public class TIOModelBundleManager {
         this.source = Source.Asset;
         this.context = c;
         this.path = path;
+        this.file = null;
 
         loadAssets();
     }
 
     private void loadAssets() throws IOException {
+        assert(context != null && path != null);
+
         modelBundles = new HashMap<>();
 
         String[] assets = context.getAssets().list(path);
@@ -123,11 +126,15 @@ public class TIOModelBundleManager {
 
         this.source = Source.File;
         this.file = file;
+        this.context = null;
+        this.path = null;
 
         loadFiles();
     }
 
     private void loadFiles() {
+        assert(file != null);
+
         modelBundles = new HashMap<>();
 
         FilenameFilter filter = (dir, name) -> name.endsWith(TIOModelBundle.TIO_BUNDLE_EXTENSION) || name.endsWith(TIOModelBundle.TF_BUNDLE_EXTENSION);
