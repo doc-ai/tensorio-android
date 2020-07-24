@@ -21,10 +21,13 @@
 package ai.doc.tensorio.TIOModel;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
 import ai.doc.tensorio.TIOUtilities.TIOFileIO;
-import androidx.annotation.NonNull;
+import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
+import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,8 +37,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
 
 /**
  * Encapsulates information about a `TIOModel` without actually loading the model.
@@ -94,19 +95,39 @@ public class TIOModelBundle {
      * The deserialized information contained in the model.json file.
      */
 
-    private String info;
+    private JSONObject info;
 
     /**
      * The filename of the model bundle folder for a context.assets source. See also modelFilename
      */
 
-    private String filename;
+    private @Nullable String filename;
 
     /**
      * The File corresponding to the model bundle folder when using a fully qualified path. See also modelFile
      */
 
-    private File file;
+    private @Nullable File file;
+
+    /**
+     * The file path to the actual underlying model contained in this bundle when using a
+     * context.source model bundle. See also filename.
+     *
+     * Currently, only tflite models are supported. If `placeholder` is `true` this property
+     * returns `null`.
+     */
+
+    private @Nullable String modelFilename;
+
+    /**
+     * The File corresponding to the actual underlying model contained in this bundle when using a
+     * context.source model bundle. See also file.
+     *
+     * Currently, only tflite models are supported. If `placeholder` is `true` this property
+     * returns `null`.
+     */
+
+    private @Nullable File modelFile;
 
     /**
      * A string uniquely identifying the model represented by this bundle.
@@ -197,26 +218,6 @@ public class TIOModelBundle {
     private TIOModelIO io;
 
     /**
-     * The file path to the actual underlying model contained in this bundle when using a
-     * context.source model bundle. See also filename.
-     *
-     * Currently, only tflite models are supported. If `placeholder` is `true` this property
-     * returns `null`.
-     */
-
-    private String modelFilename;
-
-    /**
-     * The File corresponding to the actual underlying model contained in this bundle when using a
-     * context.source model bundle. See also file.
-     *
-     * Currently, only tflite models are supported. If `placeholder` is `true` this property
-     * returns `null`.
-     */
-
-    private File modelFile;
-
-    /**
      * The class name of the @see TIOModel that should be used to implement this network.
      */
 
@@ -291,7 +292,7 @@ public class TIOModelBundle {
             throw new TIOModelBundleException("Error parsing model file as JSON", e);
         }
 
-        this.info = json;
+        this.info = bundle;
 
         // Parse basic top level properties
 
@@ -406,20 +407,24 @@ public class TIOModelBundle {
         return context;
     }
 
-    public String getFilename() {
+    public @Nullable String getFilename() {
         return filename;
     }
 
-    public String getModelFilename() {
+    public @Nullable String getModelFilename() {
         return modelFilename;
     }
 
-    public File getFile() {
+    public @Nullable File getFile() {
         return file;
     }
 
-    public File getModelFile() {
+    public @Nullable File getModelFile() {
         return modelFile;
+    }
+
+    public JSONObject getInfo() {
+        return info;
     }
 
     public String getIdentifier() {
