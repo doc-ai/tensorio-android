@@ -32,7 +32,6 @@ import androidx.annotation.Nullable;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import ai.doc.tensorio.core.utilities.FileIO;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
-import ai.doc.tensorio.tflite.model.TFLiteModel;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,6 +55,8 @@ import java.util.List;
  */
 
 public class ModelBundle {
+
+    private static final String TF_LITE_MODEL_CLASS_NAME = "ai.doc.tensorio.tflite.model.TFLiteModel";
 
     /** Source is an asset from a context or a file. Barf */
 
@@ -332,7 +333,7 @@ public class ModelBundle {
 
             this.quantized = modelJsonObject.getBoolean("quantized");
             this.type = modelJsonObject.optString("type", "unknown");
-            this.modelClassName = modelJsonObject.optString("class", TFLiteModel.class.getName());
+            this.modelClassName = modelJsonObject.optString("class", TF_LITE_MODEL_CLASS_NAME);
             this.placeholder = modelJsonObject.optBoolean("placeholder", false);
 
             if (modelJsonObject.has("modes")) {
