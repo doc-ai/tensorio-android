@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.TIOModel;
 
+import ai.doc.tensorio.TIOLayerInterface.TIODataType;
+import ai.doc.tensorio.TIOLayerInterface.TIOStringLayerDescription;
 import ai.doc.tensorio.TIOUtilities.TIOAndroidAssets;
 import ai.doc.tensorio.TIOUtilities.TIOFileIO;
 import androidx.annotation.NonNull;
@@ -58,6 +60,12 @@ public abstract class TIOModelJSONParsing {
     private static final String TENSOR_TYPE_IMAGE = "image";
 
     /**
+     * Key identifying a string (bytes) layer
+     */
+
+    private static final String TENSOR_TYPE_STRING = "string";
+
+    /**
      * Enumerates through the JSON description of a model's inputs or outputs and constructs a
      * `TIOLayerInterface` for each one.
      * @param modelBundle The model bundle whose layer descriptions are being parsed.
@@ -89,6 +97,9 @@ public abstract class TIOModelJSONParsing {
                     break;
                 case TENSOR_TYPE_IMAGE:
                     tioLayerInterface = parseTIOPixelBufferDescription(jsonObject, mode, isQuantized);
+                    break;
+                case TENSOR_TYPE_STRING:
+                    tioLayerInterface = parseTIOStringDescription(jsonObject, mode, isQuantized);
                     break;
                 default:
                     throw new TIOModelBundleException("Unsupported input layer type: " + type);
@@ -259,6 +270,49 @@ public abstract class TIOModelJSONParsing {
                 normalizer,
                 denormalizer,
                 quantized)
+        );
+    }
+
+    /**
+     * Parses the JSON description of a string (bytes) input or output.
+     *
+     * @param dict The JSON description in `JSONObject` format.
+     * @param mode One of the TIOLayerInterface.mode values
+     * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
+     *                  This property is ignored for raw string (bytes) layers.
+     *
+     * @return TIOLayerInterface An interface that describes this string (bytes) input or output.
+     */
+
+    public static TIOLayerInterface parseTIOStringDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, TIOModelBundleException, IOException {
+        int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        String name = dict.getString("name");
+        String type = dict.getString("type");
+
+        // Data Type
+
+        TIODataType dtype = null;
+
+        switch (type) {
+            case "uint8":
+                dtype = TIODataType.UInt8;
+                break;
+            case "float32":
+                dtype = TIODataType.Float32;
+                break;
+            case "int32":
+                dtype = TIODataType.Int32;
+                break;
+            case "int64":
+                dtype = TIODataType.Int64;
+                break;
+            default:
+                throw new TIOModelBundleException("Expected input.dtype to be one of [uint8, float32, int32, int64], found " + type);
+        }
+
+        return new TIOLayerInterface(name, mode, new TIOStringLayerDescription(
+                shape,
+                dtype)
         );
     }
 

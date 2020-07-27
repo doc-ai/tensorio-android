@@ -98,6 +98,8 @@ public class TIOModelBundleIntegrationTests {
                 Assert.assertEquals(pixelLayer.getNormalizer().normalize(255, 2), 1.0f, epsilon);
 
                 Assert.assertNull(pixelLayer.getDenormalizer());
+            }, (stringLayer) -> {
+                Assert.fail();
             });
 
             // Outputs
@@ -120,6 +122,8 @@ public class TIOModelBundleIntegrationTests {
                 Assert.assertNull(vectorLayer.getQuantizer());
                 Assert.assertNull(vectorLayer.getDequantizer());
             }, (pixelLayer) -> {
+                Assert.fail();
+            }, (stringLayer) -> {
                 Assert.fail();
             });
 
@@ -167,6 +171,8 @@ public class TIOModelBundleIntegrationTests {
                 Assert.assertEquals(pixelLayer.getShape().width, 224);
                 Assert.assertNull(pixelLayer.getNormalizer());
                 Assert.assertNull(pixelLayer.getDenormalizer());
+            }, (stringLayer) -> {
+                Assert.fail();
             });
 
             // Outputs
@@ -189,6 +195,8 @@ public class TIOModelBundleIntegrationTests {
                 Assert.assertNull(vectorLayer.getQuantizer());
                 Assert.assertNotNull(vectorLayer.getDequantizer());
             }, (pixelLayer) -> {
+                Assert.fail();
+            }, (stringLayer) -> {
                 Assert.fail();
             });
 
