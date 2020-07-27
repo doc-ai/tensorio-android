@@ -62,6 +62,10 @@ import ai.doc.tensorio.TIOData.TIODataQuantizer;
 
 public class TIOVectorLayerDescription extends TIOLayerDescription {
 
+    /**
+     * The shape of the underlying layer
+     */
+
     private final int[] shape;
 
     /**
@@ -124,6 +128,10 @@ public class TIOVectorLayerDescription extends TIOLayerDescription {
     }
 
     //region Getters and Setters
+
+    public int[] getShape() {
+        return shape;
+    }
 
     public int getLength() {
         return length;
