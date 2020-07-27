@@ -45,6 +45,7 @@ import ai.doc.tensorio.TIOModel.TIOModelBundle;
 import ai.doc.tensorio.TIOModel.TIOModelException;
 import ai.doc.tensorio.TIOModel.TIOModelIO;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLitePixelDataConverter;
+import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteStringDataConverter;
 import ai.doc.tensorio.TIOTFLiteData.TIOTFLiteVectorDataConverter;
 import androidx.annotation.NonNull;
 
@@ -78,6 +79,7 @@ public class TIOTFLiteModel extends TIOModel {
 
     final private TIOTFLiteVectorDataConverter vectorDataConverter = new TIOTFLiteVectorDataConverter();
     final private TIOTFLitePixelDataConverter pixelDataConverter = new TIOTFLitePixelDataConverter();
+    final private TIOTFLiteStringDataConverter stringDataConverter = new TIOTFLiteStringDataConverter();
 
     // Backend Options Getters and Setters
 
@@ -240,6 +242,8 @@ public class TIOTFLiteModel extends TIOModel {
                 bufferCache.put(layer, vectorDataConverter.createBackingBuffer(vectorLayer));
             }, (pixelLayer) -> {
                 bufferCache.put(layer, pixelDataConverter.createBackingBuffer(pixelLayer));
+            }, (stringLayer) -> {
+                bufferCache.put(layer, stringDataConverter.createBackingBuffer(stringLayer));
             });
         }
     }
@@ -438,6 +442,9 @@ public class TIOTFLiteModel extends TIOModel {
         }, (pixelLayer) -> {
             ByteBuffer buffer = pixelDataConverter.toByteBuffer(input, pixelLayer, cachedBuffer);
             inputBuffer.set(buffer);
+        }, (stringLayer) -> {
+            ByteBuffer buffer = stringDataConverter.toByteBuffer(input, stringLayer, cachedBuffer);
+            inputBuffer.set(buffer);
         });
         
         return inputBuffer.get();
@@ -465,6 +472,9 @@ public class TIOTFLiteModel extends TIOModel {
             outputBuffer.set(buffer);
         }, (pixelLayer) -> {
             ByteBuffer buffer = pixelDataConverter.createBackingBuffer(pixelLayer);
+            outputBuffer.set(buffer);
+        }, (stringLayer) -> {
+            ByteBuffer buffer = stringDataConverter.createBackingBuffer(stringLayer);
             outputBuffer.set(buffer);
         });
 
@@ -523,6 +533,9 @@ public class TIOTFLiteModel extends TIOModel {
             output.set(o);
         }, (pixelLayer) -> {
             Object o = pixelDataConverter.fromByteBuffer(buffer, pixelLayer);
+            output.set(o);
+        }, (stringLayer) -> {
+            Object o = stringDataConverter.fromByteBuffer(buffer, stringLayer);
             output.set(o);
         });
 

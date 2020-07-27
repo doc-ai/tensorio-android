@@ -45,7 +45,8 @@ public class TIOLayerInterface {
 
     public enum Type {
         PixelBuffer,
-        Vector
+        Vector,
+        String
     }
 
     /**
@@ -88,6 +89,7 @@ public class TIOLayerInterface {
 
     /**
      * Initializes a @see TIOLayerInterface with a pixel buffer layer description.
+     *
      * @param name The name of the layer
      * @param mode The mode of the layer
      * @param description A vector layer description
@@ -102,6 +104,7 @@ public class TIOLayerInterface {
 
     /**
      * Initializes a @see TIOLayerInterface with a vector layer description.
+     *
      * @param name The name of the layer
      * @param mode The mode of the layer
      * @param description A vector layer description
@@ -112,6 +115,21 @@ public class TIOLayerInterface {
         this.mode = mode;
         this.layerDescription = description;
         this.type = Type.Vector;
+    }
+
+    /**
+     * Initializes a @see TIOLayerInterface with a string (bytes) layer description.
+     *
+     * @param name The name of the layer
+     * @param mode The mode of the layer
+     * @param description A string (bytes) layer description
+     */
+
+    public TIOLayerInterface(String name, Mode mode, TIOStringLayerDescription description) {
+        this.name = name;
+        this.mode = mode;
+        this.layerDescription = description;
+        this.type = Type.String;
     }
 
     //region Getters and Setters
@@ -142,20 +160,29 @@ public class TIOLayerInterface {
      *         // your code
      *     }, (pixelLayer) -> {
      *         // your code
+     *     }, (stringLayer) -> {
+     *         // your code
      *     });
      * </code>
      *
      * @param vectorLayer A consuming lambda that takes the vector layer description as a parameter
      * @param pixelLayer A consuming lambda that takes the pixel layer description as a parameter
+     * @param stringLayer A consuming lambda that takes the string (bytes) layer description as a parameter
      */
 
-    public void doCase(Consumer<TIOVectorLayerDescription> vectorLayer, Consumer<TIOPixelBufferLayerDescription> pixelLayer) {
+    public void doCase(
+            Consumer<TIOVectorLayerDescription> vectorLayer,
+            Consumer<TIOPixelBufferLayerDescription> pixelLayer,
+            Consumer<TIOStringLayerDescription> stringLayer) {
         switch (this.type) {
             case Vector:
                 vectorLayer.accept((TIOVectorLayerDescription)this.layerDescription);
                 break;
             case PixelBuffer:
                 pixelLayer.accept((TIOPixelBufferLayerDescription)this.layerDescription);
+                break;
+            case String:
+                stringLayer.accept((TIOStringLayerDescription)this.layerDescription);
                 break;
         }
     }
