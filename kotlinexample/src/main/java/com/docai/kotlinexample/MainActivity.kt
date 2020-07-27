@@ -20,10 +20,10 @@
 
 package com.docai.kotlinexample
 
-import ai.doc.tensorio.TIOModel.TIOModelBundle
-import ai.doc.tensorio.TIOModel.TIOModelBundleException
-import ai.doc.tensorio.TIOModel.TIOModelException
-import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper
+import ai.doc.tensorio.core.TIOModel.TIOModelBundle
+import ai.doc.tensorio.core.TIOModel.TIOModelBundleException
+import ai.doc.tensorio.core.TIOModel.TIOModelException
+import ai.doc.tensorio.core.TIOUtilities.TIOClassificationHelper
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler

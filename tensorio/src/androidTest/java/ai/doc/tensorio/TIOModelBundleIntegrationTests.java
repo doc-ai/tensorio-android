@@ -28,11 +28,11 @@ import org.junit.Before;
 import org.junit.Assert;
 import org.junit.Test;
 
-import ai.doc.tensorio.TIOLayerInterface.TIOLayerInterface;
-import ai.doc.tensorio.TIOModel.TIOModelBundle;
-import ai.doc.tensorio.TIOModel.TIOModelBundleException;
-import ai.doc.tensorio.TIOModel.TIOModelOptions;
-import ai.doc.tensorio.TIOModel.TIOPixelFormat;
+import ai.doc.tensorio.core.TIOLayerInterface.TIOLayerInterface;
+import ai.doc.tensorio.core.TIOModel.TIOModelBundle;
+import ai.doc.tensorio.core.TIOModel.TIOModelBundleException;
+import ai.doc.tensorio.core.TIOModel.TIOModelOptions;
+import ai.doc.tensorio.core.TIOModel.TIOPixelFormat;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 public class TIOModelBundleIntegrationTests {
