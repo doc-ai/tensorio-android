@@ -27,7 +27,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import ai.doc.tensorio.core.utilities.TIOAndroidAssets;
+import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
@@ -43,11 +43,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ai.doc.tensorio.core.model.TIOModelBundle;
-import ai.doc.tensorio.core.model.TIOModelBundleException;
-import ai.doc.tensorio.core.model.TIOModelException;
-import ai.doc.tensorio.tflite.model.TIOTFLiteModel;
-import ai.doc.tensorio.core.utilities.TIOClassificationHelper;
+import ai.doc.tensorio.core.modelbundle.ModelBundle;
+import ai.doc.tensorio.core.modelbundle.ModelBundleException;
+import ai.doc.tensorio.core.model.ModelException;
+import ai.doc.tensorio.tflite.model.TFLiteModel;
+import ai.doc.tensorio.core.utilities.ClassificationHelper;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -81,12 +81,12 @@ public class TFLiteModelIntegrationTests {
 
     /** Create a model bundle from a file, copying the asset to models */
 
-    private TIOModelBundle bundleForFile(String filename) throws IOException, TIOModelBundleException {
+    private ModelBundle bundleForFile(String filename) throws IOException, ModelBundleException {
         File dir = new File(testContext.getFilesDir(), "models");
         File file = new File(dir, filename);
 
-        TIOAndroidAssets.copyAsset(testContext, filename, file);
-        return new TIOModelBundle(file);
+        AndroidAssets.copyAsset(testContext, filename, file);
+        return new ModelBundle(file);
     }
 
     /** Delete a directory and all its contents */
@@ -104,10 +104,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1In1OutNumberModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_number_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_number_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -155,7 +155,7 @@ public class TFLiteModelIntegrationTests {
             } catch (IllegalArgumentException e) {
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -164,10 +164,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_vectors_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -225,7 +225,7 @@ public class TFLiteModelIntegrationTests {
             } catch (IllegalArgumentException e) {
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -234,10 +234,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "2_in_2_out_vectors_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "2_in_2_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -291,7 +291,7 @@ public class TFLiteModelIntegrationTests {
             } catch (IllegalArgumentException e) {
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -300,10 +300,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "2_in_2_out_matrices_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "2_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -371,7 +371,7 @@ public class TFLiteModelIntegrationTests {
             } catch (IllegalArgumentException e) {
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -380,10 +380,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_tensors_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_tensors_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -421,7 +421,7 @@ public class TFLiteModelIntegrationTests {
             } catch (IllegalArgumentException e) {
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -430,10 +430,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -468,7 +468,7 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -477,10 +477,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -515,7 +515,7 @@ public class TFLiteModelIntegrationTests {
                 }
             }
 
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -526,10 +526,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testMobileNetClassificationModel_asset() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -542,13 +542,13 @@ public class TFLiteModelIntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
             String label = top.getKey();
 
             assertEquals("rocking chair", label);
 
-        } catch (TIOModelBundleException | TIOModelException | IOException e) {
+        } catch (ModelBundleException | ModelException | IOException e) {
             e.printStackTrace();
             fail();
         }
@@ -557,10 +557,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testQuantizedMobileNetClassificationModel_asset() {
         try {
-            TIOModelBundle bundle = new TIOModelBundle(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
+            ModelBundle bundle = new ModelBundle(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -573,13 +573,13 @@ public class TFLiteModelIntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
             String label = top.getKey();
 
             assertEquals("rocking chair", label);
 
-        } catch (TIOModelBundleException | TIOModelException | IOException e) {
+        } catch (ModelBundleException | ModelException | IOException e) {
             e.printStackTrace();
             fail();
         }
@@ -592,10 +592,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testMobileNetClassificationModel_file() {
         try {
-            TIOModelBundle bundle = bundleForFile("mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = bundleForFile("mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -608,7 +608,7 @@ public class TFLiteModelIntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
             String label = top.getKey();
 
@@ -617,7 +617,7 @@ public class TFLiteModelIntegrationTests {
         } catch (IOException e) {
             e.printStackTrace();
             fail();
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
@@ -626,10 +626,10 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testQuantizedMobileNetClassificationModel_file() {
         try {
-            TIOModelBundle bundle = bundleForFile("mobilenet_v1_1.0_224_quant.tiobundle");
+            ModelBundle bundle = bundleForFile("mobilenet_v1_1.0_224_quant.tiobundle");
             assertNotNull(bundle);
 
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
@@ -642,7 +642,7 @@ public class TFLiteModelIntegrationTests {
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
             assertTrue(classification instanceof Map);
 
-            List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+            List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
             String label = top.getKey();
 
@@ -651,7 +651,7 @@ public class TFLiteModelIntegrationTests {
         } catch (IOException e) {
             e.printStackTrace();
             fail();
-        } catch (TIOModelBundleException | TIOModelException e) {
+        } catch (ModelBundleException | ModelException e) {
             e.printStackTrace();
             fail();
         }
