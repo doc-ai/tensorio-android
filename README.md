@@ -113,7 +113,7 @@ allprojects {
 }
 
 dependencies {
-	implementation 'com.github.doc-ai:tensorio-android:0.9.5'
+	implementation 'com.github.doc-ai.tensorio-android:tflite:0.9.9'
 	...
 }
 ```
