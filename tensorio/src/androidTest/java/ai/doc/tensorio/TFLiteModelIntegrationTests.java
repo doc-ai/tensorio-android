@@ -27,7 +27,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import ai.doc.tensorio.core.TIOUtilities.TIOAndroidAssets;
+import ai.doc.tensorio.core.utilities.TIOAndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
@@ -43,11 +43,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ai.doc.tensorio.core.TIOModel.TIOModelBundle;
-import ai.doc.tensorio.core.TIOModel.TIOModelBundleException;
-import ai.doc.tensorio.core.TIOModel.TIOModelException;
-import ai.doc.tensorio.tflite.TIOTFLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.core.TIOUtilities.TIOClassificationHelper;
+import ai.doc.tensorio.core.model.TIOModelBundle;
+import ai.doc.tensorio.core.model.TIOModelBundleException;
+import ai.doc.tensorio.core.model.TIOModelException;
+import ai.doc.tensorio.tflite.model.TIOTFLiteModel;
+import ai.doc.tensorio.core.utilities.TIOClassificationHelper;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
