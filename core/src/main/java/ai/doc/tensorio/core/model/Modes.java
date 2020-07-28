@@ -1,5 +1,5 @@
 /*
- * TIOModelModes.java
+ * ModelModes.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -29,45 +29,45 @@ import java.util.EnumSet;
 
 public class Modes {
 
-    private enum TIOModelMode {
+    private enum ModelMode {
         Predict,
         Train,
         Eval
     }
 
     /**
-     * Parses a JSON array of strings into an EnumSet of TIOModelModes.
+     * Parses a JSON array of strings into an EnumSet of ModelModes.
      * @param array JSON array of strings. May be null for backwards compatibility, in which case
      *              the mode will be interpreted as predict.
-     * @return EnumSet of TIOModelModels
+     * @return EnumSet of ModelModes
      * @throws JSONException
      */
 
-    static private EnumSet<TIOModelMode> parseModelModes(@Nullable JSONArray array) throws JSONException {
+    static private EnumSet<ModelMode> parseModelModes(@Nullable JSONArray array) throws JSONException {
         if (array == null || array.length() == 0) {
-            return EnumSet.of(TIOModelMode.Predict);
+            return EnumSet.of(ModelMode.Predict);
         }
 
-        EnumSet<TIOModelMode> set = EnumSet.noneOf(TIOModelMode.class);
+        EnumSet<ModelMode> set = EnumSet.noneOf(ModelMode.class);
 
         for (int i=0; i < array.length(); i++) {
             String mode = array.getString(i);
 
             if (mode.equals("predict")) {
-                set.add(TIOModelMode.Predict);
+                set.add(ModelMode.Predict);
             }
             if (mode.equals("train")) {
-                set.add(TIOModelMode.Train);
+                set.add(ModelMode.Train);
             }
             if (mode.equals("eval")) {
-                set.add(TIOModelMode.Eval);
+                set.add(ModelMode.Eval);
             }
         }
 
         return set;
     }
 
-    final private EnumSet<TIOModelMode> modes;
+    final private EnumSet<ModelMode> modes;
 
     /**
      * Designated initializer
@@ -90,15 +90,15 @@ public class Modes {
     }
 
     public boolean predicts() {
-        return this.modes.contains(TIOModelMode.Predict);
+        return this.modes.contains(ModelMode.Predict);
     }
 
     public boolean trains() {
-        return this.modes.contains(TIOModelMode.Train);
+        return this.modes.contains(ModelMode.Train);
     }
 
     public boolean evals() {
-        return this.modes.contains(TIOModelMode.Eval);
+        return this.modes.contains(ModelMode.Eval);
     }
 
 }

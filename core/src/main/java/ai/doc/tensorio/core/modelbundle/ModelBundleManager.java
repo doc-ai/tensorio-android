@@ -1,5 +1,5 @@
 /*
- * TIOModelBundleManager.java
+ * ModelBundleManager.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -39,8 +39,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * The `TIOModelBundleManager` manages model bundles in a provided directory. Use the returned
- * `TIOModelBundle` classes to instantiate `TIOModel` objects.
+ * The `ModelBundleManager` manages model bundles in a provided directory. Use the returned
+ * `ModelBundle` classes to instantiate `Model` objects.
  */
 
 // TODO: Split into two classes, one for File, one for Asset
@@ -108,7 +108,7 @@ public class ModelBundleManager {
                 ModelBundle bundle = new ModelBundle(context, s);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
-                Log.i("TIOModelBundleManager", "Invalid bundle: " + s);
+                Log.i("ModelBundleManager", "Invalid bundle: " + s);
                 e.printStackTrace();
             }
         }
@@ -149,7 +149,7 @@ public class ModelBundleManager {
                 ModelBundle bundle = new ModelBundle(f);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
-                Log.i("TIOModelBundleManager", "Invalid bundle: " + f.getPath());
+                Log.i("ModelBundleManager", "Invalid bundle: " + f.getPath());
                 e.printStackTrace();
             }
         }
@@ -169,7 +169,7 @@ public class ModelBundleManager {
             }
         } catch (IOException e) {
             // This should never happen, initialization would have already caught the exception
-            Log.e("TIOModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
+            Log.e("ModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
         }
 
     }
@@ -178,7 +178,7 @@ public class ModelBundleManager {
      * Returns the models that match the provided ids.
      *
      * @param modelIds Array of model ids in `String` format
-     * @return List of `TIOModelBundle` matching the model ids
+     * @return List of `ModelBundle` matching the model ids
      */
 
     public List<ModelBundle> bundlesWithIds(@NonNull String[] modelIds) {
@@ -195,7 +195,7 @@ public class ModelBundleManager {
      * Returns the single model that matches the provided id.
      *
      * @param modelId The single model id whose bundle you would like.
-     * @return The `TIOModelBundle` matching the model id.
+     * @return The `ModelBundle` matching the model id.
      */
 
     public @Nullable

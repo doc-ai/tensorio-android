@@ -1,5 +1,5 @@
 /*
- * TIODataDequantizerTest.java
+ * sDataDequantizerTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/7/2020
@@ -38,7 +38,7 @@ public class DequantizerTest {
 
     @Test
     public void testDataDequantizerStandardZeroToOne() {
-        Dequantizer dequantizer = Dequantizer.TIODataDequantizerZeroToOne();
+        Dequantizer dequantizer = Dequantizer.DataDequantizerZeroToOne();
         float epsilon = 0.01f;
 
         assertEquals(0, dequantizer.dequantize(0), epsilon);
@@ -48,7 +48,7 @@ public class DequantizerTest {
 
     @Test
     public void testDataDequantizerStandardNegativeOneToOne() {
-        Dequantizer dequantizer = Dequantizer.TIODataDequantizerNegativeOneToOne();
+        Dequantizer dequantizer = Dequantizer.DataDequantizerNegativeOneToOne();
         float epsilon = 0.01f;
 
         assertEquals(dequantizer.dequantize(0), -1, epsilon);
@@ -58,7 +58,7 @@ public class DequantizerTest {
 
     @Test
     public void testDataDequantizerScaleAndBias() {
-        Dequantizer dequantizer = Dequantizer.TIODataDequantizerWithDequantization(1.0f / 255.0f, 0f);
+        Dequantizer dequantizer = Dequantizer.DataDequantizerWithDequantization(1.0f / 255.0f, 0f);
         float epsilon = 0.01f;
 
         assertEquals(0, dequantizer.dequantize(0), epsilon);

@@ -1,5 +1,5 @@
 /*
- * TIOModelBundleValidatorTest.java
+ * ModelBundleValidatorTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/17/2020

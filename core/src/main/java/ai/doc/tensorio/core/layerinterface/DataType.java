@@ -1,5 +1,5 @@
 /*
- * TIODataType.java
+ * DataType.java
  * TensorIO
  *
  * Created by Philip Dow on 7/27/2020

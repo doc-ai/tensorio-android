@@ -1,5 +1,5 @@
 /*
- * TIOModelJSONParsingTest.java
+ * ModelJSONParsingTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020

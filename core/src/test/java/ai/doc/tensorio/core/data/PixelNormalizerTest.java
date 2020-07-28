@@ -1,5 +1,5 @@
 /*
- * TIOPixelNormalizerTest.java
+ * PixelNormalizerTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/7/2020
@@ -38,7 +38,7 @@ public class PixelNormalizerTest {
 
     @Test
     public void testPixelNormalizerStandardZeroToOne() {
-        PixelNormalizer normalizer = PixelNormalizer.TIOPixelNormalizerZeroToOne();
+        PixelNormalizer normalizer = PixelNormalizer.PixelNormalizerZeroToOne();
         float epsilon = 0.01f;
 
         assertEquals(normalizer.normalize(0, 0), 0.0, epsilon);
@@ -56,7 +56,7 @@ public class PixelNormalizerTest {
 
     @Test
     public void testPixelNormalizerStandardNegativeOneToOne() {
-        PixelNormalizer normalizer = PixelNormalizer.TIOPixelNormalizerNegativeOneToOne();
+        PixelNormalizer normalizer = PixelNormalizer.PixelNormalizerNegativeOneToOne();
         float epsilon = 0.01f;
 
         assertEquals(normalizer.normalize(0, 0), -1.0, epsilon);
@@ -74,7 +74,7 @@ public class PixelNormalizerTest {
 
     @Test
     public void testPixelNormalizerScaleAndSameBiases() {
-        PixelNormalizer normalizer = PixelNormalizer.TIOPixelNormalizerSingleBias(1.0f / 255.0f, 0.0f);
+        PixelNormalizer normalizer = PixelNormalizer.PixelNormalizerSingleBias(1.0f / 255.0f, 0.0f);
         float epsilon = 0.01f;
 
         assertEquals(normalizer.normalize(0, 0), 0.0, epsilon);
@@ -92,7 +92,7 @@ public class PixelNormalizerTest {
 
     @Test
     public void testPixelNormalizerScaleAndDifferenceBiases() {
-        PixelNormalizer normalizer = PixelNormalizer.TIOPixelNormalizerPerChannelBias(1.0f / 255.0f, 0.1f, 0.2f, 0.3f);
+        PixelNormalizer normalizer = PixelNormalizer.PixelNormalizerPerChannelBias(1.0f / 255.0f, 0.1f, 0.2f, 0.3f);
         float epsilon = 0.01f;
 
         assertEquals(normalizer.normalize(0, 0), 0.0 + 0.1, epsilon);
