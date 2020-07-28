@@ -24,6 +24,7 @@ import ai.doc.tensorio.core.layerinterface.DataType;
 import ai.doc.tensorio.core.layerinterface.StringLayerDescription;
 import ai.doc.tensorio.core.model.ImageVolume;
 import ai.doc.tensorio.core.model.PixelFormat;
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import ai.doc.tensorio.core.utilities.FileIO;
 import androidx.annotation.NonNull;

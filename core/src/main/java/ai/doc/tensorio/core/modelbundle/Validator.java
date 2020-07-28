@@ -43,9 +43,19 @@ import ai.doc.tensorio.core.utilities.FileIO;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-// TODO: Must also be able to validate from a File that is not in context.getAssets
+// TODO: Split into two classes, one for File, one for Asset
 
 public class Validator {
+
+    public static class ValidatorException extends Exception {
+        public ValidatorException(@NonNull String message) {
+            super(message);
+        }
+
+        public ValidatorException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+    }
 
     /** Source is an asset from a context or a file. Barf */
 

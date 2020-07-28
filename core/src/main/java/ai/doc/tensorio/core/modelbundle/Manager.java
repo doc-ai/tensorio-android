@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.core.modelbundle;
 
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -40,6 +42,8 @@ import androidx.annotation.Nullable;
  * The `TIOModelBundleManager` manages model bundles in a provided directory. Use the returned
  * `TIOModelBundle` classes to instantiate `TIOModel` objects.
  */
+
+// TODO: Split into two classes, one for File, one for Asset
 
 public class Manager {
 

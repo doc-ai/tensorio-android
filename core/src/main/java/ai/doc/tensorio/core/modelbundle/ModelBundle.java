@@ -54,9 +54,21 @@ import java.util.List;
  * while other information may be added as needed by your use case.
  */
 
+// TODO: Split into two classes, one for File, one for Asset
+
 public class ModelBundle {
 
     private static final String TF_LITE_MODEL_CLASS_NAME = "ai.doc.tensorio.tflite.model.TFLiteModel";
+
+    public static class ModelBundleException extends Exception {
+        public ModelBundleException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+
+        public ModelBundleException(@NonNull String message) {
+            super(message);
+        }
+    }
 
     /** Source is an asset from a context or a file. Barf */
 

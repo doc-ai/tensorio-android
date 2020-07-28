@@ -65,6 +65,16 @@ import ai.doc.tensorio.core.layerinterface.LayerInterface;
 
 public abstract class Model {
 
+    public static class ModelException extends Exception {
+        public ModelException(@NonNull String message) {
+            super(message);
+        }
+
+        public ModelException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     /**
      * The `TIOModelBundle` object from which this model was instantiated.
      */

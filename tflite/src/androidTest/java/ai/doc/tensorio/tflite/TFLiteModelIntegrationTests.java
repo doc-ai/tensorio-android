@@ -44,8 +44,8 @@ import java.util.List;
 import java.util.Map;
 
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
-import ai.doc.tensorio.core.modelbundle.ModelBundleException;
-import ai.doc.tensorio.core.model.ModelException;
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
+import ai.doc.tensorio.core.model.Model.ModelException;
 import ai.doc.tensorio.tflite.model.TFLiteModel;
 import ai.doc.tensorio.core.utilities.ClassificationHelper;
 

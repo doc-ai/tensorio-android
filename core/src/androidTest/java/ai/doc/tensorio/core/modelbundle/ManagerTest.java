@@ -1,4 +1,4 @@
-package ai.doc.tensorio.core.model;
+package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.util.Set;
 
-import ai.doc.tensorio.core.modelbundle.Manager;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
 
