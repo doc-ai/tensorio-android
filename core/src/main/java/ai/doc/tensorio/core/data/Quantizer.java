@@ -1,5 +1,5 @@
 /*
- * TIODataQuantizer.java
+ * DataQuantizer.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -23,7 +23,7 @@
 package ai.doc.tensorio.core.data;
 
 /**
- * A `TIODataQuantizer` quantizes unquantized values, converting them from
+ * A `DataQuantizer` quantizes unquantized values, converting them from
  * floating point representations to int representations.
  */
 
@@ -37,7 +37,7 @@ public abstract class Quantizer {
     public abstract int quantize(float value);
 
     /**
-     * A TIODataQuantizer that applies the provided scale and bias according to the following formula:
+     * A DataQuantizer that applies the provided scale and bias according to the following formula:
      *
      * <pre>
      * quantized_value = (value + bias) * scale
@@ -45,10 +45,10 @@ public abstract class Quantizer {
      *
      * @param scale The scale
      * @param bias  The bias values
-     * @return TIODataQuantizer
+     * @return DataQuantizer
      */
 
-    public static Quantizer TIODataQuantizerWithQuantization(float scale, float bias) {
+    public static Quantizer DataQuantizerWithQuantization(float scale, float bias) {
         return new Quantizer() {
             @Override
             public int quantize(float value) {
@@ -58,10 +58,10 @@ public abstract class Quantizer {
     }
 
     /**
-     * A standard TIODataQuantizer function that converts values from a range of `[0,1]` to `[0,255]`
+     * A standard DataQuantizer function that converts values from a range of `[0,1]` to `[0,255]`
      */
 
-    public static Quantizer TIODataQuantizerZeroToOne() {
+    public static Quantizer DataQuantizerZeroToOne() {
         return new Quantizer() {
             @Override
             public int quantize(float value) {
@@ -71,12 +71,12 @@ public abstract class Quantizer {
     }
 
     /**
-     * A standard TIODataQuantizer function that converts values from a range of `[-1,1]` to `[0,255]`
+     * A standard DataQuantizer function that converts values from a range of `[-1,1]` to `[0,255]`
      */
 
-    public static Quantizer TIODataQuantizerNegativeOneToOne() {
+    public static Quantizer DataQuantizerNegativeOneToOne() {
         float scale = 255.0f/2.0f;
         float bias = 1f;
-        return TIODataQuantizerWithQuantization(scale, bias);
+        return DataQuantizerWithQuantization(scale, bias);
     }
 }

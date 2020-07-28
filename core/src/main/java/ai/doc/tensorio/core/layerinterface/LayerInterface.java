@@ -1,5 +1,5 @@
 /*
- * TIOLayerInterface.java
+ * LayerInterface.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 /**
  * Encapsulates information about the input, output, and placeholder layers of a model, fully described by a
- * `TIOLayerDescription`. Used internally by a model when parsing its description. Also used to
+ * `LayerDescription`. Used internally by a model when parsing its description. Also used to
  * match inputs, outputs, and placeholders to their corresponding layers.
  *
  * This is an algebraic data type inspired by Remodel: https://github.com/facebook/remodel.
@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  * variety of inputs and outputs a model can accept and produce in a unified interface.
  *
  * Normally you will not need to interact with this class, although you may request a
- * `TIOLayerDescription` from a conforming `TIOModel` for inputs or outputs that you are specifically
+ * `LayerDescription` from a conforming `Model` for inputs or outputs that you are specifically
  * interested in, for example, a pixel buffer input when you want greater control over scaling
  * and clipping an image before passing it to the model.
  */
@@ -88,7 +88,7 @@ public class LayerInterface {
     private LayerDescription layerDescription;
 
     /**
-     * Initializes a @see TIOLayerInterface with a pixel buffer layer description.
+     * Initializes a @see LayerInterface with a pixel buffer layer description.
      *
      * @param name The name of the layer
      * @param mode The mode of the layer
@@ -103,7 +103,7 @@ public class LayerInterface {
     }
 
     /**
-     * Initializes a @see TIOLayerInterface with a vector layer description.
+     * Initializes a @see LayerInterface with a vector layer description.
      *
      * @param name The name of the layer
      * @param mode The mode of the layer
@@ -118,7 +118,7 @@ public class LayerInterface {
     }
 
     /**
-     * Initializes a @see TIOLayerInterface with a string (bytes) layer description.
+     * Initializes a @see LayerInterface with a string (bytes) layer description.
      *
      * @param name The name of the layer
      * @param mode The mode of the layer

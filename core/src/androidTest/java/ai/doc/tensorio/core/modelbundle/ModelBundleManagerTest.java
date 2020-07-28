@@ -1,4 +1,24 @@
-package ai.doc.tensorio.core.model;
+/*
+ * ModelBundleManagerTest.java
+ * TensorIO
+ *
+ * Created by Philip Dow on 7/17/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
@@ -11,13 +31,12 @@ import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.util.Set;
 
-import ai.doc.tensorio.core.modelbundle.Manager;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
-public class ManagerTest {
+public class ModelBundleManagerTest {
 
     private static final int NUM_VALID_MODELS = 13;
 
@@ -83,8 +102,8 @@ public class ManagerTest {
     @Test
     public void testLoadsModelBundlesInAssetsDirectory() {
         try {
-            Manager manager = new Manager(testContext, "");
-            Set<String> ids = manager.getBundleIds();
+            ModelBundleManager modelBundleManager = new ModelBundleManager(testContext, "");
+            Set<String> ids = modelBundleManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);
 
@@ -104,8 +123,8 @@ public class ManagerTest {
         }
         try {
             File modelsDir = new File(testContext.getFilesDir(), "models");
-            Manager manager = new Manager(modelsDir);
-            Set<String> ids = manager.getBundleIds();
+            ModelBundleManager modelBundleManager = new ModelBundleManager(modelsDir);
+            Set<String> ids = modelBundleManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);
             

@@ -1,5 +1,5 @@
 /*
- * TIOModel.java
+ * Model.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -33,28 +33,15 @@ import ai.doc.tensorio.core.layerinterface.LayerInterface;
  * A Java wrapper around lower level, usually C++ model implementations. This is the primary
  * API provided by the TensorIO framework.
  *
- * A `TIOModel` is built from a bundle folder that contains the underlying model, a json description
+ * A `Model` is built from a bundle folder that contains the underlying model, a json description
  * of the model's input and output layers, and any additional assets required by the model, for
  * example, output labels.
  *
- * A conforming `TIOModel` begins by parsing a json description of the model's input and output
- * layers, producing a `TIOLayerInterface` for each layer. Each layer is fully described by a
- * conforming `TIOLayerDescription`, which describes the data the layer expects or produces, for
+ * A conforming `Model` begins by parsing a json description of the model's input and output
+ * layers, producing a `LayerInterface` for each layer. Each layer is fully described by a
+ * conforming `LayerDescription`, which describes the data the layer expects or produces, for
  * example, whether it is quantized, any transformations that should be applied to it, and the
  * number of bytes the layer expects.
- *
- * To perform inference with the underlying model, call `runOn:` with a conforming `TIOData` object.
- * `TIOData` objects simply know how to copy bytes to and receive bytes from a model's input
- * and output layers. Internally, this method matches `TIOData` objects with their corresponding
- * layers and ensures that bytes are copied to the right place. The `runOn:` method then returns a
- * conforming `TIOData` object, which is the result of performing inference with the model.
- * Objects that conform to the `TIOData` protocol include `NSNumber`, `NSArray`, `NSData`,
- * `NSDictionary`, and `TIOPixelBuffer`, which wraps a `CVPixelBuffer` for computer vision models.
- *
- * For more information about a model's interface, refer to the `TIOLayerInterface` and
- * `TIOLayerDescription` classes. For more information about the kinds of Objective-C data a
- * `TIOModel` can work with, refer to the `TIOData` protocol and its conforming classes. For more
- * information about the JSON file which describes a model, see TIOModelBundleJSONSchema.h
  *
  * Note that, currently, only TensorFlow Lite (TFLite) models are supported.
  *
@@ -65,8 +52,18 @@ import ai.doc.tensorio.core.layerinterface.LayerInterface;
 
 public abstract class Model {
 
+    public static class ModelException extends Exception {
+        public ModelException(@NonNull String message) {
+            super(message);
+        }
+
+        public ModelException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     /**
-     * The `TIOModelBundle` object from which this model was instantiated.
+     * The `ModelBundle` object from which this model was instantiated.
      */
 
     private ModelBundle bundle;
@@ -116,7 +113,7 @@ public abstract class Model {
     /**
      * A boolean value indicating if this is a placeholder bundle.
      * <p>
-     * A placeholder bundle has no underlying model and instantiates a `TIOModel` that does nothing.
+     * A placeholder bundle has no underlying model and instantiates a `Model` that does nothing.
      * Placeholders bundles are used to collect labeled data for models that haven't been trained yet.
      */
 
@@ -165,12 +162,12 @@ public abstract class Model {
     /**
      * The designated initializer for conforming classes.
      *
-     * You should not need to call this method directly. Instead, acquire an instance of a `TIOModelBundle`
-     * associated with this model by way of the model's identifier. Then the `TIOModelBundle` class
+     * You should not need to call this method directly. Instead, acquire an instance of a `ModelBundle`
+     * associated with this model by way of the model's identifier. Then the `ModelBundle` class
      * calls this `initWithBundle:` factory initialization method, which conforming classes may override
      * to support custom initialization.
      *
-     * @param bundle `TIOModelBundle` containing information about the model and its path
+     * @param bundle `ModelBundle` containing information about the model and its path
      * @return instancetype An instance of the conforming class, may be `nil`.
      */
 
@@ -254,7 +251,7 @@ public abstract class Model {
      * Conforming classes should override this method to perform custom loading and set loaded=true
      * or call super's implementation after loading has been successful.
      *
-     * @@throws TIOModelException
+     * @@throws ModelException
      */
 
     public void load() throws ModelException {
@@ -380,7 +377,7 @@ public abstract class Model {
     @NonNull
     @Override
     public String toString() {
-        return "TIOModel{" +
+        return "Model{" +
                 " options=" + options +
                 ", identifier='" + identifier + '\'' +
                 ", name='" + name + '\'' +

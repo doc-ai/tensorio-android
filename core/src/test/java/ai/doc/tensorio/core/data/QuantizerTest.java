@@ -1,5 +1,5 @@
 /*
- * TIODataQuantizerTest.java
+ * DataQuantizerTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/7/2020
@@ -38,7 +38,7 @@ public class QuantizerTest {
 
     @Test
     public void testDataQuantizerStandardZeroToOne() {
-        Quantizer quantizer = Quantizer.TIODataQuantizerZeroToOne();
+        Quantizer quantizer = Quantizer.DataQuantizerZeroToOne();
         int epsilon = 1;
 
         assertEquals(0, quantizer.quantize(0), epsilon);
@@ -48,7 +48,7 @@ public class QuantizerTest {
 
     @Test
     public void testDataQuantizerStandardNegativeOneToOne() {
-        Quantizer quantizer = Quantizer.TIODataQuantizerNegativeOneToOne();
+        Quantizer quantizer = Quantizer.DataQuantizerNegativeOneToOne();
         int epsilon = 1;
 
         assertEquals(0, quantizer.quantize(-1), epsilon);
@@ -58,7 +58,7 @@ public class QuantizerTest {
 
     @Test
     public void testDataQuantizerScaleAndBias() {
-        Quantizer quantizer = Quantizer.TIODataQuantizerWithQuantization(255.0f, 0.0f);
+        Quantizer quantizer = Quantizer.DataQuantizerWithQuantization(255.0f, 0.0f);
         int epsilon = 1;
 
         assertEquals(0, quantizer.quantize(0), epsilon);

@@ -1,5 +1,5 @@
 /*
- * TIOModelBundle.java
+ * ModelBundle.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -43,20 +43,32 @@ import java.util.List;
 
 
 /**
- * Encapsulates information about a `TIOModel` without actually loading the model.
+ * Encapsulates information about a `Model` without actually loading the model.
  *
- * A `TIOModelBundle` is used by the UI to show model details and is used to instantiate model
+ * A `ModelBundle` is used by the UI to show model details and is used to instantiate model
  * instances as a model factory. There is currently a one-to-one correspondence between a
- * `TIOModelBundle` and a .tiobundle folder in the models directory.
+ * `ModelBundle` and a .tiobundle folder in the models directory.
  *
  * A model bundle folder must contain at least a model.json file, which contains information
  * about the model. Some information is required, such as the identifier and name field,
  * while other information may be added as needed by your use case.
  */
 
+// TODO: Split into two classes, one for File, one for Asset
+
 public class ModelBundle {
 
     private static final String TF_LITE_MODEL_CLASS_NAME = "ai.doc.tensorio.tflite.model.TFLiteModel";
+
+    public static class ModelBundleException extends Exception {
+        public ModelBundleException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+
+        public ModelBundleException(@NonNull String message) {
+            super(message);
+        }
+    }
 
     /** Source is an asset from a context or a file. Barf */
 
@@ -176,14 +188,14 @@ public class ModelBundle {
     /**
      * A boolean value indicating if this is a placeholder bundle.
      *
-     * A placeholder bundle has no underlying model and instantiates a `TIOModel` that does nothing.
+     * A placeholder bundle has no underlying model and instantiates a `Model` that does nothing.
      * Placeholders bundles are used to collect labeled data for models that haven't been trained yet.
      */
 
     private boolean placeholder;
 
     /**
-     * A boolean value indicating if the model represnted by this bundle is quantized or not.
+     * A boolean value indicating if the model represented by this bundle is quantized or not.
      */
 
     private boolean quantized;
@@ -224,7 +236,7 @@ public class ModelBundle {
     private IO io;
 
     /**
-     * The class name of the @see TIOModel that should be used to implement this network.
+     * The class name of the @see Model that should be used to implement this network.
      */
 
     private String modelClassName;
@@ -484,14 +496,14 @@ public class ModelBundle {
     //endregion
 
     /**
-     * @return a new instance of the TIOModel represented by this bundle.
+     * @return a new instance of the Model represented by this bundle.
      */
 
     public Model newModel() throws ModelBundleException {
         try {
             return (Model) Class.forName(modelClassName).getConstructor(ModelBundle.class).newInstance( this);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
-            throw new ModelBundleException("Error creating TIOModel", e);
+            throw new ModelBundleException("Error creating Model", e);
         }
     }
 
@@ -526,7 +538,7 @@ public class ModelBundle {
                 ? ", filename='" + modelFilename + '\''
                 : ", file='" + modelFile.getPath() + '\'';
 
-        return "TIOModelBundle{" +
+        return "ModelBundle{" +
                 "info='" + info + '\'' +
                 fname +
                 ", identifier='" + identifier + '\'' +
