@@ -20,10 +20,10 @@
 
 package com.docai.kotlinexample
 
-import ai.doc.tensorio.TIOModel.TIOModelBundle
-import ai.doc.tensorio.TIOModel.TIOModelBundleException
-import ai.doc.tensorio.TIOModel.TIOModelException
-import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper
+import ai.doc.tensorio.core.modelbundle.ModelBundle
+import ai.doc.tensorio.core.modelbundle.ModelBundleException
+import ai.doc.tensorio.core.model.ModelException
+import ai.doc.tensorio.core.utilities.ClassificationHelper
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         try {
             // Load the Model
 
-            val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+            val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
             val model = bundle.newModel()
 
             // Load the Image
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val output = model.runOn(bitmap)
                     val classification = output.get("classification") as MutableMap<String, Float>
-                    val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
+                    val top5 = ClassificationHelper.topN(classification, 5, 0.1f)
 
                     for (entry in top5) {
                         Log.i(TAG, entry.key + ":" + entry.value)
@@ -84,13 +84,13 @@ class MainActivity : AppCompatActivity() {
                         textView.text = formattedResults(top5)
                     }
 
-                } catch (e: TIOModelException) {
+                } catch (e: ModelException) {
                     e.printStackTrace()
                 }
             }
         } catch (e: IOException) {
             e.printStackTrace()
-        } catch (e: TIOModelBundleException) {
+        } catch (e: ModelBundleException) {
             e.printStackTrace()
         }
     }

@@ -36,11 +36,11 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import ai.doc.tensorio.TIOModel.TIOModelBundle;
-import ai.doc.tensorio.TIOModel.TIOModelBundleException;
-import ai.doc.tensorio.TIOModel.TIOModelException;
-import ai.doc.tensorio.TIOTFLiteModel.TIOTFLiteModel;
-import ai.doc.tensorio.TIOUtilities.TIOClassificationHelper;
+import ai.doc.tensorio.core.modelbundle.ModelBundle;
+import ai.doc.tensorio.core.modelbundle.ModelBundleException;
+import ai.doc.tensorio.core.model.ModelException;
+import ai.doc.tensorio.tflite.model.TFLiteModel;
+import ai.doc.tensorio.core.utilities.ClassificationHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Load the Model
 
-            TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
-            TIOTFLiteModel model = (TIOTFLiteModel) bundle.newModel();
+            ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+            TFLiteModel model = (TFLiteModel) bundle.newModel();
 
             // Load the Test Image
 
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Map<String,Object> output = model.runOn(bitmap);
                     Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-                    List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5, 0.1f);
+                    List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5, 0.1f);
 
                     for (Map.Entry<String, Float> entry : top5) {
                         Log.i(TAG, entry.getKey() + ":" + entry.getValue());
@@ -91,12 +91,12 @@ public class MainActivity extends AppCompatActivity {
                         textView.setText(formattedResults(top5));
                     });
 
-                } catch (TIOModelException e) {
+                } catch (ModelException e) {
                     e.printStackTrace();
                 }
             });
 
-        } catch (IOException | TIOModelBundleException e) {
+        } catch (IOException | ModelBundleException e) {
             e.printStackTrace();
         }
     }
