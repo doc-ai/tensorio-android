@@ -1,5 +1,5 @@
 /*
- * TIODataDequantizer.java
+ * DataDequantizer.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -23,7 +23,7 @@
 package ai.doc.tensorio.core.data;
 
 /**
- * A `TIODataDequantizer` dequantizes quantized values, converting them from
+ * A `DataDequantizer` dequantizes quantized values, converting them from
  * int representations to floating point representations.
  */
 
@@ -37,7 +37,7 @@ public abstract class Dequantizer {
     public abstract float dequantize(int value);
 
     /**
-     * A TIODataDequantizer that applies the provided scale and bias according to the following formula:
+     * A DataDequantizer that applies the provided scale and bias according to the following formula:
      *
      * <pre>
      * dequantized_value = (value * scale) + bias
@@ -45,11 +45,11 @@ public abstract class Dequantizer {
      *
      * @param scale The scale
      * @param bias  The bias value
-     * @return TIODataQuantizer
+     * @return DataQuantizer
      *
      */
 
-    public static Dequantizer TIODataDequantizerWithDequantization(float scale, float bias) {
+    public static Dequantizer DataDequantizerWithDequantization(float scale, float bias) {
         return new Dequantizer() {
             @Override
             public float dequantize(int value) {
@@ -59,26 +59,26 @@ public abstract class Dequantizer {
     }
 
     /**
-     * A standard TIODataDequantizer that converts values from a range of `[0,255]` to `[0,1]`.
+     * A standard DataDequantizer that converts values from a range of `[0,255]` to `[0,1]`.
      *
      * This is equivalent to applying a scaling factor of `1.0/255.0` and no bias.
      */
 
-    public static Dequantizer TIODataDequantizerZeroToOne() {
+    public static Dequantizer DataDequantizerZeroToOne() {
         float scale = 1.0f / 255.0f;
-        return TIODataDequantizerWithDequantization(scale, 0f);
+        return DataDequantizerWithDequantization(scale, 0f);
     }
 
     /**
-     * A standard TIODataDequantizer that converts values from a range of `[0,255]` to `[-1,1]`.
+     * A standard DataDequantizer that converts values from a range of `[0,255]` to `[-1,1]`.
      *
      * This is equivalent to applying a scaling factor of `2.0/255.0` and a bias of `-1`.
      */
 
-    public static Dequantizer TIODataDequantizerNegativeOneToOne() {
+    public static Dequantizer DataDequantizerNegativeOneToOne() {
         float scale = 2.0f / 255.0f;
         float bias = -1f;
-        return TIODataDequantizerWithDequantization(scale, bias);
+        return DataDequantizerWithDequantization(scale, bias);
     }
 
 }

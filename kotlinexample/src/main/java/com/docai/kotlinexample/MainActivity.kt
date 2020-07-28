@@ -21,8 +21,8 @@
 package com.docai.kotlinexample
 
 import ai.doc.tensorio.core.modelbundle.ModelBundle
-import ai.doc.tensorio.core.modelbundle.ModelBundleException
-import ai.doc.tensorio.core.model.ModelException
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException
+import ai.doc.tensorio.core.model.Model.ModelException
 import ai.doc.tensorio.core.utilities.ClassificationHelper
 import android.graphics.BitmapFactory
 import android.os.Bundle

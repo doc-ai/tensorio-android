@@ -1,5 +1,5 @@
 /*
- * TIOModelJSONParsing.java
+ * ModelJSONParsing.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -24,6 +24,7 @@ import ai.doc.tensorio.core.layerinterface.DataType;
 import ai.doc.tensorio.core.layerinterface.StringLayerDescription;
 import ai.doc.tensorio.core.model.ImageVolume;
 import ai.doc.tensorio.core.model.PixelFormat;
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import ai.doc.tensorio.core.utilities.FileIO;
 import androidx.annotation.NonNull;
@@ -69,14 +70,14 @@ public abstract class JSONParsing {
 
     /**
      * Enumerates through the JSON description of a model's inputs or outputs and constructs a
-     * `TIOLayerInterface` for each one.
+     * `LayerInterface` for each one.
      * @param modelBundle The model bundle whose layer descriptions are being parsed.
      *                    May be `null` if descriptions are being parsed from something other
      *                    than a bundle.
      * @param io A JSONArray of Maps describing the model's input or output layers
-     * @param mode `TIOLayerInterfaceMode` one of input, output, or placeholder, describing the
+     * @param mode `LayerInterfaceMode` one of input, output, or placeholder, describing the
      *             kind of layer this is.
-     * @return A List of `TIOLayerInterface` matching the descriptions.
+     * @return A List of `LayerInterface` matching the descriptions.
      * @throws JSONException
      * @throws ModelBundleException
      * @throws IOException
@@ -95,13 +96,13 @@ public abstract class JSONParsing {
 
             switch (type) {
                 case TENSOR_TYPE_VECTOR:
-                    layerInterface = parseTIOVectorDescription(modelBundle, jsonObject, mode, isQuantized);
+                    layerInterface = parseVectorDescription(modelBundle, jsonObject, mode, isQuantized);
                     break;
                 case TENSOR_TYPE_IMAGE:
-                    layerInterface = parseTIOPixelBufferDescription(jsonObject, mode, isQuantized);
+                    layerInterface = parsePixelBufferDescription(jsonObject, mode, isQuantized);
                     break;
                 case TENSOR_TYPE_STRING:
-                    layerInterface = parseTIOStringDescription(jsonObject, mode, isQuantized);
+                    layerInterface = parseStringDescription(jsonObject, mode, isQuantized);
                     break;
                 default:
                     throw new ModelBundleException("Unsupported input layer type: " + type);
@@ -122,13 +123,13 @@ public abstract class JSONParsing {
      * @param modelBundle `The ModelBundel` that is being parsed, needed to derive a path to the labels file.
      *                    May be `nil` if descriptions are being parsed from something other than a bundle.
      * @param dict The JSON description in `JSONObject` format.
-     * @param mode One of the TIOLayerInterface.mode values
+     * @param mode One of the LayerInterface.mode values
      * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
      *
-     * @return TIOLayerInterface An interface that describes this vector input or output.
+     * @return LayerInterface An interface that describes this vector input or output.
      */
 
-    public static LayerInterface parseTIOVectorDescription(@Nullable ModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
+    public static LayerInterface parseVectorDescription(@Nullable ModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");
 
@@ -164,7 +165,7 @@ public abstract class JSONParsing {
             case Input:
             case Placeholder:
                 if ( dict.has("quantize") ) {
-                    quantizer = TIODataQuantizerForDict(dict.getJSONObject("quantize"));
+                    quantizer = DataQuantizerForDict(dict.getJSONObject("quantize"));
                 }
                 break;
             case Output:
@@ -178,7 +179,7 @@ public abstract class JSONParsing {
         switch (mode) {
             case Output:
                 if ( dict.has("dequantize") ) {
-                    dequantizer = TIODataDequantizerForDict(dict.getJSONObject("dequantize"));
+                    dequantizer = DataDequantizerForDict(dict.getJSONObject("dequantize"));
                 }
                 break;
             case Input:
@@ -204,13 +205,13 @@ public abstract class JSONParsing {
      * of byte alignment and pixel format conversion requirements.
      *
      * @param dict The JSON description in `JSONObject` format.
-     * @param mode One of the TIOLayerInterface.mode values
+     * @param mode One of the LayerInterface.mode values
      * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
      *
-     * @return TIOLayerInterface An interface that describes this pixel buffer input or output.
+     * @return LayerInterface An interface that describes this pixel buffer input or output.
      */
 
-    public static LayerInterface parseTIOPixelBufferDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws ModelBundleException, JSONException {
+    public static LayerInterface parsePixelBufferDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws ModelBundleException, JSONException {
         String name = dict.getString("name");
 
         // Image Volume
@@ -219,7 +220,7 @@ public abstract class JSONParsing {
 
         try {
             int[] shape = parseIntArray(dict.getJSONArray("shape"));
-            imageVolume = TIOImageVolumeForShape(shape);
+            imageVolume = ImageVolumeForShape(shape);
         } catch (JSONException e) {
             throw new ModelBundleException("Expected input.shape array field in model.json, none found", e);
         }
@@ -229,7 +230,7 @@ public abstract class JSONParsing {
         PixelFormat pixelFormat;
 
         try {
-            pixelFormat = TIOPixelFormatForString(dict.getString("format"));
+            pixelFormat = PixelFormatForString(dict.getString("format"));
         } catch (JSONException e) {
             throw new ModelBundleException("Expected input.format string in model.json, none found", e);
         }
@@ -242,7 +243,7 @@ public abstract class JSONParsing {
             case Input:
             case Placeholder:
                 if ( dict.has("normalize") ) {
-                    normalizer = TIOPixelNormalizerForDictionary(dict.getJSONObject("normalize"));
+                    normalizer = PixelNormalizerForDictionary(dict.getJSONObject("normalize"));
                 }
                 break;
             case Output:
@@ -256,7 +257,7 @@ public abstract class JSONParsing {
         switch (mode) {
             case Output:
                 if ( dict.has("denormalize") ) {
-                    denormalizer = TIOPixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
+                    denormalizer = PixelDenormalizerForDictionary(dict.getJSONObject("denormalize"));
                 }
                 break;
             case Input:
@@ -279,14 +280,14 @@ public abstract class JSONParsing {
      * Parses the JSON description of a string (bytes) input or output.
      *
      * @param dict The JSON description in `JSONObject` format.
-     * @param mode One of the TIOLayerInterface.mode values
+     * @param mode One of the LayerInterface.mode values
      * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
      *                  This property is ignored for raw string (bytes) layers.
      *
-     * @return TIOLayerInterface An interface that describes this string (bytes) input or output.
+     * @return LayerInterface An interface that describes this string (bytes) input or output.
      */
 
-    public static LayerInterface parseTIOStringDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
+    public static LayerInterface parseStringDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         String name = dict.getString("name");
         String type = dict.getString("type");
@@ -319,10 +320,10 @@ public abstract class JSONParsing {
     }
 
     /**
-     * Converts a pixel format string such as `"RGB"` or `"BGR"` to a `TIOPixelFormat` pixel format type.
+     * Converts a pixel format string such as `"RGB"` or `"BGR"` to a `PixelFormat` pixel format type.
      */
 
-    public static PixelFormat TIOPixelFormatForString(@NonNull String format) throws ModelBundleException {
+    public static PixelFormat PixelFormatForString(@NonNull String format) throws ModelBundleException {
         switch (format) {
             case "RGB":
                 return PixelFormat.RGB;
@@ -336,7 +337,7 @@ public abstract class JSONParsing {
      * Parses the `quantization` key of an input description and returns an associated data quantizer.
      */
 
-    public static Quantizer TIODataQuantizerForDict(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
+    public static Quantizer DataQuantizerForDict(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
         if (dict == null) {
             return null;
         }
@@ -346,9 +347,9 @@ public abstract class JSONParsing {
         if (standard != null) {
             switch (standard) {
                 case "[0,1]":
-                    return Quantizer.TIODataQuantizerZeroToOne();
+                    return Quantizer.DataQuantizerZeroToOne();
                 case "[-1,1]":
-                    return Quantizer.TIODataQuantizerNegativeOneToOne();
+                    return Quantizer.DataQuantizerNegativeOneToOne();
                 default:
                     throw new ModelBundleException("Invalid Quantizer, expected standard quantization to be [0,1] or [1,1]");
             }
@@ -356,7 +357,7 @@ public abstract class JSONParsing {
             if (dict.has("scale") && dict.has("bias")) {
                 float scale = (float) dict.getDouble("scale");
                 float bias = (float) dict.getDouble("bias");
-                return Quantizer.TIODataQuantizerWithQuantization(scale, bias);
+                return Quantizer.DataQuantizerWithQuantization(scale, bias);
             } else {
                 throw new ModelBundleException("Invalid Quantizer, expected scale and bias for quantizer");
             }
@@ -367,7 +368,7 @@ public abstract class JSONParsing {
      * Parses the `dequantization` key of an output description and returns an associated data dequantizer.
      */
 
-    public static Dequantizer TIODataDequantizerForDict(@Nullable JSONObject dict) throws ModelBundleException, JSONException {
+    public static Dequantizer DataDequantizerForDict(@Nullable JSONObject dict) throws ModelBundleException, JSONException {
         if (dict == null) {
             return null;
         }
@@ -377,9 +378,9 @@ public abstract class JSONParsing {
         if (standard != null) {
             switch (standard) {
                 case "[0,1]":
-                    return Dequantizer.TIODataDequantizerZeroToOne();
+                    return Dequantizer.DataDequantizerZeroToOne();
                 case "[-1,1]":
-                    return Dequantizer.TIODataDequantizerNegativeOneToOne();
+                    return Dequantizer.DataDequantizerNegativeOneToOne();
                 default:
                     throw new ModelBundleException("Invalid Dequantizer, expected standard dequantization to be [0,1] or [1,1]");
             }
@@ -387,7 +388,7 @@ public abstract class JSONParsing {
             if (dict.has("scale") && dict.has("bias")) {
                 float scale = (float) dict.getDouble("scale");
                 float bias = (float) dict.getDouble("bias");
-                return Dequantizer.TIODataDequantizerWithDequantization(scale, bias);
+                return Dequantizer.DataDequantizerWithDequantization(scale, bias);
             } else {
                 throw new ModelBundleException("Invalid Dequantizer, expected scale and bias for quantizer");
             }
@@ -410,10 +411,10 @@ public abstract class JSONParsing {
     }
 
     /**
-     * Converts an array of shape values to an `TIOImageVolume`.
+     * Converts an array of shape values to an `ImageVolume`.
      */
 
-    public static ImageVolume TIOImageVolumeForShape(int[] shape) throws ModelBundleException {
+    public static ImageVolume ImageVolumeForShape(int[] shape) throws ModelBundleException {
         if (shape.length != 3) {
             throw new ModelBundleException("Expected shape with three elements, actual count is " + shape.length);
         }
@@ -424,10 +425,10 @@ public abstract class JSONParsing {
     }
 
     /**
-     * Returns the TIOPixelNormalizer given an input dictionary.
+     * Returns the PixelNormalizer given an input dictionary.
      */
 
-    public static PixelNormalizer TIOPixelNormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelNormalizer PixelNormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
         if (dict == null) {
             return null;
         }
@@ -437,9 +438,9 @@ public abstract class JSONParsing {
         if (normalizerString != null) {
             switch (normalizerString) {
                 case "[0,1]":
-                    return PixelNormalizer.TIOPixelNormalizerZeroToOne();
+                    return PixelNormalizer.PixelNormalizerZeroToOne();
                 case "[-1,1]":
-                    return PixelNormalizer.TIOPixelNormalizerNegativeOneToOne();
+                    return PixelNormalizer.PixelNormalizerNegativeOneToOne();
                 default:
                     throw new ModelBundleException("Expected input.normalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
             }
@@ -448,7 +449,7 @@ public abstract class JSONParsing {
             float redBias = (float)dict.optDouble("r", 0.0);
             float greenBias = (float)dict.optDouble("g", 0.0);
             float blueBias = (float)dict.optDouble("b", 0.0);
-            return PixelNormalizer.TIOPixelNormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
+            return PixelNormalizer.PixelNormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
         } else {
             return null;
         }
@@ -458,7 +459,7 @@ public abstract class JSONParsing {
      * Returns the denormalizer for a given input dictionary.
      */
 
-    public static PixelDenormalizer TIOPixelDenormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelDenormalizer PixelDenormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
         if (dict == null) {
             return null;
         }
@@ -468,9 +469,9 @@ public abstract class JSONParsing {
         if (normalizerString != null) {
             switch (normalizerString) {
                 case "[0,1]":
-                    return PixelDenormalizer.TIOPixelDenormalizerZeroToOne();
+                    return PixelDenormalizer.PixelDenormalizerZeroToOne();
                 case "[-1,1]":
-                    return PixelDenormalizer.TIOPixelDenormalizerNegativeOneToOne();
+                    return PixelDenormalizer.PixelDenormalizerNegativeOneToOne();
                 default:
                     throw new ModelBundleException("Expected input.denormalizer string to be '[0,1]' or '[-1,1]', actual value is " + normalizerString);
             }
@@ -479,7 +480,7 @@ public abstract class JSONParsing {
             float redBias = (float)dict.optDouble("r", 0.0);
             float greenBias = (float)dict.optDouble("g", 0.0);
             float blueBias = (float)dict.optDouble("b", 0.0);
-            return PixelDenormalizer.TIOPixelDenormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
+            return PixelDenormalizer.PixelDenormalizerPerChannelBias(scale, redBias, greenBias, blueBias);
         } else {
             return null;
         }

@@ -1,5 +1,5 @@
 /*
- * TIOPixelBufferLayerDescription.java
+ * PixelBufferLayerDescription.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -38,7 +38,7 @@ public class PixelBufferLayerDescription extends LayerDescription {
     private boolean quantized;
 
     /**
-     * The pixel format of the image data, must be TIOPixelFormat.RGB or TIOPixelFormat.BGR
+     * The pixel format of the image data, must be PixelFormat.RGB or PixelFormat.BGR
      */
 
     private PixelFormat pixelFormat;

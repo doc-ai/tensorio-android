@@ -1,5 +1,5 @@
 /*
- * TIOModelIO.java
+ * ModelIO.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -81,7 +81,7 @@ public class IO {
         }
 
         /**
-         * Returns the `TIOLayerInterface` for the I/O at a numeric index, or raises an
+         * Returns the `LayerInterface` for the I/O at a numeric index, or raises an
          * exception if no interface is available at the index.
          */
 
@@ -90,7 +90,7 @@ public class IO {
         }
 
         /**
-         * Returns the `TIOLayerInterface` for the I/O at a named index, or raises an
+         * Returns the `LayerInterface` for the I/O at a named index, or raises an
          * exception if no interface is available at the index.
          */
 
@@ -128,7 +128,7 @@ public class IO {
     private IOList placeholders;
 
     /**
-     * Initializes an instance of TIOModelIO with input and output interfaces.
+     * Initializes an instance of IO with input and output interfaces.
      */
 
     public IO(@NonNull List<LayerInterface> inputInterfaces, @NonNull List<LayerInterface> outputInterfaces) {
@@ -137,7 +137,7 @@ public class IO {
     }
 
     /**
-     * Initializes an instance of TIOModelIO with input, output, and placeholder interfaces.
+     * Initializes an instance of IO with input, output, and placeholder interfaces.
      */
 
     public IO(@NonNull List<LayerInterface> inputInterfaces, @NonNull List<LayerInterface> outputInterfaces, @Nullable List<LayerInterface> placeholderInterfaces) {

@@ -1,5 +1,5 @@
 /*
- * TIOModelBundleIntegrationTests.java
+ * ModelBundleIntegrationTests.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -31,6 +31,7 @@ import org.junit.Test;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.model.Options;
 import ai.doc.tensorio.core.model.PixelFormat;
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 public class ModelBundleIntegrationTests {

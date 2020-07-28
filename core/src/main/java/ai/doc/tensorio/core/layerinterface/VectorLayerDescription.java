@@ -1,5 +1,5 @@
 /*
- * TIOVectorLayerDescription.java
+ * VectorLayerDescription.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -51,13 +51,13 @@ import ai.doc.tensorio.core.data.Quantizer;
  *
  * i.e, start with the row and traverse the columns before moving to the next row.
  *
- * Because output layers are also exposed as an array of bytes, a `TIOTFLiteModel` will always return
+ * Because output layers are also exposed as an array of bytes, a `TFLiteModel` will always return
  * a vector in one dimension. If is up to you to reshape it if required.
  *
  * @warning
- * A `TIOVectorLayerDescription`'s length is different than the byte length of a `TIOData` object.
- * For example a quantized `TIOVector` (uint8_t) of length 4 will occupy 4 bytes of memory but an
- * unquantized `TIOVector` (float_t) of length 4 will occupy 16 bytes of memory.
+ * A `VectorLayerDescription`'s length is different than the byte length of a `Data` object.
+ * For example a quantized `Vector` (uint8_t) of length 4 will occupy 4 bytes of memory but an
+ * unquantized `Vector` (float_t) of length 4 will occupy 16 bytes of memory.
  */
 
 public class VectorLayerDescription extends LayerDescription {

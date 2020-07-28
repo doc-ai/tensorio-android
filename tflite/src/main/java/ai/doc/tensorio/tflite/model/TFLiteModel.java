@@ -1,5 +1,5 @@
 /*
- * TIOTFLiteModel.java
+ * TFLiteModel.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -42,7 +42,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
-import ai.doc.tensorio.core.model.ModelException;
 import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.tflite.data.BitmapConverter;
 import ai.doc.tensorio.tflite.data.StringConverter;
@@ -60,7 +59,7 @@ public class TFLiteModel extends Model {
     // TFLite Backend
 
     private Interpreter interpreter;
-    private MappedByteBuffer tfliteModel;
+    private MappedByteBuffer tfLiteModel;
     private GpuDelegate gpuDelegate = null;
     private NnApiDelegate nnApiDelegate = null;
 
@@ -136,7 +135,7 @@ public class TFLiteModel extends Model {
         // Load Model
 
         try {
-            tfliteModel = loadModelFile();
+            tfLiteModel = loadModelFile();
         } catch (IOException e) {
             throw new ModelException("Error loading model file", e);
         }
@@ -225,7 +224,7 @@ public class TFLiteModel extends Model {
 
         // Interpreter
 
-        interpreter = new Interpreter(tfliteModel, options);
+        interpreter = new Interpreter(tfLiteModel, options);
     }
 
     /** Create buffer caches that are used for model inputs and outputs */

@@ -1,5 +1,5 @@
 /*
- * TIODataConverter.java
+ * DataConverter.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -21,7 +21,7 @@
 package ai.doc.tensorio.core.data;
 
 /**
- * A TIODataConverter knows how to convert data from a native java type to that expected by a model,
+ * A DataConverter knows how to convert data from a native java type to that expected by a model,
  * and vice versa. This abstract interface is empty but concrete converters for specific backends
  * should conform to it to identify themselves as such.
  */

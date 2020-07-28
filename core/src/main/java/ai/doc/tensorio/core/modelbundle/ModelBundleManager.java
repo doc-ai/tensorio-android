@@ -1,5 +1,5 @@
 /*
- * TIOModelBundleManager.java
+ * ModelBundleManager.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.core.modelbundle;
 
+import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -37,11 +39,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * The `TIOModelBundleManager` manages model bundles in a provided directory. Use the returned
- * `TIOModelBundle` classes to instantiate `TIOModel` objects.
+ * The `ModelBundleManager` manages model bundles in a provided directory. Use the returned
+ * `ModelBundle` classes to instantiate `Model` objects.
  */
 
-public class Manager {
+// TODO: Split into two classes, one for File, one for Asset
+
+public class ModelBundleManager {
 
     /** Source is an asset from a context or a file. Barf */
 
@@ -75,7 +79,7 @@ public class Manager {
      *             a shallow search is performed.
      */
 
-    public Manager(@NonNull Context c, @NonNull String path) throws IOException {
+    public ModelBundleManager(@NonNull Context c, @NonNull String path) throws IOException {
         this.source = Source.Asset;
         this.context = c;
         this.path = path;
@@ -104,7 +108,7 @@ public class Manager {
                 ModelBundle bundle = new ModelBundle(context, s);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
-                Log.i("TIOModelBundleManager", "Invalid bundle: " + s);
+                Log.i("ModelBundleManager", "Invalid bundle: " + s);
                 e.printStackTrace();
             }
         }
@@ -119,7 +123,7 @@ public class Manager {
      * @throws IOException
      */
 
-    public Manager(@NonNull File file) throws IOException {
+    public ModelBundleManager(@NonNull File file) throws IOException {
         if (!file.isDirectory()) {
             throw new FileNotFoundException("Not a directory");
         }
@@ -145,7 +149,7 @@ public class Manager {
                 ModelBundle bundle = new ModelBundle(f);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
-                Log.i("TIOModelBundleManager", "Invalid bundle: " + f.getPath());
+                Log.i("ModelBundleManager", "Invalid bundle: " + f.getPath());
                 e.printStackTrace();
             }
         }
@@ -165,7 +169,7 @@ public class Manager {
             }
         } catch (IOException e) {
             // This should never happen, initialization would have already caught the exception
-            Log.e("TIOModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
+            Log.e("ModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
         }
 
     }
@@ -174,7 +178,7 @@ public class Manager {
      * Returns the models that match the provided ids.
      *
      * @param modelIds Array of model ids in `String` format
-     * @return List of `TIOModelBundle` matching the model ids
+     * @return List of `ModelBundle` matching the model ids
      */
 
     public List<ModelBundle> bundlesWithIds(@NonNull String[] modelIds) {
@@ -191,7 +195,7 @@ public class Manager {
      * Returns the single model that matches the provided id.
      *
      * @param modelId The single model id whose bundle you would like.
-     * @return The `TIOModelBundle` matching the model id.
+     * @return The `ModelBundle` matching the model id.
      */
 
     public @Nullable

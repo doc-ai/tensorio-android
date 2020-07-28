@@ -1,5 +1,5 @@
 /*
- * TIOModelBundleValidator.java
+ * ModelBundleValidator.java
  * TensorIO
  *
  * Created by Philip Dow on 7/6/2020
@@ -43,9 +43,19 @@ import ai.doc.tensorio.core.utilities.FileIO;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-// TODO: Must also be able to validate from a File that is not in context.getAssets
+// TODO: Split into two classes, one for File, one for Asset
 
-public class Validator {
+public class ModelBundleValidator {
+
+    public static class ValidatorException extends Exception {
+        public ValidatorException(@NonNull String message) {
+            super(message);
+        }
+
+        public ValidatorException(@NonNull String message, @NonNull Throwable cause) {
+            super(message, cause);
+        }
+    }
 
     /** Source is an asset from a context or a file. Barf */
 
@@ -77,7 +87,7 @@ public class Validator {
      * @param filename The model bundle's filename relative to the assets directory
      */
 
-    public Validator(@NonNull Context context, @NonNull String filename) {
+    public ModelBundleValidator(@NonNull Context context, @NonNull String filename) {
         this.source = Source.Asset;
         this.context = context;
 
@@ -98,7 +108,7 @@ public class Validator {
      * @param file Fully qualified File pointing to the model bundle
      */
 
-    public Validator(@NonNull Context context, @NonNull File file) {
+    public ModelBundleValidator(@NonNull Context context, @NonNull File file) {
         this.source = Source.File;
         this.context = context;
 

@@ -1,5 +1,5 @@
 /*
- * TIOStringLayerDescription.java
+ * StringLayerDescription.java
  * TensorIO
  *
  * Created by Philip Dow on 7/27/2020
@@ -67,7 +67,7 @@ public class StringLayerDescription extends LayerDescription {
      *
      * @param shape The shape of the underlying tensor
      * @param dtype The type of data this layer expects or produces
-     * @return instancetype A read-only instance of `TIOStringLayerDescription`
+     * @return instancetype A read-only instance of `StringLayerDescription`
      */
 
     public StringLayerDescription(int[] shape, DataType dtype) {

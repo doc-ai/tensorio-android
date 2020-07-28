@@ -1,5 +1,5 @@
 /*
- * TIOPixelDenormalizerTest.java
+ * PixelDenormalizerTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/7/2020
@@ -38,7 +38,7 @@ public class PixelDenormalizerTest {
 
     @Test
     public void testPixelDenormalizerForDictionaryParsesStandardZeroToOne() {
-        PixelDenormalizer denormalizer = PixelDenormalizer.TIOPixelDenormalizerZeroToOne();
+        PixelDenormalizer denormalizer = PixelDenormalizer.PixelDenormalizerZeroToOne();
         int epsilon = 1;
 
         assertEquals(denormalizer.denormalize(0.0f, 0), 0, epsilon);
@@ -56,7 +56,7 @@ public class PixelDenormalizerTest {
 
     @Test
     public void testPixelDenormalizerForDictionaryParsesStandardNegativeOneToOne() {
-        PixelDenormalizer denormalizer = PixelDenormalizer.TIOPixelDenormalizerNegativeOneToOne();
+        PixelDenormalizer denormalizer = PixelDenormalizer.PixelDenormalizerNegativeOneToOne();
         int epsilon = 1;
 
         assertEquals(denormalizer.denormalize(-1.0f, 0), 0, epsilon);
@@ -74,7 +74,7 @@ public class PixelDenormalizerTest {
 
     @Test
     public void testPixelDenormalizerForDictionaryParsesScaleAndSameBiases() {
-        PixelDenormalizer denormalizer = PixelDenormalizer.TIOPixelDenormalizerSingleBias(255.0f, 0.0f);
+        PixelDenormalizer denormalizer = PixelDenormalizer.PixelDenormalizerSingleBias(255.0f, 0.0f);
         int epsilon = 1;
 
         assertEquals(denormalizer.denormalize(0.0f, 0), 0, epsilon);
@@ -92,7 +92,7 @@ public class PixelDenormalizerTest {
 
     @Test
     public void testPixelDenormalizerForDictionaryParsesScaleAndDifferenceBiases() {
-        PixelDenormalizer denormalizer = PixelDenormalizer.TIOPixelDenormalizerPerChannelBias(255.0f, -0.1f, -0.2f, -0.3f);
+        PixelDenormalizer denormalizer = PixelDenormalizer.PixelDenormalizerPerChannelBias(255.0f, -0.1f, -0.2f, -0.3f);
         int epsilon = 1;
 
         assertEquals(denormalizer.denormalize(0.0f + 0.1f, 0), 0, epsilon);

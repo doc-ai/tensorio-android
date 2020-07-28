@@ -15,8 +15,8 @@ With TensorIO you can perform inference in just a few lines of code:
 ```java
 // Load the Model
 
-TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
-TIOModel model = bundle.newModel();
+ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+Model model = bundle.newModel();
 
 // Load an Image
 
@@ -30,7 +30,7 @@ Map<String,Object> output = model.runOn(bitmap);
 // Get the Results
 
 Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
 Map.Entry<String, Float> top = top5.get(0);
 String label = top.getKey();
 ```
@@ -40,7 +40,7 @@ String label = top.getKey();
 ```kotlin
 // Load the Model
 
-val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
 
 // Load an Image
@@ -55,7 +55,7 @@ val output = model.runOn(bitmap)
 // Get the Results
 
 val classification = output.get("classification") as MutableMap<String, Float>
-val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
+val top5 = ClassificationHelper.topN(classification, 5, 0.1f)
 val label = top5.get(0).key
 ```
 
@@ -66,7 +66,7 @@ TensorIO supports many kinds of models with multiple input and output layers of 
 
 Instead, TensorIO relies on a JSON description of the model that you provide. During inference, the library matches incoming data to the model layers that expect it, performing any transformations that are needed and ensuring that the underlying bytes are copied to the right place.  Once inference is complete, the library copies bytes from the output tensors back to native Java types.
 
-The built-in class for working with TensorFlow Lite (TF Lite) models, `TIOTFLiteModel`, includes support for multiple input and output layers; single-valued, vectored, matrix, and image data; pixel normalization and denormalization; and quantization and dequantization of data. In case you require a completely custom interface to a model you may specify your own class in the JSON description, and TensorIO will use it in place of the default class.
+The built-in class for working with TensorFlow Lite (TF Lite) models, `TFLiteModel`, includes support for multiple input and output layers; single-valued, vectored, matrix, and image data; pixel normalization and denormalization; and quantization and dequantization of data. In case you require a completely custom interface to a model you may specify your own class in the JSON description, and TensorIO will use it in place of the default class.
 
 Although TensorIO supports both full TensorFlow and TF Lite models, this README will refer to TFLite throughout. Except for small differences in support of data types (`uint8_t`, `float32_t`, etc), the interface is the same.
 
@@ -164,8 +164,8 @@ Add a tensor/io compatible model to your project's assets directory and run the 
 ```java
 // Load the Model
 
-TIOModelBundle bundle = new TIOModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
-TIOModel model = bundle.newModel();
+ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+Model model = bundle.newModel();
 
 // Load an Image
 
@@ -179,7 +179,7 @@ Map<String,Object> output = model.runOn(bitmap);
 // Get the Results
 
 Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-List<Map.Entry<String, Float>> top5 = TIOClassificationHelper.topN(classification, 5);
+List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
 Map.Entry<String, Float> top = top5.get(0);
 String label = top.getKey();
 ```
@@ -189,7 +189,7 @@ String label = top.getKey();
 ```kotlin
 // Load the Model
 
-val bundle = TIOModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
 
 // Load an Image
@@ -204,7 +204,7 @@ val output = model.runOn(bitmap)
 // Get the Results
 
 val classification = output.get("classification") as MutableMap<String, Float>
-val top5 = TIOClassificationHelper.topN(classification, 5, 0.1f)
+val top5 = ClassificationHelper.topN(classification, 5, 0.1f)
 val label = top5.get(0).key
 ```
 
