@@ -30,13 +30,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 
-import ai.doc.tensorio.core.modelbundle.Validator.ValidatorException;
+import ai.doc.tensorio.core.modelbundle.ModelBundleValidator.ValidatorException;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
-public class ValidatorTest {
+public class ModelBundleValidatorTest {
     private Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
 
@@ -60,18 +60,18 @@ public class ValidatorTest {
 
     /** Create an assets source validator from an asset */
 
-    private Validator validatorForFilename(String filename) {
-        return new Validator(testContext, filename);
+    private ModelBundleValidator validatorForFilename(String filename) {
+        return new ModelBundleValidator(testContext, filename);
     }
 
     /** Create a file source validator from a file, copying the asset to models */
 
-    private Validator validatorForFile(String filename) throws IOException {
+    private ModelBundleValidator validatorForFile(String filename) throws IOException {
         File dir = new File(testContext.getFilesDir(), "models");
         File file = new File(dir, filename);
 
         AndroidAssets.copyAsset(testContext, filename, file);
-        return new Validator(testContext, file);
+        return new ModelBundleValidator(testContext, file);
     }
 
    /** Delete a directory and all its contents */
@@ -93,8 +93,8 @@ public class ValidatorTest {
     @Test
     public void testBundleAtInvalidPathDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("foo-foo.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("foo-foo.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -103,8 +103,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithoutTIOBundleExtensionDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("invalid-model-no-ext");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("invalid-model-no-ext");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -113,8 +113,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithoutJSONDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("invalid-model-no-json.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("invalid-model-no-json.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -123,8 +123,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithBadJSONDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("invalid-model-bad-json.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("invalid-model-bad-json.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -133,8 +133,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithDeprecatedExtensionStillValidates_assets() {
         try {
-            Validator validator = validatorForFilename("deprecated.tfbundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("deprecated.tfbundle");
+            modelBundleValidator.validate();
         } catch (ValidatorException e) {
             fail();
         }
@@ -145,8 +145,8 @@ public class ValidatorTest {
     @Test
     public void testAnIncorrectlyNamedModelFileDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("invalid-model-incorrect-model-file.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("invalid-model-incorrect-model-file.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -155,8 +155,8 @@ public class ValidatorTest {
     @Test
     public void testAnIncorrectNamedLabelsFileDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("invalid-model-incorrect-labels-file.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("invalid-model-incorrect-labels-file.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (ValidatorException e) {
         }
@@ -167,8 +167,8 @@ public class ValidatorTest {
     @Test
     public void testInvalidCustomValidationDoesNotValidate_assets() {
         try {
-            Validator validator = validatorForFilename("1_in_1_out_number_test.tiobundle");
-            validator.validate((path, jsonObject) -> {
+            ModelBundleValidator modelBundleValidator = validatorForFilename("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate((path, jsonObject) -> {
                 return false;
             });
             fail();
@@ -179,8 +179,8 @@ public class ValidatorTest {
     @Test
     public void testValidCustomValidatorValidates_assets() {
         try {
-            Validator validator = validatorForFilename("1_in_1_out_number_test.tiobundle");
-            validator.validate((path, jsonObject) -> {
+            ModelBundleValidator modelBundleValidator = validatorForFilename("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate((path, jsonObject) -> {
                 return true;
             });
         } catch (ValidatorException e) {
@@ -192,38 +192,38 @@ public class ValidatorTest {
 
     @Test
     public void testValidModelsValidate_assets() {
-        Validator validator = null;
+        ModelBundleValidator modelBundleValidator = null;
 
         try {
-            validator = validatorForFilename("1_in_1_out_number_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("1_in_1_out_pixelbuffer_identity_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("1_in_1_out_pixelbuffer_normalization_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("1_in_1_out_pixelbuffer_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_pixelbuffer_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("1_in_1_out_tensors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_tensors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("1_in_1_out_vectors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("1_in_1_out_vectors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("2_in_2_out_matrices_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("2_in_2_out_matrices_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("2_in_2_out_vectors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("2_in_2_out_vectors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("mobilenet_v1_1.0_224_quant.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("mobilenet_v1_1.0_224_quant.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFilename("mobilenet_v2_1.4_224.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFilename("mobilenet_v2_1.4_224.tiobundle");
+            modelBundleValidator.validate();
         } catch (ValidatorException e) {
             e.printStackTrace();
             fail();
@@ -233,8 +233,8 @@ public class ValidatorTest {
     @Test
     public void testModelWithoutBackendValidates_assets() {
         try {
-            Validator validator = validatorForFilename("no-backend.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("no-backend.tiobundle");
+            modelBundleValidator.validate();
         } catch (ValidatorException e) {
             fail();
         }
@@ -243,8 +243,8 @@ public class ValidatorTest {
     @Test
     public void testModelWithoutModesValidates_assets() {
         try {
-            Validator validator = validatorForFilename("no-modes.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("no-modes.tiobundle");
+            modelBundleValidator.validate();
         } catch (ValidatorException e) {
             fail();
         }
@@ -253,8 +253,8 @@ public class ValidatorTest {
     @Test
     public void testPlaceholderModelValidates_assets() {
         try {
-            Validator validator = validatorForFilename("placeholder.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFilename("placeholder.tiobundle");
+            modelBundleValidator.validate();
         } catch (ValidatorException e) {
             fail();
         }
@@ -267,8 +267,8 @@ public class ValidatorTest {
     @Test
     public void testBundleAtInvalidPathDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("foo-foo.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("foo-foo.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
         } catch (ValidatorException e) {
@@ -278,8 +278,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithoutTIOBundleExtensionDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("invalid-model-no-ext");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("invalid-model-no-ext");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
             e.printStackTrace();
@@ -291,8 +291,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithoutJSONDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("invalid-model-no-json.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("invalid-model-no-json.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
             e.printStackTrace();
@@ -304,8 +304,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithBadJSONDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("invalid-model-bad-json.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("invalid-model-bad-json.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
             e.printStackTrace();
@@ -317,8 +317,8 @@ public class ValidatorTest {
     @Test
     public void testBundleWithDeprecatedExtensionStillValidates_file() {
         try {
-            Validator validator = validatorForFile("deprecated.tfbundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("deprecated.tfbundle");
+            modelBundleValidator.validate();
         } catch (IOException e) {
             e.printStackTrace();
             fail();
@@ -332,8 +332,8 @@ public class ValidatorTest {
     @Test
     public void testAnIncorrectlyNamedModelFileDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("invalid-model-incorrect-model-file.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("invalid-model-incorrect-model-file.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
             e.printStackTrace();
@@ -345,8 +345,8 @@ public class ValidatorTest {
     @Test
     public void testAnIncorrectNamedLabelsFileDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("invalid-model-incorrect-labels-file.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("invalid-model-incorrect-labels-file.tiobundle");
+            modelBundleValidator.validate();
             fail();
         } catch (IOException e) {
             e.printStackTrace();
@@ -360,8 +360,8 @@ public class ValidatorTest {
     @Test
     public void testInvalidCustomValidationDoesNotValidate_file() {
         try {
-            Validator validator = validatorForFile("1_in_1_out_number_test.tiobundle");
-            validator.validate((path, jsonObject) -> {
+            ModelBundleValidator modelBundleValidator = validatorForFile("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate((path, jsonObject) -> {
                 return false;
             });
             fail();
@@ -375,8 +375,8 @@ public class ValidatorTest {
     @Test
     public void testValidCustomValidatorValidates_file() {
         try {
-            Validator validator = validatorForFile("1_in_1_out_number_test.tiobundle");
-            validator.validate((path, jsonObject) -> {
+            ModelBundleValidator modelBundleValidator = validatorForFile("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate((path, jsonObject) -> {
                 return true;
             });
         } catch (IOException e) {
@@ -392,38 +392,38 @@ public class ValidatorTest {
     @Test
     public void testValidModelsValidate_file() {
 
-        Validator validator = null;
+        ModelBundleValidator modelBundleValidator = null;
 
         try {
-            validator = validatorForFile("1_in_1_out_number_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_number_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("1_in_1_out_pixelbuffer_identity_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("1_in_1_out_pixelbuffer_normalization_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("1_in_1_out_pixelbuffer_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_pixelbuffer_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("1_in_1_out_tensors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_tensors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("1_in_1_out_vectors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("1_in_1_out_vectors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("2_in_2_out_matrices_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("2_in_2_out_matrices_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("2_in_2_out_vectors_test.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("2_in_2_out_vectors_test.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("mobilenet_v1_1.0_224_quant.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("mobilenet_v1_1.0_224_quant.tiobundle");
+            modelBundleValidator.validate();
 
-            validator = validatorForFile("mobilenet_v2_1.4_224.tiobundle");
-            validator.validate();
+            modelBundleValidator = validatorForFile("mobilenet_v2_1.4_224.tiobundle");
+            modelBundleValidator.validate();
         } catch (IOException e) {
             e.printStackTrace();
             fail();
@@ -436,8 +436,8 @@ public class ValidatorTest {
     @Test
     public void testModelWithoutBackendValidates_file() {
         try {
-            Validator validator = validatorForFile("no-backend.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("no-backend.tiobundle");
+            modelBundleValidator.validate();
         } catch (IOException e) {
             e.printStackTrace();
             fail();
@@ -449,8 +449,8 @@ public class ValidatorTest {
     @Test
     public void testModelWithoutModesValidates_file() {
         try {
-            Validator validator = validatorForFile("no-modes.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("no-modes.tiobundle");
+            modelBundleValidator.validate();
         } catch (IOException e) {
             e.printStackTrace();
             fail();
@@ -462,8 +462,8 @@ public class ValidatorTest {
     @Test
     public void testPlaceholderModelValidates_file() {
         try {
-            Validator validator = validatorForFile("placeholder.tiobundle");
-            validator.validate();
+            ModelBundleValidator modelBundleValidator = validatorForFile("placeholder.tiobundle");
+            modelBundleValidator.validate();
         } catch (IOException e) {
             e.printStackTrace();
             fail();

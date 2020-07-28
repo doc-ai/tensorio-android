@@ -45,7 +45,7 @@ import androidx.annotation.Nullable;
 
 // TODO: Split into two classes, one for File, one for Asset
 
-public class Validator {
+public class ModelBundleValidator {
 
     public static class ValidatorException extends Exception {
         public ValidatorException(@NonNull String message) {
@@ -87,7 +87,7 @@ public class Validator {
      * @param filename The model bundle's filename relative to the assets directory
      */
 
-    public Validator(@NonNull Context context, @NonNull String filename) {
+    public ModelBundleValidator(@NonNull Context context, @NonNull String filename) {
         this.source = Source.Asset;
         this.context = context;
 
@@ -108,7 +108,7 @@ public class Validator {
      * @param file Fully qualified File pointing to the model bundle
      */
 
-    public Validator(@NonNull Context context, @NonNull File file) {
+    public ModelBundleValidator(@NonNull Context context, @NonNull File file) {
         this.source = Source.File;
         this.context = context;
 

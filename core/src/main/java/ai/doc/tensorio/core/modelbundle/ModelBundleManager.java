@@ -45,7 +45,7 @@ import androidx.annotation.Nullable;
 
 // TODO: Split into two classes, one for File, one for Asset
 
-public class Manager {
+public class ModelBundleManager {
 
     /** Source is an asset from a context or a file. Barf */
 
@@ -79,7 +79,7 @@ public class Manager {
      *             a shallow search is performed.
      */
 
-    public Manager(@NonNull Context c, @NonNull String path) throws IOException {
+    public ModelBundleManager(@NonNull Context c, @NonNull String path) throws IOException {
         this.source = Source.Asset;
         this.context = c;
         this.path = path;
@@ -123,7 +123,7 @@ public class Manager {
      * @throws IOException
      */
 
-    public Manager(@NonNull File file) throws IOException {
+    public ModelBundleManager(@NonNull File file) throws IOException {
         if (!file.isDirectory()) {
             throw new FileNotFoundException("Not a directory");
         }
