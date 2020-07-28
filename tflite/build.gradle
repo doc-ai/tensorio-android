@@ -31,6 +31,14 @@ android {
     aaptOptions {
         noCompress "tflite"
     }
+
+    packagingOptions {
+        pickFirst 'META-INF/ASL-2.0.txt'
+        pickFirst 'draftv4/schema'
+        pickFirst 'draftv3/schema'
+        pickFirst 'META-INF/LICENSE'
+        pickFirst 'META-INF/LGPL-3.0.txt'
+    }
 }
 
 repositories {
@@ -47,7 +55,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    // Tensorflow dependency
+    // TensorFlow dependency
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
     implementation 'org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly'
 

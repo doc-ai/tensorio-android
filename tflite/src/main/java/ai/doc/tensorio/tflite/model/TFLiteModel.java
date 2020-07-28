@@ -62,7 +62,7 @@ public class TFLiteModel extends Model {
     private Interpreter interpreter;
     private MappedByteBuffer tfliteModel;
     private GpuDelegate gpuDelegate = null;
-    private NnApiDelegate nnApiDelgate = null;
+    private NnApiDelegate nnApiDelegate = null;
 
     // TFLite Backend Options
 
@@ -162,9 +162,9 @@ public class TFLiteModel extends Model {
             gpuDelegate = null;
         }
 
-        if (nnApiDelgate != null) {
-            nnApiDelgate.close();
-            nnApiDelgate = null;
+        if (nnApiDelegate != null) {
+            nnApiDelegate.close();
+            nnApiDelegate = null;
         }
 
         createInterpreter();
@@ -187,9 +187,9 @@ public class TFLiteModel extends Model {
             gpuDelegate = null;
         }
 
-        if (nnApiDelgate != null) {
-            nnApiDelgate.close();
-            nnApiDelgate = null;
+        if (nnApiDelegate != null) {
+            nnApiDelegate.close();
+            nnApiDelegate = null;
         }
 
         if (bufferCache != null) {
@@ -219,8 +219,8 @@ public class TFLiteModel extends Model {
         // NNAPI Delegate
 
         if (hardwareBacking == HardwareBacking.NNAPI && NnApiDelegateHelper.isNnApiDelegateAvailable()) {
-            nnApiDelgate = (NnApiDelegate) NnApiDelegateHelper.createNnApiDelegate();
-            options.addDelegate(nnApiDelgate);
+            nnApiDelegate = (NnApiDelegate) NnApiDelegateHelper.createNnApiDelegate();
+            options.addDelegate(nnApiDelegate);
         }
 
         // Interpreter

@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-// TODO: Quantiziation should produce bytes not ints but there are is no unsigned byte primitive (#28)
+// TODO: Quantization should produce bytes not ints but there are is no unsigned byte primitive (#28)
 
 package ai.doc.tensorio.core.data;
 
