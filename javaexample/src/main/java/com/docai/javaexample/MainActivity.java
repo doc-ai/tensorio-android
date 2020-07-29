@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Load the Model
 
-            ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
             TFLiteModel model = (TFLiteModel) bundle.newModel();
 
             // Load the Test Image

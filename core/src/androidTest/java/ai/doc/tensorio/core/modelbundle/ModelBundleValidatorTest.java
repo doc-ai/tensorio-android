@@ -61,7 +61,7 @@ public class ModelBundleValidatorTest {
     /** Create an assets source validator from an asset */
 
     private ModelBundleValidator validatorForFilename(String filename) {
-        return new ModelBundleValidator(testContext, filename);
+        return ModelBundleValidator.validatorWithAsset(testContext, filename);
     }
 
     /** Create a file source validator from a file, copying the asset to models */
@@ -71,7 +71,7 @@ public class ModelBundleValidatorTest {
         File file = new File(dir, filename);
 
         AndroidAssets.copyAsset(testContext, filename, file);
-        return new ModelBundleValidator(testContext, file);
+        return ModelBundleValidator.validatorWithFile(testContext, file);
     }
 
    /** Delete a directory and all its contents */

@@ -36,7 +36,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
-public class ModelBundleManagerTest {
+public class ModelBundlesManagerTest {
 
     private static final int NUM_VALID_MODELS = 13;
 
@@ -102,8 +102,8 @@ public class ModelBundleManagerTest {
     @Test
     public void testLoadsModelBundlesInAssetsDirectory() {
         try {
-            ModelBundleManager modelBundleManager = new ModelBundleManager(testContext, "");
-            Set<String> ids = modelBundleManager.getBundleIds();
+            ModelBundlesManager modelBundlesManager = ModelBundlesManager.managerWithAssets(testContext, "");
+            Set<String> ids = modelBundlesManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);
 
@@ -123,8 +123,8 @@ public class ModelBundleManagerTest {
         }
         try {
             File modelsDir = new File(testContext.getFilesDir(), "models");
-            ModelBundleManager modelBundleManager = new ModelBundleManager(modelsDir);
-            Set<String> ids = modelBundleManager.getBundleIds();
+            ModelBundlesManager modelBundlesManager = ModelBundlesManager.managerWithFiles(modelsDir);
+            Set<String> ids = modelBundlesManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);
             

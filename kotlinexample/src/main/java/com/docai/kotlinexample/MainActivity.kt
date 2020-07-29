@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         try {
             // Load the Model
 
-            val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+            val bundle = ModelBundle.bundleWithAsset(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
             val model = bundle.newModel()
 
             // Load the Image

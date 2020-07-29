@@ -15,7 +15,7 @@ With TensorIO you can perform inference in just a few lines of code:
 ```java
 // Load the Model
 
-ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+ModelBundle bundle = ModelBundle.bundleWithAsset(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
 Model model = bundle.newModel();
 
 // Load an Image
@@ -40,7 +40,7 @@ String label = top.getKey();
 ```kotlin
 // Load the Model
 
-val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+val bundle = ModelBundle.bundleWithAsset(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
 
 // Load an Image
@@ -85,14 +85,14 @@ You should always target Java 8 as a compile option for compatibility, and if yo
 
 ```gradle
 compileOptions {
-	coreLibraryDesugaringEnabled true
-	sourceCompatibility JavaVersion.VERSION_1_8
-	targetCompatibility JavaVersion.VERSION_1_8
+  coreLibraryDesugaringEnabled true
+  sourceCompatibility JavaVersion.VERSION_1_8
+  targetCompatibility JavaVersion.VERSION_1_8
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
-    ...
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
+  ...
 }
 ```
 
@@ -106,16 +106,16 @@ It will look something like:
 
 ```gradle
 allprojects {
-	repositories {
-		...
-		maven { url 'https://jitpack.io' }
-	}
+  repositories {
+    ...
+    maven { url 'https://jitpack.io' }
+  }
 }
 
 dependencies {
-    implementation 'com.github.doc-ai.tensorio-android:core:0.9.9'
-	implementation 'com.github.doc-ai.tensorio-android:tflite:0.9.9'
-	...
+  implementation 'com.github.doc-ai.tensorio-android:core:0.9.9'
+  implementation 'com.github.doc-ai.tensorio-android:tflite:0.9.9'
+  ...
 }
 ```
 
@@ -123,7 +123,7 @@ TF Lite binaries are compressed by default, which we don't want. Add the followi
 
 ```build.gradle
 aaptOptions {
-    noCompress "tflite"
+  noCompress "tflite"
 }
 ```
 
@@ -131,11 +131,11 @@ If you encounter the error *"More than one file was found with OS independent pa
 
 ```gradle
 packagingOptions {
-    pickFirst 'META-INF/ASL-2.0.txt'
-    pickFirst 'draftv4/schema'
-    pickFirst 'draftv3/schema'
-    pickFirst 'META-INF/LICENSE'
-    pickFirst 'META-INF/LGPL-3.0.txt'
+  pickFirst 'META-INF/ASL-2.0.txt'
+  pickFirst 'draftv4/schema'
+  pickFirst 'draftv3/schema'
+  pickFirst 'META-INF/LICENSE'
+  pickFirst 'META-INF/LGPL-3.0.txt'
 }
 ```
 
@@ -164,7 +164,7 @@ Add a tensor/io compatible model to your project's assets directory and run the 
 ```java
 // Load the Model
 
-ModelBundle bundle = new ModelBundle(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
+ModelBundle bundle = new ModelBundle.bundleWithAsset(getApplicationContext(), "mobilenet_v2_1.4_224.tiobundle");
 Model model = bundle.newModel();
 
 // Load an Image
@@ -189,7 +189,7 @@ String label = top.getKey();
 ```kotlin
 // Load the Model
 
-val bundle = ModelBundle(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
+val bundle = ModelBundle.bundleWithAsset(applicationContext, "mobilenet_v2_1.4_224.tiobundle")
 val model = bundle.newModel()
 
 // Load an Image

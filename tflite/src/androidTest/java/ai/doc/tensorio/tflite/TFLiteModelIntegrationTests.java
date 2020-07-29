@@ -86,7 +86,7 @@ public class TFLiteModelIntegrationTests {
         File file = new File(dir, filename);
 
         AndroidAssets.copyAsset(testContext, filename, file);
-        return new ModelBundle(file);
+        return ModelBundle.bundleWithFile(file);
     }
 
     /** Delete a directory and all its contents */
@@ -104,7 +104,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1In1OutNumberModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_number_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_number_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -164,7 +164,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_vectors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -234,7 +234,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "2_in_2_out_vectors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "2_in_2_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -300,7 +300,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "2_in_2_out_matrices_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "2_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -380,7 +380,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_tensors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_tensors_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -430,7 +430,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -477,7 +477,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -526,7 +526,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testMobileNetClassificationModel_asset() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
@@ -557,7 +557,7 @@ public class TFLiteModelIntegrationTests {
     @Test
     public void testQuantizedMobileNetClassificationModel_asset() {
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "mobilenet_v1_1.0_224_quant.tiobundle");
             assertNotNull(bundle);
 
             TFLiteModel model = (TFLiteModel) bundle.newModel();
