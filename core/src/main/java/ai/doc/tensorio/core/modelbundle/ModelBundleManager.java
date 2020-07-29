@@ -20,17 +20,11 @@
 
 package ai.doc.tensorio.core.modelbundle;
 
-import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
-
 import android.content.Context;
-import android.util.Log;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,138 +35,47 @@ import androidx.annotation.Nullable;
 /**
  * The `ModelBundleManager` manages model bundles in a provided directory. Use the returned
  * `ModelBundle` classes to instantiate `Model` objects.
+ *
+ * This is an abstract class. Use one of the static methods @see managerWithAssets or
+ * @see managerWithFiles to get a concrete instance from an assets or File directory.
  */
 
-// TODO: Split into two classes, one for File, one for Asset
+public abstract class ModelBundleManager {
 
-public class ModelBundleManager {
+    /**
+     * Creates and returns a new AssetModelBundlesManager for the bundles in the assets directory at path
+     *
+     * @param c The application or activity context
+     * @param path The path to the directory containing the model bundles in the assets, including subdirectories
+     * @return A @see AssetModelBundlesManager
+     * @throws IOException On any error reading the directory contents
+     */
 
-    /** Source is an asset from a context or a file. Barf */
+    public static ModelBundleManager managerWithAssets(@NonNull Context c, @NonNull String path) throws IOException {
+        return new AssetModelBundlesManager(c, path);
+    }
 
-    public enum Source {
-        Asset,
-        File
-    };
+    /**
+     * Creates and returns a new FileModelBundlesManager for the bundles in the File directory
+     *
+     * @param file The File directory containing the model bundles
+     * @return A @see FileModelBundlesManager
+     * @throws IOException On any error reading the directory contents
+     */
 
-    private Source source;
-
-    /** Context and path are used when the manager targets assets in an application package */
-
-    private @Nullable Context context;
-    private @Nullable String path;
-
-    /** File is used when the manager targets files at an arbitrary file location */
-
-    private @Nullable File file;
+    public static ModelBundleManager managerWithFiles(@NonNull File file) throws IOException {
+        return new FileModelBundlesManager(file);
+    }
 
     /** Map of Model Bundle identifiers to Model Bundles */
 
-    private Map<String, ModelBundle> modelBundles;
+    protected Map<String, ModelBundle> modelBundles;
 
     /**
-     * Loads the available models at the relative path in context, e.g. folders that end in .tiobundle or
-     * the now deprecated .tfbundle, and assigns them to the models property. Models will be sorted
-     * by name by default.
-     *
-     * @param c The `Context` containing an assets folder and models at path
-     * @param path Directory in the context's assets folder where model bundles are located. Only
-     *             a shallow search is performed.
+     * Reload the managed model bundles
      */
 
-    public ModelBundleManager(@NonNull Context c, @NonNull String path) throws IOException {
-        this.source = Source.Asset;
-        this.context = c;
-        this.path = path;
-        this.file = null;
-
-        loadAssets();
-    }
-
-    private void loadAssets() throws IOException {
-        assert(context != null && path != null);
-
-        modelBundles = new HashMap<>();
-
-        String[] assets = context.getAssets().list(path);
-
-        if (assets == null) {
-            return;
-        }
-
-        for (String s: assets) {
-            if ( !(s.endsWith(ModelBundle.TF_BUNDLE_EXTENSION) || s.endsWith(ModelBundle.TIO_BUNDLE_EXTENSION)) ) {
-                continue;
-            }
-
-            try {
-                ModelBundle bundle = new AssetModelBundle(context, s);
-                modelBundles.put(bundle.getIdentifier(), bundle);
-            } catch (ModelBundleException e) {
-                Log.i("ModelBundleManager", "Invalid bundle: " + s);
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Loads the available models in the directory specified by the file, e.g. folders that end in
-     * .tiobundle or the now deprecated .tfbundle, and assigns them to the models property. Models
-     * will be sorted by name by default.
-     *
-     * @param file The directory containing the model bundles. Only a shallow search is performed.
-     * @throws IOException
-     */
-
-    public ModelBundleManager(@NonNull File file) throws IOException {
-        if (!file.isDirectory()) {
-            throw new FileNotFoundException("Not a directory");
-        }
-
-        this.source = Source.File;
-        this.file = file;
-        this.context = null;
-        this.path = null;
-
-        loadFiles();
-    }
-
-    private void loadFiles() {
-        assert(file != null);
-
-        modelBundles = new HashMap<>();
-
-        FilenameFilter filter = (dir, name) -> name.endsWith(ModelBundle.TIO_BUNDLE_EXTENSION) || name.endsWith(ModelBundle.TF_BUNDLE_EXTENSION);
-        File[] contents = file.listFiles(filter);
-
-        for (File f : contents) {
-            try {
-                ModelBundle bundle = new FileModelBundle(f);
-                modelBundles.put(bundle.getIdentifier(), bundle);
-            } catch (ModelBundleException e) {
-                Log.i("ModelBundleManager", "Invalid bundle: " + f.getPath());
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /** Reload the managed model bundles */
-
-    public void reload() {
-        try {
-            switch (source) {
-                case Asset:
-                    loadAssets();
-                    break;
-                case File:
-                    loadFiles();
-                    break;
-            }
-        } catch (IOException e) {
-            // This should never happen, initialization would have already caught the exception
-            Log.e("ModelBundleManager", "Unexpected IO Exception loading assets: " + e.getMessage());
-        }
-
-    }
+    public abstract void reload();
 
     /**
      * Returns the models that match the provided ids.

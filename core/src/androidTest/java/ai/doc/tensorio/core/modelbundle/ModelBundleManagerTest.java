@@ -102,7 +102,7 @@ public class ModelBundleManagerTest {
     @Test
     public void testLoadsModelBundlesInAssetsDirectory() {
         try {
-            ModelBundleManager modelBundleManager = new ModelBundleManager(testContext, "");
+            ModelBundleManager modelBundleManager = ModelBundleManager.managerWithAssets(testContext, "");
             Set<String> ids = modelBundleManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);
@@ -123,7 +123,7 @@ public class ModelBundleManagerTest {
         }
         try {
             File modelsDir = new File(testContext.getFilesDir(), "models");
-            ModelBundleManager modelBundleManager = new ModelBundleManager(modelsDir);
+            ModelBundleManager modelBundleManager = ModelBundleManager.managerWithFiles(modelsDir);
             Set<String> ids = modelBundleManager.getBundleIds();
 
             assertEquals(ids.size(), NUM_VALID_MODELS);

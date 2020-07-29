@@ -49,6 +49,9 @@ import java.util.List;
  * A model bundle folder must contain at least a model.json file, which contains information
  * about the model. Some information is required, such as the identifier and name field,
  * while other information may be added as needed by your use case.
+ *
+ * This is an abstract class. Use one of the static methods @see bundleWithAsset or
+ * @see bundleWithFile to get a concrete instance from a package asset or File.
  */
 
 public abstract class ModelBundle {
@@ -93,7 +96,7 @@ public abstract class ModelBundle {
      * Creates and returns a new ModelBundle from an asset
      *
      * @param context The application or activity context
-     * @param filename The filename of the model bundle in the asset, including subdirectories
+     * @param filename The filename of the model bundle in the assets, including subdirectories
      * @return An @see AssetModelBundle
      * @throws ModelBundleException On any problem reading the ModelBundle
      */
