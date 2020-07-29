@@ -16,10 +16,12 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
         }
-        debug{}
-        innerTest{}
+        debug{
+            minifyEnabled false
+            multiDexEnabled true
+        }
     }
 
     compileOptions {
@@ -37,19 +39,13 @@ android {
     }
 }
 
-
-
 dependencies {
-    implementation 'org.jetbrains:annotations:15.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
-
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
-
-    // JSON Schema validator library dependencies
     implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
-    implementation 'io.apisense:rhino-android:1.0'
 
     testImplementation 'junit:junit:4.13'
     testImplementation 'org.json:json:20190722'
