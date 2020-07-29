@@ -39,16 +39,22 @@ android {
     }
 }
 
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
+    implementation 'org.everit.json:org.everit.json.schema:1.1.0'
 
     testImplementation 'junit:junit:4.13'
-    testImplementation 'org.json:json:20190722'
+    // testImplementation 'org.json:json:20190722'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
