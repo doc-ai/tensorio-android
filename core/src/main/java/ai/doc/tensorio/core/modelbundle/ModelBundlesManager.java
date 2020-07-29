@@ -40,7 +40,7 @@ import androidx.annotation.Nullable;
  * @see managerWithFiles to get a concrete instance from an assets or File directory.
  */
 
-public abstract class ModelBundleManager {
+public abstract class ModelBundlesManager {
 
     /**
      * Creates and returns a new AssetModelBundlesManager for the bundles in the assets directory at path
@@ -51,7 +51,7 @@ public abstract class ModelBundleManager {
      * @throws IOException On any error reading the directory contents
      */
 
-    public static ModelBundleManager managerWithAssets(@NonNull Context c, @NonNull String path) throws IOException {
+    public static ModelBundlesManager managerWithAssets(@NonNull Context c, @NonNull String path) throws IOException {
         return new AssetModelBundlesManager(c, path);
     }
 
@@ -63,7 +63,7 @@ public abstract class ModelBundleManager {
      * @throws IOException On any error reading the directory contents
      */
 
-    public static ModelBundleManager managerWithFiles(@NonNull File file) throws IOException {
+    public static ModelBundlesManager managerWithFiles(@NonNull File file) throws IOException {
         return new FileModelBundlesManager(file);
     }
 

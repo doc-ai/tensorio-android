@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 import androidx.annotation.NonNull;
 
-public class FileModelBundlesManager extends ModelBundleManager {
+public class FileModelBundlesManager extends ModelBundlesManager {
 
     /**
      * A File corresponding to the directory which contains the model bundles

@@ -8,7 +8,7 @@ import java.util.HashMap;
 
 import androidx.annotation.NonNull;
 
-public class AssetModelBundlesManager extends ModelBundleManager {
+public class AssetModelBundlesManager extends ModelBundlesManager {
 
     /**
      * The application or activity context whose assets contain the model bundles
