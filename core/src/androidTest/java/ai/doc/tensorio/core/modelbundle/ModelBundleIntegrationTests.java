@@ -53,7 +53,7 @@ public class ModelBundleIntegrationTests {
         float epsilon = 0.01f;
 
         try {
-            ModelBundle bundle = new ModelBundle(testContext, "mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "mobilenet_v2_1.4_224.tiobundle");
 
             // Basic Properties
 
@@ -137,7 +137,7 @@ public class ModelBundleIntegrationTests {
         float epsilon = 0.01f;
 
         try {
-            ModelBundle bundle = new ModelBundle(appContext, "mobilenet_v1_1.0_224_quant.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "mobilenet_v1_1.0_224_quant.tiobundle");
 
             // Basic Properties
 

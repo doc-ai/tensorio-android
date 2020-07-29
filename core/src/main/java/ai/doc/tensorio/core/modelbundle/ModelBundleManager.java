@@ -105,7 +105,7 @@ public class ModelBundleManager {
             }
 
             try {
-                ModelBundle bundle = new ModelBundle(context, s);
+                ModelBundle bundle = new AssetModelBundle(context, s);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
                 Log.i("ModelBundleManager", "Invalid bundle: " + s);
@@ -146,7 +146,7 @@ public class ModelBundleManager {
 
         for (File f : contents) {
             try {
-                ModelBundle bundle = new ModelBundle(f);
+                ModelBundle bundle = new FileModelBundle(f);
                 modelBundles.put(bundle.getIdentifier(), bundle);
             } catch (ModelBundleException e) {
                 Log.i("ModelBundleManager", "Invalid bundle: " + f.getPath());

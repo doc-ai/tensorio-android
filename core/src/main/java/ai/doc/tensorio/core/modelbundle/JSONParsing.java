@@ -25,8 +25,6 @@ import ai.doc.tensorio.core.layerinterface.StringLayerDescription;
 import ai.doc.tensorio.core.model.ImageVolume;
 import ai.doc.tensorio.core.model.PixelFormat;
 import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException;
-import ai.doc.tensorio.core.utilities.AndroidAssets;
-import ai.doc.tensorio.core.utilities.FileIO;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -139,20 +137,11 @@ public abstract class JSONParsing {
 
         if (dict.optString("labels", null) != null) {
             try {
-                String contents = null;
-                // So barf
-                switch (modelBundle.getSource()) {
-                    case Asset:
-                        contents = AndroidAssets.readTextFile(modelBundle.getContext(), modelBundle.pathToAsset(dict.getString("labels")));
-                        break;
-                    case File:
-                        contents = FileIO.readTextFile((modelBundle.fileToAsset(dict.getString("labels"))));
-                        break;
-                }
+                String contents = modelBundle.readTextFile(dict.getString("labels"));
                 contents = contents.trim();
                 labels = contents.split("\\n");
             }
-            catch (IOException e){
+            catch (IOException e) {
                 throw new ModelBundleException("There was a problem reading the labels file, no labels were loaded", e);
             }
         }
