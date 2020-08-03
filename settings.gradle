@@ -1,3 +1,4 @@
+include ':tensorflow'
 include ':tflite'
 include ':kotlinexample'
 include ':javaexample'
