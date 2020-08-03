@@ -37,6 +37,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
+/**
+ * This class is not compiled into tests. See #171 and net-runner-android/#83
+ */
+
 public class ModelBundleValidatorTest {
     private Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private Context testContext = InstrumentationRegistry.getInstrumentation().getContext();

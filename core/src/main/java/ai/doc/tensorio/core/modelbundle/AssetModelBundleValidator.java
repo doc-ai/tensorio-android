@@ -3,8 +3,8 @@ package ai.doc.tensorio.core.modelbundle;
 import android.content.Context;
 
 import org.everit.json.schema.Schema;
-
 import org.everit.json.schema.ValidationException;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +16,10 @@ import java.util.function.BiFunction;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+/**
+ * This class is not compiled into the library. See #171 and net-runner-android/#83
+ */
 
 public class AssetModelBundleValidator extends ModelBundleValidator {
 
