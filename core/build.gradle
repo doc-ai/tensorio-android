@@ -36,13 +36,13 @@ android {
         pickFirst 'draftv3/schema'
         pickFirst 'META-INF/LICENSE'
         pickFirst 'META-INF/LGPL-3.0.txt'
+
+        pickFirst 'javax/annotation/Nonnegative.java'
     }
 }
 
-allprojects {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
+ repositories {
+     maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -51,10 +51,13 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'org.everit.json:org.everit.json.schema:1.1.0'
+
+    implementation ('com.github.everit-org:json-schema:1.12.1') {
+        exclude group: 'com.google.code.findbugs', module: 'annotations'
+        exclude group: "com.vaadin.external.google", module:"android-json"
+    }
 
     testImplementation 'junit:junit:4.13'
-    // testImplementation 'org.json:json:20190722'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
