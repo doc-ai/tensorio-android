@@ -35,6 +35,10 @@ import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+/**
+ * This class is not compiled into the library. See #171 and net-runner-android/#83
+ */
+
 public abstract class ModelBundleValidator {
 
     public static class ValidatorException extends Exception {

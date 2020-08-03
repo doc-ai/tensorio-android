@@ -15,6 +15,15 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
+    sourceSets {
+        androidTest {
+            java {
+                // See #171 and net-runner-android/#83
+                exclude '**/ModelBundleValidatorTest.java'
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

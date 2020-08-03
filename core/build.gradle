@@ -13,6 +13,17 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
+    sourceSets {
+        main {
+            java {
+                // See #171 and net-runner-android/#83
+                exclude '**/ModelBundleValidator.java'
+                exclude '**/AssetModelBundleValidator.java'
+                exclude '**/FileModelBundleValidator.java'
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -52,10 +63,11 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    implementation ('com.github.everit-org:json-schema:1.12.1') {
-        exclude group: 'com.google.code.findbugs', module: 'annotations'
-        exclude group: "com.vaadin.external.google", module:"android-json"
-    }
+    // See #171 and net-runner-android/#83
+//    implementation ('com.github.everit-org:json-schema:1.12.1') {
+//        exclude group: 'com.google.code.findbugs', module: 'annotations'
+//        exclude group: "com.vaadin.external.google", module:"android-json"
+//    }
 
     testImplementation 'junit:junit:4.13'
 
