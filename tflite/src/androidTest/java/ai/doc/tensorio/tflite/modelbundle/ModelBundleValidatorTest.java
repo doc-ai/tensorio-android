@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.core.modelbundle;
+package ai.doc.tensorio.tflite.modelbundle;
 
 import android.content.Context;
 
@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 
+import ai.doc.tensorio.core.modelbundle.ModelBundleValidator;
 import ai.doc.tensorio.core.modelbundle.ModelBundleValidator.ValidatorException;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
