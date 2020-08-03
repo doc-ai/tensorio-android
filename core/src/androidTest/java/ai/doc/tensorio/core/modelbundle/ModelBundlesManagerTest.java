@@ -38,7 +38,7 @@ import static org.junit.Assert.*;
 
 public class ModelBundlesManagerTest {
 
-    private static final int NUM_VALID_MODELS = 13;
+    private static final int NUM_VALID_MODELS = 14;
 
     private static final String[] VALID_MODELS = {
             "1_in_1_out_number_test.tiobundle",
@@ -49,6 +49,7 @@ public class ModelBundlesManagerTest {
             "1_in_1_out_vectors_test.tiobundle",
             "2_in_2_out_matrices_test.tiobundle",
             "2_in_2_out_vectors_test.tiobundle",
+            "deprecated.tfbundle",
             "mobilenet_v1_1.0_224_quant.tiobundle",
             "mobilenet_v2_1.4_224.tiobundle",
             "no-backend.tiobundle",
