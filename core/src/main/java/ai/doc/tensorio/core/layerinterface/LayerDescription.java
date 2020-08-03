@@ -33,13 +33,23 @@ package ai.doc.tensorio.core.layerinterface;
 public abstract class LayerDescription {
 
     /**
-     * true if this data is quantized (bytes of type byte), false if not (bytes of type float)
+     * true if this layer is quantized (bytes of type byte), false if not (bytes of type float)
      */
 
     protected boolean quantized;
 
+    /**
+     * true if this layer supports batched inference and training
+     */
+
+    protected boolean batched;
+
     public boolean isQuantized() {
         return quantized;
+    }
+
+    public boolean isBatched() {
+        return batched;
     }
 
 }

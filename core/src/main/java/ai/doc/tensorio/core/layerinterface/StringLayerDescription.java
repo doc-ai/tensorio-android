@@ -66,12 +66,14 @@ public class StringLayerDescription extends LayerDescription {
      * file.
      *
      * @param shape The shape of the underlying tensor
+     * @param batched True if the layer supports batched execution, false otherwise
      * @param dtype The type of data this layer expects or produces
      * @return instancetype A read-only instance of `StringLayerDescription`
      */
 
-    public StringLayerDescription(int[] shape, DataType dtype) {
+    public StringLayerDescription(int[] shape, boolean batched, DataType dtype) {
         this.shape = shape;
+        this.batched = batched;
         this.dtype = dtype;
 
         this.length = 1;

@@ -68,14 +68,16 @@ public class PixelBufferLayerDescription extends LayerDescription {
      *
      * @param pixelFormat  The expected format of the pixels
      * @param shape        The shape of the input image
+     * @param batched      True if the layer supports batched execution, false otherwise
      * @param normalizer   A function which normalizes the pixel values for an input layer, may be null.
      * @param denormalizer A function which denormalizes pixel values for an output layer, may be null
      * @param quantized    true if this layer expectes quantized values, false otherwise
      */
 
-    public PixelBufferLayerDescription(PixelFormat pixelFormat, ImageVolume shape, PixelNormalizer normalizer, PixelDenormalizer denormalizer, boolean quantized) {
+    public PixelBufferLayerDescription(PixelFormat pixelFormat, ImageVolume shape, boolean batched, PixelNormalizer normalizer, PixelDenormalizer denormalizer, boolean quantized) {
         this.pixelFormat = pixelFormat;
         this.shape = shape;
+        this.batched = batched;
         this.normalizer = normalizer;
         this.denormalizer = denormalizer;
         this.quantized = quantized;

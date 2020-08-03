@@ -105,13 +105,15 @@ public class VectorLayerDescription extends LayerDescription {
      * Designated initializer. Creates a vector description from the properties parsed in a model.json
      * file.
      *
+     * @param shape       The layer's shape
+     * @param batched     True if the layer supports batched execution, false otherwise
      * @param labels      The indexed labels associated with the outputs of this layer. May be `nil`.
      * @param quantized   True if the values are quantized
      * @param quantizer   A function that transforms unquantized values to quantized input
      * @param dequantizer A function that transforms quantized output to unquantized values
      */
 
-    public VectorLayerDescription(int[] shape, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer) {
+    public VectorLayerDescription(int[] shape, boolean batched, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer) {
         this.shape = shape;
 
         // Total Volume
@@ -120,6 +122,7 @@ public class VectorLayerDescription extends LayerDescription {
             length *= i;
         }
 
+        this.batched = batched;
         this.labels = labels;
         this.labeled = labels != null && labels.length > 0;
         this.quantized = quantized;

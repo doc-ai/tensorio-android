@@ -129,6 +129,7 @@ public abstract class JSONParsing {
 
     public static LayerInterface parseVectorDescription(@Nullable ModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        boolean batched = shape[0] == -1;
         String name = dict.getString("name");
 
         // Labels
@@ -180,6 +181,7 @@ public abstract class JSONParsing {
 
         return new LayerInterface(name, mode, new VectorLayerDescription(
                 shape,
+                batched,
                 labels,
                 quantized,
                 quantizer,
@@ -206,10 +208,12 @@ public abstract class JSONParsing {
         // Image Volume
 
         ImageVolume imageVolume;
+        boolean batched = false;
 
         try {
             int[] shape = parseIntArray(dict.getJSONArray("shape"));
             imageVolume = ImageVolumeForShape(shape);
+            batched = shape[0] == -1;
         } catch (JSONException e) {
             throw new ModelBundleException("Expected input.shape array field in model.json, none found", e);
         }
@@ -259,6 +263,7 @@ public abstract class JSONParsing {
         return new LayerInterface(name, mode, new PixelBufferLayerDescription(
                 pixelFormat,
                 imageVolume,
+                batched,
                 normalizer,
                 denormalizer,
                 quantized)
@@ -278,6 +283,7 @@ public abstract class JSONParsing {
 
     public static LayerInterface parseStringDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        boolean batched = shape[0] == -1;
         String name = dict.getString("name");
         String type = dict.getString("type");
 
@@ -304,6 +310,7 @@ public abstract class JSONParsing {
 
         return new LayerInterface(name, mode, new StringLayerDescription(
                 shape,
+                batched,
                 dtype)
         );
     }
@@ -404,13 +411,29 @@ public abstract class JSONParsing {
      */
 
     public static ImageVolume ImageVolumeForShape(int[] shape) throws ModelBundleException {
-        if (shape.length != 3) {
-            throw new ModelBundleException("Expected shape with three elements, actual count is " + shape.length);
-        }
-        if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
-            throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
-        }
-        return new ImageVolume(shape[0], shape[1], shape[2]);
+       switch (shape.length) {
+           case 3:
+               if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
+                   throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+               }
+               return new ImageVolume(shape[0], shape[1], shape[2]);
+           case 4:
+               if ( shape[0] == -1 ) {      // Batch is first dimension
+                   if (shape[1] <= 0 || shape[2] <= 0 || shape[3] <= 0) {
+                       throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+                   }
+                   return new ImageVolume(shape[1], shape[2], shape[3]);
+               } else if ( shape[3] == -1 ) { // Batch is last dimension
+                   if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
+                       throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+                   }
+                   return new ImageVolume(shape[0], shape[1], shape[2]);
+               } else {
+                   throw new ModelBundleException("Invalid image input shape, either first or last element must be -1 for batch dimension");
+               }
+           default:
+               throw new ModelBundleException("Expected shape with three elements, actual count is " + shape.length);
+       }
     }
 
     /**
