@@ -22,6 +22,7 @@ package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
+import ai.doc.tensorio.core.model.Backend;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.core.model.Modes;
@@ -55,8 +56,6 @@ import java.util.List;
  */
 
 public abstract class ModelBundle {
-
-    private static final String TF_LITE_MODEL_CLASS_NAME = "ai.doc.tensorio.tflite.model.TFLiteModel";
 
     public static class ModelBundleException extends Exception {
         public ModelBundleException(@NonNull String message, @NonNull Throwable cause) {
@@ -260,7 +259,7 @@ public abstract class ModelBundle {
 
             this.quantized = modelJsonObject.getBoolean("quantized");
             this.type = modelJsonObject.optString("type", "unknown");
-            this.modelClassName = modelJsonObject.optString("class", TF_LITE_MODEL_CLASS_NAME);
+            this.modelClassName = modelJsonObject.optString("class", Backend.classNameForBackend(Backend.availableBackend()));
             this.placeholder = modelJsonObject.optBoolean("placeholder", false);
 
             if (modelJsonObject.has("modes")) {
