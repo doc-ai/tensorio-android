@@ -22,16 +22,13 @@ package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.loader.SchemaLoader;
 
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.function.BiFunction;
 
 import ai.doc.tensorio.core.utilities.AndroidAssets;
@@ -115,14 +112,13 @@ public abstract class ModelBundleValidator {
 
     /** Loads the JSON schema and returns null if unable */
 
-    protected @Nullable JsonSchema jsonSchemaForBackend(@NonNull String backend){
+    protected @Nullable Schema jsonSchemaForBackend(@NonNull String backend){
         try {
             String modelSchema = AndroidAssets.readTextFile(context, backend + "/model-schema.json");
-            JsonNode schemaNode = JsonLoader.fromString(modelSchema);
-            JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-            JsonSchema schema = factory.getJsonSchema(schemaNode);
+            JSONObject rawSchema = new JSONObject(new JSONTokener(modelSchema));
+            Schema schema = SchemaLoader.load(rawSchema);
             return schema;
-        } catch (IOException | ProcessingException e) {
+        } catch (Exception e) {
             return null;
         }
     }

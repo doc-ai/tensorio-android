@@ -2,12 +2,9 @@ package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
+import org.everit.json.schema.Schema;
 
+import org.everit.json.schema.ValidationException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,7 +89,6 @@ public class AssetModelBundleValidator extends ModelBundleValidator {
 
         String json = loadAssetJson();
         JSONObject jsonObject = null;
-        JsonNode jsonNode = null;
 
         if (json == null) {
             throw new ValidatorException("Unable to read model.json");
@@ -100,8 +96,7 @@ public class AssetModelBundleValidator extends ModelBundleValidator {
 
         try {
             jsonObject = new JSONObject(json);
-            jsonNode = JsonLoader.fromString(json);
-        } catch (JSONException | IOException e) {
+        } catch (JSONException e) {
             throw new ValidatorException("Unable to load model.json", e);
         }
 
@@ -111,19 +106,16 @@ public class AssetModelBundleValidator extends ModelBundleValidator {
 
         // Validate JSON with Schema
 
-        JsonSchema schema = jsonSchemaForBackend(backend);
+        Schema schema = jsonSchemaForBackend(backend);
 
         if (schema == null) {
             throw new ValidatorException("Unable to acquire model.json schema");
         }
 
         try {
-            ProcessingReport report = schema.validate(jsonNode);
-            if (!report.isSuccess()) {
-                throw new ValidatorException("model.json validation failed");
-            }
-        } catch (ProcessingException e) {
-            throw new ValidatorException("Unknown error encounted during model.json validation", e);
+            schema.validate(jsonObject);
+        } catch (ValidationException e) {
+            throw new ValidatorException("model.json validation failed", e);
         }
 
         // Validate Assets
