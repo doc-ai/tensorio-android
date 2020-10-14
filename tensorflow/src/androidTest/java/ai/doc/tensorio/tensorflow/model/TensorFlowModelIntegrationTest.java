@@ -1,6 +1,8 @@
 package ai.doc.tensorio.tensorflow.model;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -8,9 +10,18 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.FileSystemException;
+import java.util.Map;
+
+import ai.doc.tensorflow.DataType;
+import ai.doc.tensorflow.SavedModelBundle;
+import ai.doc.tensorflow.Tensor;
 
 import ai.doc.tensorio.core.model.Model;
+import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -64,25 +75,93 @@ public class TensorFlowModelIntegrationTest {
         }
     }
 
-    // CIFAR 10 MobileNet Tests
+    /** Create a direct native order byte buffer with floats **/
+
+    private ByteBuffer byteBufferWithFloats(float[] floats) {
+        int size = floats.length * 4; // dims x bytes for dtype
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(size);
+        buffer.order(ByteOrder.nativeOrder());
+
+        for (float f : floats) {
+            buffer.putFloat(f);
+        }
+
+        return buffer;
+    }
+
+    /** Compares the contents of a float byte buffer to floats */
+
+    private void assertByteBufferEqualToFloats(ByteBuffer buffer, float epsilon, float[] floats) {
+        for (float f : floats) {
+            assertEquals(buffer.getFloat(), f, epsilon);
+        }
+    }
 
     @Test
-    public void testMobileNetEstimatorPredict() {
+    public void test1x1NumberModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "cats-vs-dogs-predict.tiobundle");
-            assertNotNull(bundle);
 
-            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("1_in_1_out_number_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            // Direct TensorFlow Test TODO: Make Tensor/IO Test
+
+            File modelDir = new File(((FileModelBundle)tioBundle).getFile(), "predict");
+
+            SavedModelBundle model = new SavedModelBundle(modelDir);
             assertNotNull(model);
-            model.load();
 
-        } catch (ModelBundle.ModelBundleException | Model.ModelException e) {
+            // Prepare Inputs
+
+            Tensor input = new Tensor(DataType.FLOAT32, new int[]{1}, "input");
+            ByteBuffer buffer = byteBufferWithFloats(new float[]{2});
+            input.setBytes(buffer);
+
+            // Prepare Outputs
+
+            Tensor output = new Tensor(DataType.FLOAT32, new int[]{1}, "output");
+
+            // Run Model
+
+            Tensor[] inputs = {input};
+            Tensor[] outputs = {output};
+
+            model.run(inputs, outputs);
+
+            // Read Output
+
+            ByteBuffer out = output.getBytes();
+            assertEquals(out.getFloat(), 25, epsilon);
+
+        } catch (ModelBundle.ModelBundleException | IOException e) {
             e.printStackTrace();
             fail();
         }
     }
 
-    // MNIST Fashion Tests
-
+//    @Test
+//    public void testCatsVsDogsPredict() {
+//        try {
+//            // ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "cats-vs-dogs-predict.tiobundle");
+//            ModelBundle bundle = bundleForFile("cats-vs-dogs-predict.tiobundle");
+//            assertNotNull(bundle);
+//
+//            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+//            assertNotNull(model);
+//            model.load();
+//
+//            InputStream stream = testContext.getAssets().open("cat.jpg");
+//            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+//
+//            Map<String,Object> output = model.runOn(bitmap);
+//            assertNotNull(output);
+//
+//        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+//            fail();
+//        }
+//    }
 
 }

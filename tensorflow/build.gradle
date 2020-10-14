@@ -50,7 +50,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    implementation 'org.tensorflow:tensorflow-android:1.13.1'
+    implementation 'com.github.doc-ai:tensorio-tensorflow-android:0.2.2'
 
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

@@ -26,7 +26,8 @@ public class AssetModelBundle extends ModelBundle {
     String filename;
 
     /**
-     * The file path to the actual underlying model contained in this bundle.
+     * The file path to the actual underlying model contained in this bundle, including the path
+     * to the bundle.
      *
      * Currently, only tflite models are supported. If `placeholder` is `true` this property
      * returns `null`.

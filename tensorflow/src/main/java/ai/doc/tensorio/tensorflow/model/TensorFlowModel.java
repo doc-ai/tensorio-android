@@ -5,15 +5,28 @@ import android.graphics.Bitmap;
 import java.util.Map;
 
 import ai.doc.tensorio.core.model.Model;
+import ai.doc.tensorio.core.modelbundle.AssetModelBundle;
+import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
 
-import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
+import ai.doc.tensorflow.SavedModelBundle;
 
 public class TensorFlowModel extends Model {
 
+    // Initial Test is just inference
+
     public TensorFlowModel(@NonNull ModelBundle bundle) {
         super(bundle);
+    }
+
+    @Override
+    public void load() throws ModelException {
+        if (isLoaded()) {
+            return;
+        }
+
+        super.load();
     }
 
     @Override
