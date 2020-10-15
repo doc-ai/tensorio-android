@@ -26,6 +26,8 @@ import java.util.Map;
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
 
+import static java.lang.Math.abs;
+
 /**
  * The description of a vector (array) input or output later.
  *
@@ -119,7 +121,7 @@ public class VectorLayerDescription extends LayerDescription {
         // Total Volume
         this.length = 1;
         for (int i : shape) {
-            length *= i;
+            length *= abs(i);
         }
 
         this.batched = batched;
@@ -154,6 +156,11 @@ public class VectorLayerDescription extends LayerDescription {
 
     public Dequantizer getDequantizer() {
         return dequantizer;
+    }
+
+    @Override
+    public int[] getTensorShape() {
+        return getShape();
     }
 
     //endRegion

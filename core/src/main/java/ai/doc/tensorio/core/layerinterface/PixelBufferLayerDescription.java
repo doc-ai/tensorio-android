@@ -106,5 +106,14 @@ public class PixelBufferLayerDescription extends LayerDescription {
         return denormalizer;
     }
 
+    @Override
+    public int[] getTensorShape() {
+        if (isBatched()) {
+            return new int[]{-1, shape.height, shape.width, shape.channels};
+        } else {
+            return new int[]{shape.height, shape.width, shape.channels};
+        }
+    }
+
     //endRegion
 }

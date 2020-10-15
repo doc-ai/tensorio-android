@@ -52,4 +52,9 @@ public abstract class LayerDescription {
         return batched;
     }
 
+    // TODO: Just getShape so image should have volume
+    public int[] getTensorShape() {
+        return new int[]{0};
+    }
+
 }

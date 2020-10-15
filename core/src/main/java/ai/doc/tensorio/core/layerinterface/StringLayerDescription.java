@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.core.layerinterface;
 
+import static java.lang.Math.abs;
+
 /**
  * The description of a string (raw bytes) input or output layer.
  *
@@ -78,7 +80,7 @@ public class StringLayerDescription extends LayerDescription {
 
         this.length = 1;
         for (int i : shape) {
-            this.length *= i;
+            this.length *= abs(i);
         }
     }
 
@@ -92,6 +94,11 @@ public class StringLayerDescription extends LayerDescription {
 
     public DataType getDtype() {
         return dtype;
+    }
+
+    @Override
+    public int[] getTensorShape() {
+        return getShape();
     }
 
 }

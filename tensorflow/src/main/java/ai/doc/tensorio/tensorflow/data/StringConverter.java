@@ -2,7 +2,7 @@
  * StringConverter.java
  * TensorIO
  *
- * Created by Philip Dow on 7/27/2020
+ * Created by Philip Dow on 10/14/2020
  * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package ai.doc.tensorio.tflite.data;
+package ai.doc.tensorio.tensorflow.data;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;

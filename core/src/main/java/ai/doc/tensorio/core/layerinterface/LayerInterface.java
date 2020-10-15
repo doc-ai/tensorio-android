@@ -146,6 +146,10 @@ public class LayerInterface {
         return mode;
     }
 
+    public int[] getTensorShape() {
+        return layerDescription.getTensorShape();
+    }
+
     //endregion
 
     /**

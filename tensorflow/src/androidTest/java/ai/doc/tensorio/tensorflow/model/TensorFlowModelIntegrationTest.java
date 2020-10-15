@@ -107,10 +107,40 @@ public class TensorFlowModelIntegrationTest {
             ModelBundle tioBundle = bundleForFile("1_in_1_out_number_test.tiobundle");
             assertNotNull(tioBundle);
 
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            float[] input = {2};
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Read Output
+
+            float[] output = (float[]) outputs.get("output");
+            assertEquals(output[0], 25, epsilon);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void test1x1NumberModelDirectly() {
+        try {
+
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("1_in_1_out_number_test.tiobundle");
+            assertNotNull(tioBundle);
+
             // Direct TensorFlow Test TODO: Make Tensor/IO Test
 
-            File modelDir = new File(((FileModelBundle)tioBundle).getFile(), "predict");
-
+            File modelDir = ((FileModelBundle)tioBundle).getModelFile();
             SavedModelBundle model = new SavedModelBundle(modelDir);
             assertNotNull(model);
 
@@ -142,26 +172,28 @@ public class TensorFlowModelIntegrationTest {
         }
     }
 
-//    @Test
-//    public void testCatsVsDogsPredict() {
-//        try {
-//            // ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "cats-vs-dogs-predict.tiobundle");
-//            ModelBundle bundle = bundleForFile("cats-vs-dogs-predict.tiobundle");
-//            assertNotNull(bundle);
-//
-//            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
-//            assertNotNull(model);
-//            model.load();
-//
-//            InputStream stream = testContext.getAssets().open("cat.jpg");
-//            Bitmap bitmap = BitmapFactory.decodeStream(stream);
-//
-//            Map<String,Object> output = model.runOn(bitmap);
-//            assertNotNull(output);
-//
-//        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
-//            fail();
-//        }
-//    }
+    // TODO: Support for batch channel in shapes
+
+    @Test
+    public void testCatsVsDogsPredict() {
+        try {
+            // ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "cats-vs-dogs-predict.tiobundle");
+            ModelBundle bundle = bundleForFile("cats-vs-dogs-predict.tiobundle");
+            assertNotNull(bundle);
+
+            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            InputStream stream = testContext.getAssets().open("cat.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+            Map<String,Object> output = model.runOn(bitmap);
+            assertNotNull(output);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            fail();
+        }
+    }
 
 }
