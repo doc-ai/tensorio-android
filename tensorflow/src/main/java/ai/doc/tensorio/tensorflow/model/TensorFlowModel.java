@@ -1,3 +1,23 @@
+/*
+ * TensorFlowModel.java
+ * TensorIO
+ *
+ * Created by Philip Dow
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.doc.tensorio.tensorflow.model;
 
 import android.graphics.Bitmap;
@@ -10,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
@@ -19,6 +40,7 @@ import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
 
+import ai.doc.tensorflow.SavedModelBundle.Mode;
 import ai.doc.tensorflow.SavedModelBundle;
 import ai.doc.tensorflow.DataType;
 import ai.doc.tensorflow.Tensor;
@@ -67,8 +89,13 @@ public class TensorFlowModel extends Model {
 
         // Load Model
 
-        File modelDir = ((FileModelBundle) getBundle()).getModelFile();
-        interpreter = new SavedModelBundle(modelDir);
+        Mode tagset = Mode.Serve;
+        if (getBundle().getModes().trains()) {
+            tagset = Mode.Train;
+        }
+
+        File modelDir = Objects.requireNonNull(((FileModelBundle) getBundle()).getModelFile());
+        interpreter = new SavedModelBundle(modelDir, tagset);
 
         super.load();
     }
@@ -155,16 +182,16 @@ public class TensorFlowModel extends Model {
             LayerInterface inputLayer = inputList.get(i);
 
             String name = inputLayer.getName();
-            int shape[] = inputLayer.getTensorShape();
+            int[] shape = inputLayer.getTensorShape();
             // TODO: layer data types: it's been just uint8 and float32 for tflite
             DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
 
-            // TODO: batch sizing
+            // Batch size of 1
             if (shape[0] == -1) {
                 shape[0] = 1;
             }
 
-            Object input = inputs.get(name);
+            Object input = Objects.requireNonNull(inputs.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
             Tensor tensor = new Tensor(dtype, shape, name);
             tensor.setBytes(inputBuffer);
@@ -179,16 +206,15 @@ public class TensorFlowModel extends Model {
             LayerInterface outputLayer = outputList.get(i);
 
             String name = outputLayer.getName();
-            int shape[] = outputLayer.getTensorShape();
+            int[] shape = outputLayer.getTensorShape();
             // TODO: layer data types: it's been just uint8 and float32 for tflite
             DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
 
-            // TODO: batch sizing
+            // Batch size of 1
             if (shape[0] == -1) {
                 shape[0] = 1;
             }
 
-            // ByteBuffer outputBuffer = prepareOutputBuffer(outputLayer);
             Tensor tensor = new Tensor(dtype, shape, name);
             outputTensors[i] = tensor;
         }
@@ -328,4 +354,95 @@ public class TensorFlowModel extends Model {
 
         return output.get();
     }
+
+    // TODO: Add abstract training classes to Model
+
+    //region Train
+
+    // The train methods are the primary interface to a concrete training implementation
+
+    /**
+     * Perform training on an map of objects
+     * @param inputs A mapping of layer names to arbitrary objects
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException Raised if the model has not yet been loaded and the attempt to
+     *                           load it fails
+     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
+     *                                  expected inputs
+     */
+
+    public Map<String, Object> trainOn(@NonNull Map<String, Object> inputs) throws ModelException, IllegalArgumentException {
+        validateInput(inputs);
+        load();
+
+        // Fetch the input and output layer descriptions from the model
+
+        IO.IOList inputList = getIO().getInputs();
+        IO.IOList outputList = getIO().getOutputs();
+
+        // Prepare input tensors
+
+        Tensor[] inputTensors = new Tensor[inputList.size()];
+
+        for (int i = 0; i < inputList.size(); i++){
+            LayerInterface inputLayer = inputList.get(i);
+
+            String name = inputLayer.getName();
+            int[] shape = inputLayer.getTensorShape();
+            // TODO: layer data types: it's been just uint8 and float32 for tflite
+            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
+            // TODO: Obviously no
+            if (name.equals("labels")) {
+                dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Int32);
+            }
+
+            // Batch size of 1
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Object input = Objects.requireNonNull(inputs.get(name));
+            ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+            Tensor tensor = new Tensor(dtype, shape, name);
+            tensor.setBytes(inputBuffer);
+            inputTensors[i] = tensor;
+        }
+
+        // Prepare output tensors
+
+        Tensor[] outputTensors = new Tensor[outputList.size()];
+
+        for (int i = 0; i < outputList.size(); i++){
+            LayerInterface outputLayer = outputList.get(i);
+
+            String name = outputLayer.getName();
+            int[] shape = outputLayer.getTensorShape();
+            // TODO: layer data types: it's been just uint8 and float32 for tflite
+            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
+
+            // Batch size of 1
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Tensor tensor = new Tensor(dtype, shape, name);
+            outputTensors[i] = tensor;
+        }
+
+        // Prepare training op names
+
+        // TODO: read from model.json
+        String[] trainingOps = new String[1];
+        trainingOps[0] = "train";
+
+        // Run the model on the input tensors, store the output in the output tensors
+
+        interpreter.train(inputTensors, outputTensors, trainingOps);
+
+        // Convert output buffers to user land objects
+
+        return captureOutputs(outputTensors);
+    }
+
+    //endRegion
 }

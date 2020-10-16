@@ -104,8 +104,6 @@ public class BitmapConverter implements ai.doc.tensorio.core.data.Converter, Con
         // Read Bitmap into int array
 
         int[] intValues = new int[shape.width * shape.height]; // 4 bytes per int
-
-        buffer.rewind();
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight()); // Returns ARGB pixels
 
         // Write Individual Pixels to Buffer

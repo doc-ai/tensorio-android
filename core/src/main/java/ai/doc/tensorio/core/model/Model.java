@@ -320,7 +320,7 @@ public abstract class Model {
     public abstract Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException;
 
     /**
-     * Perform inference on an map of bytes
+     * Perform inference on an map of objects
      * @param input A mapping of layer names to arbitrary objects
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException Raised if the model has not yet been loaded and the attempt to
