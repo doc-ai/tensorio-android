@@ -54,16 +54,6 @@ public class StringLayerDescription extends LayerDescription {
     private int length;
 
     /**
-     * The layer's data type
-     *
-     * @warning
-     * There are complex interactions between backends, data types, and quantization
-     * that will be addressed and validated in later releases.
-     */
-
-    private DataType dtype;
-
-    /**
      * Designated initializer. Creates a string description from the properties parsed in a model.json
      * file.
      *
@@ -90,10 +80,6 @@ public class StringLayerDescription extends LayerDescription {
 
     public int getLength() {
         return length;
-    }
-
-    public DataType getDtype() {
-        return dtype;
     }
 
     @Override

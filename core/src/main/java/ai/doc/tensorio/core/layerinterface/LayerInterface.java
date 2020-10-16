@@ -150,6 +150,10 @@ public class LayerInterface {
         return layerDescription.getTensorShape();
     }
 
+    public DataType getDtype() {
+        return layerDescription.getDtype();
+    }
+
     //endregion
 
     /**

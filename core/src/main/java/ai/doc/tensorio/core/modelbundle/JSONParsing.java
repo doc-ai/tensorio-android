@@ -132,6 +132,10 @@ public abstract class JSONParsing {
         boolean batched = shape[0] == -1;
         String name = dict.getString("name");
 
+        // Data Type
+
+        DataType dtype = DataTypeForString(dict.optString("dtype", null));
+
         // Labels
 
         String[] labels = null;
@@ -185,7 +189,8 @@ public abstract class JSONParsing {
                 labels,
                 quantized,
                 quantizer,
-                dequantizer)
+                dequantizer,
+                dtype)
         );
     }
 
@@ -287,26 +292,7 @@ public abstract class JSONParsing {
         String name = dict.getString("name");
         String type = dict.getString("type");
 
-        // Data Type
-
-        DataType dtype = null;
-
-        switch (type) {
-            case "uint8":
-                dtype = DataType.UInt8;
-                break;
-            case "float32":
-                dtype = DataType.Float32;
-                break;
-            case "int32":
-                dtype = DataType.Int32;
-                break;
-            case "int64":
-                dtype = DataType.Int64;
-                break;
-            default:
-                throw new ModelBundleException("Expected input.dtype to be one of [uint8, float32, int32, int64], found " + type);
-        }
+        DataType dtype = DataTypeForString(type);
 
         return new LayerInterface(name, mode, new StringLayerDescription(
                 shape,
@@ -498,4 +484,32 @@ public abstract class JSONParsing {
         }
     }
 
+    /**
+     * Converts a string datatype value to one of the enum values. As a practical matter if the data
+     * type is unknown because it is unspecified it should be treated as a float32 by concrete
+     * implementations.
+     *
+     * @param type String type
+     * @return DataType
+     * @throws ModelBundleException If the string provided cannot be parsed
+     */
+
+    public static DataType DataTypeForString(@Nullable String type) throws ModelBundleException {
+        if (type == null) {
+            return DataType.Unknown;
+        } else {
+            switch (type) {
+                case "uint8":
+                    return DataType.UInt8;
+                case "float32":
+                    return DataType.Float32;
+                case "int32":
+                    return DataType.Int32;
+                case "int64":
+                    return DataType.Int64;
+                default:
+                    throw new ModelBundleException("Expected input.dtype to be one of [uint8, float32, int32, int64], found " + type);
+            }
+        }
+    }
 }

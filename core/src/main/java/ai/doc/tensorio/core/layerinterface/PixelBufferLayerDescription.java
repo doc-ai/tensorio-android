@@ -71,10 +71,13 @@ public class PixelBufferLayerDescription extends LayerDescription {
      * @param batched      True if the layer supports batched execution, false otherwise
      * @param normalizer   A function which normalizes the pixel values for an input layer, may be null.
      * @param denormalizer A function which denormalizes pixel values for an output layer, may be null
-     * @param quantized    true if this layer expectes quantized values, false otherwise
+     * @param quantized    true if this layer expects quantized values, false otherwise
      */
 
     public PixelBufferLayerDescription(PixelFormat pixelFormat, ImageVolume shape, boolean batched, PixelNormalizer normalizer, PixelDenormalizer denormalizer, boolean quantized) {
+        // The data type will always be UInt8 if the layer is quantized and Float32 otherwise
+        this.dtype = quantized ? DataType.UInt8 : DataType.Float32;
+
         this.pixelFormat = pixelFormat;
         this.shape = shape;
         this.batched = batched;

@@ -44,12 +44,28 @@ public abstract class LayerDescription {
 
     protected boolean batched;
 
+    /**
+     * The layer's data type. Not all backends support all data types.
+     *
+     * @warning
+     * There are complex interactions between backends, data types, and quantization
+     * that will be addressed and validated in later releases.
+     */
+
+    protected DataType dtype;
+
+    // Public Getters and Setters
+
     public boolean isQuantized() {
         return quantized;
     }
 
     public boolean isBatched() {
         return batched;
+    }
+
+    public DataType getDtype() {
+        return dtype;
     }
 
     // TODO: Just getShape so image should have volume

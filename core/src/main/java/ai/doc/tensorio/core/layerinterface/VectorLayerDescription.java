@@ -115,7 +115,7 @@ public class VectorLayerDescription extends LayerDescription {
      * @param dequantizer A function that transforms quantized output to unquantized values
      */
 
-    public VectorLayerDescription(int[] shape, boolean batched, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer) {
+    public VectorLayerDescription(int[] shape, boolean batched, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer, DataType dtype) {
         this.shape = shape;
 
         // Total Volume
@@ -130,6 +130,7 @@ public class VectorLayerDescription extends LayerDescription {
         this.quantized = quantized;
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
+        this.dtype = dtype;
     }
 
     //region Getters and Setters

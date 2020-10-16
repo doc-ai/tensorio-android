@@ -183,8 +183,7 @@ public class TensorFlowModel extends Model {
 
             String name = inputLayer.getName();
             int[] shape = inputLayer.getTensorShape();
-            // TODO: layer data types: it's been just uint8 and float32 for tflite
-            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
+            DataType dtype = tensorDataType(inputLayer.getDtype());
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -207,8 +206,7 @@ public class TensorFlowModel extends Model {
 
             String name = outputLayer.getName();
             int[] shape = outputLayer.getTensorShape();
-            // TODO: layer data types: it's been just uint8 and float32 for tflite
-            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
+            DataType dtype = tensorDataType(outputLayer.getDtype());
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -290,7 +288,6 @@ public class TensorFlowModel extends Model {
                 return DataType.FLOAT32;
 
         }
-
         return null;
     }
 
@@ -389,12 +386,7 @@ public class TensorFlowModel extends Model {
 
             String name = inputLayer.getName();
             int[] shape = inputLayer.getTensorShape();
-            // TODO: layer data types: it's been just uint8 and float32 for tflite
-            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
-            // TODO: Obviously no
-            if (name.equals("labels")) {
-                dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Int32);
-            }
+            DataType dtype = tensorDataType(inputLayer.getDtype());
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -417,8 +409,7 @@ public class TensorFlowModel extends Model {
 
             String name = outputLayer.getName();
             int[] shape = outputLayer.getTensorShape();
-            // TODO: layer data types: it's been just uint8 and float32 for tflite
-            DataType dtype = tensorDataType(ai.doc.tensorio.core.layerinterface.DataType.Float32);
+            DataType dtype = tensorDataType(outputLayer.getDtype());
 
             // Batch size of 1
             if (shape[0] == -1) {
