@@ -28,9 +28,11 @@ import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.core.model.Modes;
 import ai.doc.tensorio.core.model.Options;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -210,6 +212,12 @@ public abstract class ModelBundle {
     protected IO io;
 
     /**
+     * The ops to execute when training a model, may be null. Not all backends support training
+     */
+
+    protected @Nullable String[] trainingOps = null;
+
+    /**
      * The class name of the @see Model that should be used to implement this network.
      */
 
@@ -297,7 +305,6 @@ public abstract class ModelBundle {
         List<LayerInterface> placeholders = null;
 
         if ( bundle.has("placeholders") ) {
-
             try {
                 placeholders = JSONParsing.parseIO(this, bundle.getJSONArray("placeholders"), LayerInterface.Mode.Placeholder);
             } catch (JSONException e) {
@@ -305,10 +312,24 @@ public abstract class ModelBundle {
             } catch (IOException e) {
                 throw new ModelBundleException("Error reading labels file", e);
             }
-
         }
 
         this.io = new IO(inputs, outputs, placeholders);
+
+        // Parse Training Ops, may be null
+
+        if (bundle.has("train")) {
+            try {
+                JSONArray array = bundle.getJSONObject("train").getJSONArray("ops");
+                String[] ops = new String[array.length()];
+                for (int i = 0; i < array.length(); i++) {
+                    ops[i] = array.getString(i);
+                }
+                trainingOps = ops;
+            } catch (JSONException e) {
+                throw new ModelBundleException("Error parsing train field", e);
+            }
+        }
     }
 
     //region Getters and Setters
@@ -363,6 +384,10 @@ public abstract class ModelBundle {
 
     public IO getIO() {
         return io;
+    }
+
+    public String[] getTrainingOps() {
+        return trainingOps;
     }
 
     //endregion

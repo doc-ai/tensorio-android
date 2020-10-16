@@ -421,10 +421,8 @@ public class TensorFlowModel extends Model {
         }
 
         // Prepare training op names
-
-        // TODO: read from model.json
-        String[] trainingOps = new String[1];
-        trainingOps[0] = "train";
+        
+        String[] trainingOps = Objects.requireNonNull(getBundle().getTrainingOps());
 
         // Run the model on the input tensors, store the output in the output tensors
 
