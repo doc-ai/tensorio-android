@@ -24,19 +24,21 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 import ai.doc.tensorio.core.layerinterface.DataType;
 import ai.doc.tensorio.core.layerinterface.LayerDescription;
 import ai.doc.tensorio.core.layerinterface.StringLayerDescription;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-// TODO: Add suport for int32 and int64
 
 public class StringConverter implements Converter {
 
     @Override
     public ByteBuffer createBackingBuffer(@NonNull LayerDescription description, int batchSize) {
+        boolean quantized = ((StringLayerDescription)description).isQuantized();
         DataType dtype = ((StringLayerDescription)description).getDtype();
         int length = ((StringLayerDescription)description).getLength();
 
@@ -61,6 +63,11 @@ public class StringConverter implements Converter {
                 // Unspecified input is assumed float
                 bufferLength = length * 4;
                 break;
+        }
+
+        if (quantized) {
+            // Override for a quantized layer
+            bufferLength = length;
         }
 
         bufferLength *= batchSize;
@@ -105,10 +112,18 @@ public class StringConverter implements Converter {
             return toByteBuffer((byte[])o, description, cache);
         } else if (o instanceof float[]) {
             return toByteBuffer((float[])o, description, cache);
+        } else if (o instanceof int[]) {
+            return toByteBuffer((int[])o, description, cache);
+        } else if (o instanceof long[]) {
+            return toByteBuffer((long[])o, description, cache);
         } else if (o instanceof ByteBuffer) {
             return toByteBuffer((ByteBuffer)o, description, cache);
         } else if (o instanceof FloatBuffer) {
             return toByteBuffer((FloatBuffer)o, description, cache);
+        } else if (o instanceof IntBuffer) {
+            return toByteBuffer((IntBuffer)o, description, cache);
+        } else if (o instanceof LongBuffer) {
+            return toByteBuffer((LongBuffer)o, description, cache);
         } else {
             throw BadInputException();
         }
@@ -140,6 +155,32 @@ public class StringConverter implements Converter {
         return buffer;
     }
 
+    public ByteBuffer toByteBuffer(@NonNull int[] ints, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
+        buffer.rewind();
+
+        // Write the ints
+
+        buffer.asIntBuffer().put(ints);
+
+        return buffer;
+    }
+
+    public ByteBuffer toByteBuffer(@NonNull long[] longs, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
+        buffer.rewind();
+
+        // Write the longs
+
+        buffer.asLongBuffer().put(longs);
+
+        return buffer;
+    }
+
     public ByteBuffer toByteBuffer(@NonNull ByteBuffer byteBuffer, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
@@ -162,6 +203,32 @@ public class StringConverter implements Converter {
         // Copy the float buffer
 
         buffer.asFloatBuffer().put(floatBuffer);
+
+        return buffer;
+    }
+
+    public ByteBuffer toByteBuffer(@NonNull IntBuffer intBuffer, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
+        buffer.rewind();
+
+        // Copy the int buffer
+
+        buffer.asIntBuffer().put(intBuffer);
+
+        return buffer;
+    }
+
+    public ByteBuffer toByteBuffer(@NonNull LongBuffer longBuffer, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
+        buffer.rewind();
+
+        // Copy the long buffer
+
+        buffer.asLongBuffer().put(longBuffer);
 
         return buffer;
     }
@@ -204,7 +271,8 @@ public class StringConverter implements Converter {
                 view = buffer.asFloatBuffer();
                 break;
             case Unknown:;
-                view = buffer;
+                // Unknown assumes float
+                view = buffer.asFloatBuffer();
                 break;
         }
 

@@ -341,7 +341,48 @@ public class TensorFlowModelIntegrationTest {
 
     // Int32 and Int64 Tests
 
+    @Test
+    public void testInt32Model() {
+        try {
+            // Prepare Model
 
+            ModelBundle tioBundle = bundleForFile("int32io_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            int[] input = {2};
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            int[] output = (int[]) outputs.get("output");
+            assertNotNull(output);
+
+            int[] expectedOutput = {
+                    25
+            };
+
+            assertArrayEquals(output, expectedOutput);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testInt64Model() {
+        fail();
+    }
 
     // Real Usage Tests
 
@@ -408,6 +449,8 @@ public class TensorFlowModelIntegrationTest {
             fail();
         }
     }
+
+    // Training Tests
 
     @Test
     public void testCatsVsDogsTrain() {

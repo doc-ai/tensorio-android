@@ -254,6 +254,11 @@ public class TFLiteModel extends Model {
     //region Run
 
     @Override
+    public Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int32 inputs are not supported by TF Lite");
+    }
+
+    @Override
     public Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();

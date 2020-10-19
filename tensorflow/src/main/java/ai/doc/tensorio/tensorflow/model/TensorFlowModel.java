@@ -142,7 +142,7 @@ public class TensorFlowModel extends Model {
     }
 
     @Override
-    public Map<String, Object> runOn(float[] input) throws ModelException {
+    public Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -150,7 +150,7 @@ public class TensorFlowModel extends Model {
     }
 
     @Override
-    public Map<String, Object> runOn(byte[] input) throws ModelException {
+    public Map<String, Object> runOn(byte[] input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
@@ -158,7 +158,15 @@ public class TensorFlowModel extends Model {
     }
 
     @Override
-    public Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException {
+    public Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException {
+        validateInput(input);
+        load();
+
+        return runOn(mappedInput(input));
+    }
+
+    @Override
+    public Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();
 
