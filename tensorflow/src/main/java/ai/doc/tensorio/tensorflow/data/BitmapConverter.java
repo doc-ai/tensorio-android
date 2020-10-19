@@ -34,8 +34,8 @@ import ai.doc.tensorio.core.layerinterface.PixelBufferLayerDescription;
 import ai.doc.tensorio.core.model.ImageVolume;
 
 /**
- * The TFLite pixel data converter transforms bitmaps into byte buffers for use as inputs to
- * TFLite models and byte buffers outputs back into bitmaps.
+ * The TensorFlow Bitmap converter transforms bitmaps into byte buffers for use as inputs to
+ * TensorFlow models and byte buffers outputs back into bitmaps.
  *
  * The `toByteBuffer` method will scale the Bitmap you provide if necessary using
  * `createScaledBitmap`, or you may scale the Bitmap before hand.
@@ -44,21 +44,40 @@ import ai.doc.tensorio.core.model.ImageVolume;
 public class BitmapConverter implements ai.doc.tensorio.core.data.Converter, Converter {
 
     @Override
-    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description) {
-        ByteBuffer buffer;
-
+    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description, int batchSize) {
         boolean quantized = ((PixelBufferLayerDescription)description).isQuantized();
         ImageVolume shape = ((PixelBufferLayerDescription)description).getShape();
 
+        // Compute buffer length
+
+        int bufferLength = 0;
+
         if (quantized) {
             // Layer expects bytes
-            buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels);
+            bufferLength = shape.width * shape.height * shape.channels;
         } else {
             // Layer expects floats
-            buffer = ByteBuffer.allocateDirect(shape.width * shape.height * shape.channels * 4);
+            bufferLength = shape.width * shape.height * shape.channels * 4;
         }
 
+        bufferLength *= batchSize;
+
+        // Create buffer
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferLength);
         buffer.order(ByteOrder.nativeOrder());
+
+        return buffer;
+    }
+
+    @Override
+    public ByteBuffer toByteBuffer(@NonNull Object[] c, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, c.length);
+        buffer.rewind();
+
+        for (Object o : c) {
+            buffer.put((ByteBuffer) toByteBuffer(o, description, null).rewind());
+        }
 
         return buffer;
     }
@@ -79,13 +98,13 @@ public class BitmapConverter implements ai.doc.tensorio.core.data.Converter, Con
      * @param description A description of the layer with instructions on how to make the conversion
      * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
      *              is provided it will be rewound before being used.
-     * @return A ByteBuffer ready for use with a TFLite model
+     * @return A ByteBuffer ready for use with a TensorFlow model
      */
 
     public ByteBuffer toByteBuffer(@NonNull Bitmap bitmap, @NonNull LayerDescription description, @Nullable ByteBuffer cache) {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Acquire needed properties from layer description

@@ -36,6 +36,10 @@ public final class Batch extends AbstractList<Batch.Item> {
 
     private String[] keys;
 
+    /** The batch keys cached as a Set */
+
+    private Set<String> keyset;
+
     // Constructors
 
     /** Instantiates a batch with keys. You must add items with those keys to it */
@@ -77,6 +81,12 @@ public final class Batch extends AbstractList<Batch.Item> {
 
     public String[] getKeys() {
         return keys;
+    }
+
+    /** Returns the keyset */
+
+    public Set<String> getKeyset() {
+        return keyset;
     }
 
     // List Implementation
@@ -123,6 +133,12 @@ public final class Batch extends AbstractList<Batch.Item> {
         return Objects.requireNonNull(items.get(key)).toArray(new Object[0]);
     }
 
+    /** Convenience method that calls valuesForKey */
+
+    public Object[] get(String name) {
+        return valuesForKey(name);
+    }
+
     /** Instantiates the item map */
 
     private void createItemsMap() {
@@ -138,8 +154,6 @@ public final class Batch extends AbstractList<Batch.Item> {
     }
 
     /** Validates that the item's keys match the keys contained in the batch */
-
-    private Set<String> keyset;
 
     private void validateKeys(Item item) throws IllegalArgumentException {
         if (!keyset.equals(item.keySet())) {

@@ -31,13 +31,12 @@ import ai.doc.tensorio.core.layerinterface.StringLayerDescription;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+// TODO: Add suport for int32 and int64
+
 public class StringConverter implements Converter {
 
     @Override
-    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description) {
-
-        // Acquire needed properties from layer description
-
+    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description, int batchSize) {
         DataType dtype = ((StringLayerDescription)description).getDtype();
         int length = ((StringLayerDescription)description).getLength();
 
@@ -59,14 +58,29 @@ public class StringConverter implements Converter {
                 bufferLength = length * 4;
                 break;
             case Unknown:;
-                bufferLength = length;
+                // Unspecified input is assumed float
+                bufferLength = length * 4;
                 break;
         }
+
+        bufferLength *= batchSize;
 
         // Create buffer
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(bufferLength);
         buffer.order(ByteOrder.nativeOrder());
+
+        return buffer;
+    }
+
+    @Override
+    public ByteBuffer toByteBuffer(@NonNull Object[] c, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws  IllegalArgumentException {
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, c.length);
+        buffer.rewind();
+
+        for (Object o : c) {
+            buffer.put((ByteBuffer) toByteBuffer(o, description, null).rewind());
+        }
 
         return buffer;
     }
@@ -103,7 +117,7 @@ public class StringConverter implements Converter {
     public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Write the bytes
@@ -116,7 +130,7 @@ public class StringConverter implements Converter {
     public ByteBuffer toByteBuffer(@NonNull float[] floats, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Write the floats
@@ -129,7 +143,7 @@ public class StringConverter implements Converter {
     public ByteBuffer toByteBuffer(@NonNull ByteBuffer byteBuffer, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Copy the byte buffer
@@ -142,7 +156,7 @@ public class StringConverter implements Converter {
     public ByteBuffer toByteBuffer(@NonNull FloatBuffer floatBuffer, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Copy the float buffer
@@ -156,7 +170,7 @@ public class StringConverter implements Converter {
      * Processes the model output and returns an appropriate view on the output ByteBuffer given
      * the layer's data type, e.g. a [ByteBuffer], [FloatBuffer], [IntBuffer], etc.
      *
-     * @param buffer      A ByteBuffer read from a TFLite model
+     * @param buffer      A ByteBuffer read from a TensorFlow model
      * @param description A description of the layer with instructions on how to make the conversion
      * @return The model's output ByteBuffer or a view on it
      */

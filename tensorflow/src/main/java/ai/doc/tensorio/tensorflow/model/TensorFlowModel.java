@@ -24,6 +24,7 @@ import android.graphics.Bitmap;
 
 import java.util.Map;
 
+import ai.doc.tensorio.core.data.Batch;
 import ai.doc.tensorio.core.model.Model;
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -126,11 +127,11 @@ public class TensorFlowModel extends Model {
 
         for (LayerInterface layer : layers) {
             layer.doCase((vectorLayer) -> {
-                bufferCache.put(layer, vectorConverter.createBackingBuffer(vectorLayer));
+                bufferCache.put(layer, vectorConverter.createBackingBuffer(vectorLayer, 1));
             }, (pixelLayer) -> {
-                bufferCache.put(layer, bitmapConverter.createBackingBuffer(pixelLayer));
+                bufferCache.put(layer, bitmapConverter.createBackingBuffer(pixelLayer, 1));
             }, (stringLayer) -> {
-                bufferCache.put(layer, stringConverter.createBackingBuffer(stringLayer));
+                bufferCache.put(layer, stringConverter.createBackingBuffer(stringLayer, 1));
             });
         }
     }
@@ -431,6 +432,117 @@ public class TensorFlowModel extends Model {
         // Convert output buffers to user land objects
 
         return captureOutputs(outputTensors);
+    }
+
+    /**
+     * Perform training on a batch of objects
+     * @param batch A batch of items mapping layer names to arbitrary objects
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException Raised if the model has not yet been loaded and the attempt to
+     *                           load it fails
+     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
+     *                                  expected inputs
+     */
+
+    // Otherwise everything stays the same
+
+    public Map<String, Object> trainOn(@NonNull Batch batch) throws ModelException, IllegalArgumentException {
+        validateInput(batch);
+        load();
+
+        // Fetch the input and output layer descriptions from the model
+
+        IO.IOList inputList = getIO().getInputs();
+        IO.IOList outputList = getIO().getOutputs();
+
+        // Prepare input tensors
+
+        Tensor[] inputTensors = new Tensor[inputList.size()];
+
+        for (int i = 0; i < inputList.size(); i++){
+            LayerInterface inputLayer = inputList.get(i);
+
+            String name = inputLayer.getName();
+            int[] shape = inputLayer.getTensorShape();
+            DataType dtype = tensorDataType(inputLayer.getDtype());
+
+            // TODO: If model is not batched, this is an error, validate beforehand
+            if (shape[0] == -1) {
+                shape[0] = batch.size();
+            }
+
+            Object[] input = Objects.requireNonNull(batch.get(name));
+            ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
+            Tensor tensor = new Tensor(dtype, shape, name);
+            tensor.setBytes(inputBuffer);
+            inputTensors[i] = tensor;
+        }
+
+        // Prepare output tensors
+
+        Tensor[] outputTensors = new Tensor[outputList.size()];
+
+        for (int i = 0; i < outputList.size(); i++){
+            LayerInterface outputLayer = outputList.get(i);
+
+            String name = outputLayer.getName();
+            int[] shape = outputLayer.getTensorShape();
+            DataType dtype = tensorDataType(outputLayer.getDtype());
+
+            // TODO: No support for batched training output, loss function must return single value
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Tensor tensor = new Tensor(dtype, shape, name);
+            outputTensors[i] = tensor;
+        }
+
+        // Prepare training op names
+
+        String[] trainingOps = Objects.requireNonNull(getBundle().getTrainingOps());
+
+        // Run the model on the input tensors, store the output in the output tensors
+
+        interpreter.train(inputTensors, outputTensors, trainingOps);
+
+        // Convert output buffers to user land objects
+
+        return captureOutputs(outputTensors);
+    }
+
+    /**
+     * Prepares a ByteBuffer that will be used for input to a model. If buffer caching is used
+     * then buffers that have been associated with each layer will be reused.
+     *
+     * @param column The column of data from batched input to convert to a byte buffer
+     * @param inputLayer The interface to the layer that this buffer will be used with
+     * @return ByteBuffer ready for input to a model
+     * @throws IllegalArgumentException raised if the input cannot be transformed to the format
+     *                                  expected by the model
+     */
+
+    // TODO: Cache a byte buffer large enough to hold the batch data
+    // Consumer must provide maximum batch size they will use and then the Tensor will read only
+    // the amount of data it needs from the byte buffer even when the buffer is larger than the
+    // current batch.
+
+    private ByteBuffer prepareInputBuffer(@NonNull Object[] column, @NonNull LayerInterface inputLayer) throws IllegalArgumentException {
+        final AtomicReference<ByteBuffer> inputBuffer = new AtomicReference<>();
+        final ByteBuffer cachedBuffer = null;
+
+        inputLayer.doCase((vectorLayer) -> {
+            ByteBuffer buffer = vectorConverter.toByteBuffer(column, vectorLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        }, (pixelLayer) -> {
+            ByteBuffer buffer = bitmapConverter.toByteBuffer(column, pixelLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        }, (stringLayer) -> {
+            ByteBuffer buffer = stringConverter.toByteBuffer(column, stringLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        });
+
+        return inputBuffer.get();
     }
 
     //endRegion

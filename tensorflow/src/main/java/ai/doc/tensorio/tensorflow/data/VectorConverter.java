@@ -32,24 +32,45 @@ import ai.doc.tensorio.core.data.Quantizer;
 import ai.doc.tensorio.core.layerinterface.LayerDescription;
 import ai.doc.tensorio.core.layerinterface.VectorLayerDescription;
 
+// TODO: Add suport for int32 and int64
+
 public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Converter {
 
     @Override
-    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description) {
-        ByteBuffer buffer;
-
+    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description, int batchSize) {
         boolean quantized = ((VectorLayerDescription)description).isQuantized();
         int length = ((VectorLayerDescription)description).getLength();
 
+        // Compute buffer length
+
+        int bufferLength = 0;
+
         if (quantized) {
             // Layer expects bytes
-            buffer = ByteBuffer.allocateDirect(length);
+            bufferLength = length;
         } else {
             // Layer expects floats
-            buffer = ByteBuffer.allocateDirect(length*4);
+            bufferLength = length*4;
         }
 
+        bufferLength *= batchSize;
+
+        // Create buffer
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferLength);
         buffer.order(ByteOrder.nativeOrder());
+
+        return buffer;
+    }
+
+    @Override
+    public ByteBuffer toByteBuffer(@NonNull Object[] c, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws  IllegalArgumentException {
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, c.length);
+        buffer.rewind();
+
+        for (Object o : c) {
+            buffer.put((ByteBuffer) toByteBuffer(o, description, null).rewind());
+        }
 
         return buffer;
     }
@@ -72,13 +93,13 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
      * @param description A description of the layer with instructions on how to make the conversion
      * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
      *              is provided it will be rewound before being used.
-     * @return ByteBuffer ready for use with a TFLite model
+     * @return ByteBuffer ready for use with a TensorFlow model
      */
 
     public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Acquire needed properties from layer description
@@ -107,13 +128,13 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
      * @param description A description of the layer with instructions on how to make the conversion
      * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
      *              is provided it will be rewound before being used.
-     * @return ByteBuffer ready for use with a TFLite model
+     * @return ByteBuffer ready for use with a TensorFlow model
      */
 
     public ByteBuffer toByteBuffer(@NonNull float[] floats, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         // Create a buffer if no reusable cache is provided
 
-        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description, 1);
         buffer.rewind();
 
         // Acquire needed properties from layer description

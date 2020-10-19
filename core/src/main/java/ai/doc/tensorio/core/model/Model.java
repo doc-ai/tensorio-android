@@ -22,6 +22,7 @@ package ai.doc.tensorio.core.model;
 
 import android.graphics.Bitmap;
 
+import ai.doc.tensorio.core.data.Batch;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
 
@@ -335,6 +336,8 @@ public abstract class Model {
 
     //region Input Validation
 
+    // TODO: Write unit tests for these methods
+
     protected void validateInput(float[] input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
@@ -364,6 +367,23 @@ public abstract class Model {
         if ( !input.keySet().equals(io.getInputs().keys()) ) {
             for (LayerInterface layer : io.getInputs().all()) {
                 if ( !input.containsKey(layer.getName()) ) {
+                    throw MissingInput(layer.getName());
+                }
+            }
+        }
+    }
+
+    protected void validateInput(@NonNull Batch batch) throws IllegalArgumentException {
+        int expectedSize = io.getInputs().size();
+        int actualSize = batch.getKeys().length;
+
+        if (expectedSize != actualSize) {
+            throw InputCountMismatchException(actualSize, expectedSize);
+        }
+
+        if ( !batch.getKeyset().equals(io.getInputs().keys()) ) {
+            for (LayerInterface layer : io.getInputs().all()) {
+                if ( !batch.getKeyset().contains(layer.getName()) ) {
                     throw MissingInput(layer.getName());
                 }
             }
