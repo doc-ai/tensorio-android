@@ -259,6 +259,11 @@ public class TFLiteModel extends Model {
     }
 
     @Override
+    public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("ByteBuffer inputs are not supported by TF Lite");
+    }
+
+    @Override
     public Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();

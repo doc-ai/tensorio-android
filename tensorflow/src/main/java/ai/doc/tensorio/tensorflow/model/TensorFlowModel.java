@@ -166,6 +166,14 @@ public class TensorFlowModel extends Model {
     }
 
     @Override
+    public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
+        validateInput(input);
+        load();
+
+        return runOn(mappedInput(input));
+    }
+
+    @Override
     public Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();
@@ -210,7 +218,7 @@ public class TensorFlowModel extends Model {
 
         Tensor[] outputTensors = new Tensor[outputList.size()];
 
-        for (int i = 0; i < outputList.size(); i++){
+        for (int i = 0; i < outputList.size(); i++) {
             LayerInterface outputLayer = outputList.get(i);
 
             String name = outputLayer.getName();

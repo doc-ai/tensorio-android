@@ -31,6 +31,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.file.FileSystemException;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,6 +91,29 @@ public class TensorFlowModelIntegrationTest {
 
         if (!f.delete()) {
             throw new FileSystemException("on delete: " + f.getPath());
+        }
+    }
+
+    /** Create a direct native order byte buffer with floats */
+
+    private ByteBuffer byteBufferWithFloats(float[] floats) {
+        int size = floats.length * 4; // dims * bytes_per_float
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(size);
+        buffer.order(ByteOrder.nativeOrder());
+
+        for (float f : floats) {
+            buffer.putFloat(f);
+        }
+
+        return buffer;
+    }
+
+    /** Compares the contents of a float byte buffer to floats */
+
+    private void assertByteBufferEqualToFloats(ByteBuffer buffer, float epsilon, float[] floats) {
+        for (float f : floats) {
+            assertEquals(buffer.getFloat(), f, epsilon);
         }
     }
 
@@ -335,9 +361,10 @@ public class TensorFlowModelIntegrationTest {
         }
     }
 
-    // String Tests
 
     // Pixel Buffer Tests
+
+    // TODO: Pixel Buffer Tests
 
     // Int32 and Int64 Tests
 
@@ -382,6 +409,42 @@ public class TensorFlowModelIntegrationTest {
     @Test
     public void testInt64Model() {
         fail();
+    }
+
+    // String Tests
+
+    @Test
+    public void test1In1OutStringModel() {
+        try {
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("1_in_1_out_string_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            ByteBuffer input = byteBufferWithFloats(new float[]{2});
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            FloatBuffer output = (FloatBuffer) outputs.get("output");
+            assertNotNull(output);
+
+            assertEquals(25, output.get(), epsilon);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     // Real Usage Tests

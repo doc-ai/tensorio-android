@@ -307,7 +307,7 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
     //region Exceptions
 
     private static IllegalArgumentException BadInputException() {
-        return new IllegalArgumentException("Expected float[] or byte[] as input to the converter");
+        return new IllegalArgumentException("Expected float[], byte[], int[], or long[] as input to the converter");
     }
 
     private static IllegalArgumentException BadLengthException(int given, int expected) {

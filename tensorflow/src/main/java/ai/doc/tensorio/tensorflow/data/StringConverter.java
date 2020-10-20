@@ -108,6 +108,10 @@ public class StringConverter implements Converter {
 
     @Override
     public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        DataType dtype = description.getDtype();
+
+        // Barf
+
         if (o instanceof byte[]) {
             return toByteBuffer((byte[])o, description, cache);
         } else if (o instanceof float[]) {
@@ -116,17 +120,30 @@ public class StringConverter implements Converter {
             return toByteBuffer((int[])o, description, cache);
         } else if (o instanceof long[]) {
             return toByteBuffer((long[])o, description, cache);
-        } else if (o instanceof ByteBuffer) {
-            return toByteBuffer((ByteBuffer)o, description, cache);
         } else if (o instanceof FloatBuffer) {
             return toByteBuffer((FloatBuffer)o, description, cache);
         } else if (o instanceof IntBuffer) {
             return toByteBuffer((IntBuffer)o, description, cache);
         } else if (o instanceof LongBuffer) {
-            return toByteBuffer((LongBuffer)o, description, cache);
+            return toByteBuffer((LongBuffer) o, description, cache);
+        } else if (o instanceof ByteBuffer) {
+            ((ByteBuffer)o).rewind();
+            switch (dtype) {
+                case UInt8:
+                    return toByteBuffer((ByteBuffer)o, description, cache);
+                case Int32:
+                    return toByteBuffer(((ByteBuffer)o).asIntBuffer(), description, cache);
+                case Int64:
+                    return toByteBuffer(((ByteBuffer)o).asLongBuffer(), description, cache);
+                case Float32:
+                case Unknown:
+                    return toByteBuffer(((ByteBuffer)o).asFloatBuffer(), description, cache);
+            }
         } else {
             throw BadInputException();
         }
+
+        return null;
     }
 
     public ByteBuffer toByteBuffer(@NonNull byte[] bytes, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
@@ -189,6 +206,7 @@ public class StringConverter implements Converter {
 
         // Copy the byte buffer
 
+        byteBuffer.rewind();
         buffer.put(byteBuffer);
 
         return buffer;
@@ -202,6 +220,7 @@ public class StringConverter implements Converter {
 
         // Copy the float buffer
 
+        floatBuffer.rewind();
         buffer.asFloatBuffer().put(floatBuffer);
 
         return buffer;
@@ -215,6 +234,7 @@ public class StringConverter implements Converter {
 
         // Copy the int buffer
 
+        intBuffer.rewind();
         buffer.asIntBuffer().put(intBuffer);
 
         return buffer;
@@ -228,6 +248,7 @@ public class StringConverter implements Converter {
 
         // Copy the long buffer
 
+        longBuffer.rewind();
         buffer.asLongBuffer().put(longBuffer);
 
         return buffer;
@@ -280,6 +301,6 @@ public class StringConverter implements Converter {
     }
 
     private static IllegalArgumentException BadInputException() {
-        return new IllegalArgumentException("Expected float[] or byte[] as input to the converter");
+        return new IllegalArgumentException("Expected float[], byte[], int[], long[] or equivalent ByteBuffer as input to the converter");
     }
 }

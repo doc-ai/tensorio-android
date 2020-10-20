@@ -26,6 +26,7 @@ import ai.doc.tensorio.core.data.Batch;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
@@ -295,6 +296,7 @@ public abstract class Model {
 
     /**
      * Perform inference on an array of floats for a single input layer.
+     *
      * @param input an array of floats
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
@@ -306,6 +308,7 @@ public abstract class Model {
 
     /**
      * Perform inference on an array of bytes (uint8) for a single input layer.
+     *
      * @param input an array of bytes
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
@@ -318,6 +321,7 @@ public abstract class Model {
     /**
      * Perform inference on an array of int32s for a single input layer. Not all backends support
      * int32 inputs and will throw an exception if this method is not supported.
+     *
      * @param input An array of int32s
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
@@ -328,7 +332,22 @@ public abstract class Model {
     public abstract Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException;
 
     /**
+     * Perform inference on a ByteBuffer for a single input layer. Not all backends support
+     * ByteBuffer inputs and will throw an exception if this method is not supported. ByteBuffers
+     * should only be used with `string` type inputs.
+     *
+     * @param input A ByteBuffer that will be sent directly to the model with no additional preprocessing
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support ByteBuffers
+     */
+
+    public abstract Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException;
+
+    /**
      * Perform inference on a Bitmap for a single input layer.
+     *
      * @param input A Bitmap
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
@@ -340,6 +359,7 @@ public abstract class Model {
 
     /**
      * Perform inference on an map of objects
+     *
      * @param input A mapping of layer names to arbitrary objects
      * @return results of running the model mapped from the output layer names to the values
      * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
@@ -367,6 +387,12 @@ public abstract class Model {
     }
 
     protected void validateInput(int[] input) throws IllegalArgumentException {
+        if (io.getInputs().size() != 1) {
+            throw InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(@NonNull ByteBuffer input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
         }

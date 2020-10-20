@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.core.layerinterface;
 
+// TODO: Remove Unknown Type, Parsing will default to Float32
+
 public enum DataType {
     Unknown,
     UInt8,       // "uint8"

@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
@@ -83,7 +84,7 @@ public abstract class JSONParsing {
 
     public static List<LayerInterface> parseIO(@Nullable ModelBundle modelBundle, @NonNull JSONArray io, Mode mode) throws JSONException, ModelBundleException, IOException {
         ArrayList<LayerInterface> interfaces = new ArrayList<>();
-        boolean isQuantized = modelBundle.isQuantized(); // Always false if modelBundle is nil
+        boolean isQuantized = modelBundle != null && modelBundle.isQuantized();
 
         for (int i = 0; i < io.length(); i++) {
             JSONObject jsonObject = io.getJSONObject(i);
@@ -134,13 +135,13 @@ public abstract class JSONParsing {
 
         // Data Type
 
-        DataType dtype = DataTypeForString(dict.optString("dtype", null));
+        DataType dtype = DataTypeForString(dict.optString("dtype"));
 
         // Labels
 
         String[] labels = null;
 
-        if (dict.optString("labels", null) != null) {
+        if (dict.has("labels")) {
             try {
                 String contents = modelBundle.readTextFile(dict.getString("labels"));
                 contents = contents.trim();
@@ -290,9 +291,8 @@ public abstract class JSONParsing {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
         boolean batched = shape[0] == -1;
         String name = dict.getString("name");
-        String type = dict.getString("type");
 
-        DataType dtype = DataTypeForString(type);
+        DataType dtype = DataTypeForString(dict.optString("dtype"));
 
         return new LayerInterface(name, mode, new StringLayerDescription(
                 shape,
@@ -324,9 +324,8 @@ public abstract class JSONParsing {
             return null;
         }
 
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
+        if (dict.has("standard")) {
+            String standard = dict.getString("standard");
             switch (standard) {
                 case "[0,1]":
                     return Quantizer.DataQuantizerZeroToOne();
@@ -355,9 +354,8 @@ public abstract class JSONParsing {
             return null;
         }
 
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
+        if (dict.has("standard")) {
+            String standard = dict.getString("standard");
             switch (standard) {
                 case "[0,1]":
                     return Dequantizer.DataDequantizerZeroToOne();
@@ -426,14 +424,13 @@ public abstract class JSONParsing {
      * Returns the PixelNormalizer given an input dictionary.
      */
 
-    public static PixelNormalizer PixelNormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelNormalizer PixelNormalizerForDictionary(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
         if (dict == null) {
             return null;
         }
 
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
+        if (dict.has("standard")) {
+            String normalizerString = dict.getString("standard");
             switch (normalizerString) {
                 case "[0,1]":
                     return PixelNormalizer.PixelNormalizerZeroToOne();
@@ -457,14 +454,13 @@ public abstract class JSONParsing {
      * Returns the denormalizer for a given input dictionary.
      */
 
-    public static PixelDenormalizer PixelDenormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelDenormalizer PixelDenormalizerForDictionary(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
         if (dict == null) {
             return null;
         }
 
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
+        if (dict.has("standard")) {
+            String normalizerString = dict.getString("standard");
             switch (normalizerString) {
                 case "[0,1]":
                     return PixelDenormalizer.PixelDenormalizerZeroToOne();
@@ -487,7 +483,7 @@ public abstract class JSONParsing {
     /**
      * Converts a string datatype value to one of the enum values. As a practical matter if the data
      * type is unknown because it is unspecified it should be treated as a float32 by concrete
-     * implementations.
+     * implementations and will be interpreted as such.
      *
      * @param type String type
      * @return DataType
@@ -495,8 +491,8 @@ public abstract class JSONParsing {
      */
 
     public static DataType DataTypeForString(@Nullable String type) throws ModelBundleException {
-        if (type == null) {
-            return DataType.Unknown;
+        if (type == null || "".equals(type)) {
+            return DataType.Float32;
         } else {
             switch (type) {
                 case "uint8":
