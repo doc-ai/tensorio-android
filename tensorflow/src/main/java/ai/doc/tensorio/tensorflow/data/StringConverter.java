@@ -59,10 +59,6 @@ public class StringConverter implements Converter {
             case Float32:
                 bufferLength = length * 4;
                 break;
-            case Unknown:;
-                // Unspecified input is assumed float
-                bufferLength = length * 4;
-                break;
         }
 
         if (quantized) {
@@ -136,7 +132,6 @@ public class StringConverter implements Converter {
                 case Int64:
                     return toByteBuffer(((ByteBuffer)o).asLongBuffer(), description, cache);
                 case Float32:
-                case Unknown:
                     return toByteBuffer(((ByteBuffer)o).asFloatBuffer(), description, cache);
             }
         } else {
@@ -289,10 +284,6 @@ public class StringConverter implements Converter {
                 view = buffer.asLongBuffer();
                 break;
             case Float32:
-                view = buffer.asFloatBuffer();
-                break;
-            case Unknown:;
-                // Unknown assumes float
                 view = buffer.asFloatBuffer();
                 break;
         }

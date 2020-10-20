@@ -58,9 +58,6 @@ public class StringConverter implements Converter {
             case Float32:
                 bufferLength = length * 4;
                 break;
-            case Unknown:;
-                bufferLength = length;
-                break;
         }
 
         // Create buffer
@@ -188,9 +185,6 @@ public class StringConverter implements Converter {
                 break;
             case Float32:
                 view = buffer.asFloatBuffer();
-                break;
-            case Unknown:;
-                view = buffer;
                 break;
         }
 

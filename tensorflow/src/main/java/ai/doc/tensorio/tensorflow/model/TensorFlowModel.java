@@ -301,7 +301,6 @@ public class TensorFlowModel extends Model {
             case Int64:
                 return DataType.INT64;
             case Float32:
-            case Unknown:
                 return DataType.FLOAT32;
 
         }

@@ -60,10 +60,6 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
             case Float32:
                 bufferLength = length * 4;
                 break;
-            case Unknown:;
-                // Unspecified input is assumed float
-                bufferLength = length * 4;
-                break;
         }
 
         if (quantized) {
