@@ -457,7 +457,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             Paint paint = new Paint();
-            //paint.setColor(Color.RED);
+
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 
@@ -504,7 +504,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             Paint paint = new Paint();
-            //paint.setColor(Color.RED);
+
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 

@@ -23,6 +23,9 @@ package ai.doc.tensorio.tensorflow.model;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 
 import org.junit.After;
 import org.junit.Before;
@@ -364,7 +367,99 @@ public class TensorFlowModelIntegrationTest {
 
     // Pixel Buffer Tests
 
-    // TODO: Pixel Buffer Tests
+    @Test
+    public void testPixelBufferIdentityModel() {
+        try {
+            ModelBundle tioBundle = bundleForFile("1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Ensure inputs and outputs return correct count
+
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
+
+            int width = 224;
+            int height = 224;
+
+            Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bmp);
+            Paint paint = new Paint();
+
+            paint.setColor(Color.rgb(89, 0, 84));
+            canvas.drawRect(0F, 0F, width, height, paint);
+
+            Map<String, Object> output = model.runOn(bmp);
+            assertNotNull(output);
+
+            Bitmap outputBitmap = (Bitmap) output.get("output");
+            assertNotNull(outputBitmap);
+
+            // Inspect pixel buffer bytes
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
+                    assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
+                    assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
+                }
+            }
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testPixelBufferNormalizationTransformationModel() {
+        try {
+            ModelBundle tioBundle = bundleForFile("1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Ensure inputs and outputs return correct count
+
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
+
+            int width = 224;
+            int height = 224;
+
+            Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bmp);
+            Paint paint = new Paint();
+
+            paint.setColor(Color.rgb(89, 0, 84));
+            canvas.drawRect(0F, 0F, width, height, paint);
+
+            Map<String,Object> output = model.runOn(bmp);
+            assertNotNull(output);
+
+            Bitmap outputBitmap = (Bitmap) output.get("output");
+            assertNotNull(outputBitmap);
+
+            // Inspect pixel buffer bytes
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    assertEquals((bmp.getPixel(x, y)) & 0xFF, (outputBitmap.getPixel(x, y)) & 0xFF, epsilon = 1);
+                    assertEquals((bmp.getPixel(x, y) >> 8) & 0xFF, (outputBitmap.getPixel(x, y) >> 8) & 0xFF, epsilon = 1);
+                    assertEquals((bmp.getPixel(x, y) >> 16) & 0xFF, (outputBitmap.getPixel(x, y) >> 16) & 0xFF, epsilon = 1);
+                }
+            }
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 
     // Int32 and Int64 Tests
 
@@ -502,6 +597,46 @@ public class TensorFlowModelIntegrationTest {
 
         } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
             e.printStackTrace();
+            fail();
+        }
+    }
+
+    // Additional Tests
+
+    @Test
+    public void testModelWithoutSpecifiedBackendUsesAvailableBackend() {
+    // Uses a copy of the 1_in_1_out_number_test without a model.backend field
+        try {
+            // Prepare Model
+
+            ModelBundle bundle = bundleForFile("no-backend.tiobundle");
+            assertNotNull(bundle);
+
+            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            // Prepare Inputs
+
+            float[] input = {2};
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            float[] output = (float[]) outputs.get("output");
+            assertNotNull(output);
+
+            float[] expectedOutput = {
+                    25
+            };
+
+            assertArrayEquals(output, expectedOutput, epsilon);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
             fail();
         }
     }
