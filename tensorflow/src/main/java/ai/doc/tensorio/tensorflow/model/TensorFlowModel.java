@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.model.IO;
 
+import ai.doc.tensorio.core.training.TrainableModel;
 import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
@@ -51,7 +52,7 @@ import ai.doc.tensorio.tensorflow.data.BitmapConverter;
 import ai.doc.tensorio.tensorflow.data.StringConverter;
 import ai.doc.tensorio.tensorflow.data.VectorConverter;
 
-public class TensorFlowModel extends Model {
+public class TensorFlowModel extends Model implements TrainableModel {
 
     // TensorFlow Backend
 
@@ -368,8 +369,6 @@ public class TensorFlowModel extends Model {
         return output.get();
     }
 
-    // TODO: Add abstract training classes to Model
-
     //region Train
 
     // The train methods are the primary interface to a concrete training implementation
@@ -558,6 +557,12 @@ public class TensorFlowModel extends Model {
         });
 
         return inputBuffer.get();
+    }
+
+    /** Exports the model checkpoints to file, used to write updated checkpoints to disk after training */
+
+    public void exportTo(File file) {
+        // TODO: Implement
     }
 
     //endRegion
