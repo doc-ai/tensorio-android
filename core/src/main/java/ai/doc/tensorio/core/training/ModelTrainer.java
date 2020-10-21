@@ -20,6 +20,9 @@
 
 package ai.doc.tensorio.core.training;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,17 +31,22 @@ import java.util.function.Consumer;
 
 import ai.doc.tensorio.core.data.Batch;
 import ai.doc.tensorio.core.data.BatchDataSource;
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.model.Model.ModelException;
 
 public class ModelTrainer {
 
     /** The model to train */
 
-    private final TrainableModel model;
+    private final @NonNull TrainableModel model;
 
     /** The data source that will vend batches of data for training */
 
-    private final BatchDataSource dataSource;
+    private final @NonNull BatchDataSource dataSource;
+
+    /** The placeholders that will be set before training */
+
+    private final @Nullable Placeholders placeholders;
 
     /** The number of epochs to train for */
 
@@ -54,9 +62,10 @@ public class ModelTrainer {
 
     /** Default constructor */
 
-    public ModelTrainer(TrainableModel model, BatchDataSource dataSource, int epochs, int batchSize, boolean shuffle) {
+    public ModelTrainer(@NonNull TrainableModel model, @NonNull BatchDataSource dataSource, @Nullable Placeholders placeholders, int epochs, int batchSize, boolean shuffle) {
         this.model = model;
         this.dataSource = dataSource;
+        this.placeholders = placeholders;
         this.epochs = epochs;
         this.batchSize = batchSize;
         this.shuffle = shuffle;
@@ -78,7 +87,7 @@ public class ModelTrainer {
 
         for (int epoch = 0; epoch < epochs; epoch++) {
             for (int index = 0; index < batchCount; index++) {
-                results = model.trainOn(batch(index));
+                results = model.trainOn(batch(index), placeholders);
             }
         }
 
@@ -101,7 +110,7 @@ public class ModelTrainer {
 
         for (int epoch = 0; epoch < epochs; epoch++) {
             for (int index = 0; index < batchCount; index++) {
-                results = model.trainOn(batch(index));
+                results = model.trainOn(batch(index), placeholders);
             }
             callback.accept(results);
         }
