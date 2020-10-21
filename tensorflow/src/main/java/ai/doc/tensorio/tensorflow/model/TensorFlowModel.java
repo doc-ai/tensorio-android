@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import java.util.Map;
 
 import ai.doc.tensorio.core.data.Batch;
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.model.Model;
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -41,6 +42,7 @@ import ai.doc.tensorio.core.training.TrainableModel;
 import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import ai.doc.tensorflow.SavedModelBundle.Mode;
 import ai.doc.tensorflow.SavedModelBundle;
@@ -124,6 +126,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
         List<LayerInterface> layers = new ArrayList<>();
         layers.addAll(getIO().getInputs().all());
+        layers.addAll(getIO().getPlaceholders().all());
         layers.addAll(getIO().getOutputs().all());
 
         for (LayerInterface layer : layers) {
@@ -184,17 +187,24 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
     @Override
     public Map<String, Object> runOn(@NonNull Map<String, Object> inputs) throws ModelException, IllegalArgumentException {
+        return runOn(inputs, null);
+    }
+
+    @Override
+    public Map<String, Object> runOn(@NonNull Map<String, Object> inputs, @Nullable Placeholders placeholders) throws ModelException, IllegalArgumentException {
+        validatePlaceholders(placeholders);
         validateInput(inputs);
         load();
 
         // Fetch the input and output layer descriptions from the model
 
         IO.IOList inputList = getIO().getInputs();
+        IO.IOList placeholdersList = getIO().getPlaceholders();
         IO.IOList outputList = getIO().getOutputs();
 
         // Prepare input tensors
 
-        Tensor[] inputTensors = new Tensor[inputList.size()];
+        Tensor[] inputTensors = new Tensor[inputList.size() + placeholdersList.size()];
 
         for (int i = 0; i < inputList.size(); i++){
             LayerInterface inputLayer = inputList.get(i);
@@ -213,6 +223,27 @@ public class TensorFlowModel extends Model implements TrainableModel {
             Tensor tensor = new Tensor(dtype, shape, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
+        }
+
+        // Prepare placeholders, which are just added to the input tensors
+
+        for (int i = 0; i < placeholdersList.size(); i++) {
+            LayerInterface placeholderLayer = placeholdersList.get(i);
+
+            String name = placeholderLayer.getName();
+            int[] shape = placeholderLayer.getTensorShape();
+            DataType dtype = tensorDataType(placeholderLayer.getDtype());
+
+            // Batch size of 1
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Object placeholder = Objects.requireNonNull(placeholders.get(name));
+            ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
+            Tensor tensor = new Tensor(dtype, shape, name);
+            tensor.setBytes(placeholderBuffer);
+            inputTensors[inputList.size()+i] = tensor;
         }
 
         // Prepare output tensors
@@ -384,17 +415,24 @@ public class TensorFlowModel extends Model implements TrainableModel {
      */
 
     public Map<String, Object> trainOn(@NonNull Map<String, Object> inputs) throws ModelException, IllegalArgumentException {
+        return trainOn(inputs, null);
+    }
+
+    @Override
+    public Map<String, Object> trainOn(@NonNull Map<String, Object> inputs, @Nullable Placeholders placeholders) throws Model.ModelException, IllegalArgumentException {
+        validatePlaceholders(placeholders);
         validateInput(inputs);
         load();
 
         // Fetch the input and output layer descriptions from the model
 
         IO.IOList inputList = getIO().getInputs();
+        IO.IOList placeholdersList = getIO().getPlaceholders();
         IO.IOList outputList = getIO().getOutputs();
 
         // Prepare input tensors
 
-        Tensor[] inputTensors = new Tensor[inputList.size()];
+        Tensor[] inputTensors = new Tensor[inputList.size() + placeholdersList.size()];
 
         for (int i = 0; i < inputList.size(); i++){
             LayerInterface inputLayer = inputList.get(i);
@@ -413,6 +451,27 @@ public class TensorFlowModel extends Model implements TrainableModel {
             Tensor tensor = new Tensor(dtype, shape, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
+        }
+
+        // Prepare placeholders, which are just added to the input tensors
+
+        for (int i = 0; i < placeholdersList.size(); i++) {
+            LayerInterface placeholderLayer = placeholdersList.get(i);
+
+            String name = placeholderLayer.getName();
+            int[] shape = placeholderLayer.getTensorShape();
+            DataType dtype = tensorDataType(placeholderLayer.getDtype());
+
+            // Batch size of 1
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Object placeholder = Objects.requireNonNull(placeholders.get(name));
+            ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
+            Tensor tensor = new Tensor(dtype, shape, name);
+            tensor.setBytes(placeholderBuffer);
+            inputTensors[inputList.size()+i] = tensor;
         }
 
         // Prepare output tensors
@@ -461,17 +520,23 @@ public class TensorFlowModel extends Model implements TrainableModel {
     // Otherwise everything stays the same
 
     public Map<String, Object> trainOn(@NonNull Batch batch) throws ModelException, IllegalArgumentException {
+        return trainOn(batch, null);
+    }
+
+    public Map<String, Object> trainOn(@NonNull Batch batch, Placeholders placeholders) throws Model.ModelException, IllegalArgumentException {
+        validatePlaceholders(placeholders);
         validateInput(batch);
         load();
 
         // Fetch the input and output layer descriptions from the model
 
         IO.IOList inputList = getIO().getInputs();
+        IO.IOList placeholdersList = getIO().getPlaceholders();
         IO.IOList outputList = getIO().getOutputs();
 
         // Prepare input tensors
 
-        Tensor[] inputTensors = new Tensor[inputList.size()];
+        Tensor[] inputTensors = new Tensor[inputList.size() + placeholdersList.size()];
 
         for (int i = 0; i < inputList.size(); i++){
             LayerInterface inputLayer = inputList.get(i);
@@ -490,6 +555,29 @@ public class TensorFlowModel extends Model implements TrainableModel {
             Tensor tensor = new Tensor(dtype, shape, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
+        }
+
+        // Prepare placeholders, which are just added to the input tensors
+
+        for (int i = 0; i < placeholdersList.size(); i++) {
+            LayerInterface placeholderLayer = placeholdersList.get(i);
+
+            String name = placeholderLayer.getName();
+            int[] shape = placeholderLayer.getTensorShape();
+            DataType dtype = tensorDataType(placeholderLayer.getDtype());
+
+            // Placeholders should not have a batch dimension
+            // Batch size of 1
+
+            if (shape[0] == -1) {
+                shape[0] = 1;
+            }
+
+            Object placeholder = Objects.requireNonNull(placeholders.get(name));
+            ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
+            Tensor tensor = new Tensor(dtype, shape, name);
+            tensor.setBytes(placeholderBuffer);
+            inputTensors[inputList.size()+i] = tensor;
         }
 
         // Prepare output tensors

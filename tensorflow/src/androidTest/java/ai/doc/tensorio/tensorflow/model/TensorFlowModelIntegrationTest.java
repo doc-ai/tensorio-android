@@ -24,6 +24,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNot;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import ai.doc.tensorio.core.data.Batch;
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import ai.doc.tensorio.core.utilities.AndroidAssets;
@@ -447,6 +450,65 @@ public class TensorFlowModelIntegrationTest {
         }
     }
 
+    // Placeholder Tests
+
+    @Test
+    public void testPlaceholders() {
+        try {
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("1_in_1_placeholder_2_out_vectors_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            float[] input1 = {
+                    1, 2, 3, 4
+            };
+            float[] input2 = {
+                    10, 20, 30, 40
+            };
+
+            Map<String, Object> input = new HashMap<String, Object>();
+            input.put("input1", input1);
+
+            // Prepare Placeholders
+
+            Placeholders placeholders = new Placeholders();
+            placeholders.put("input2", input2);
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input, placeholders);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            float[] output1 = (float[]) outputs.get("output1");
+            assertNotNull(output1);
+            float[] output2 = (float[]) outputs.get("output2");
+            assertNotNull(output2);
+
+            float[] expectedOutput1 = {
+                    240
+            };
+            float[] expectedOutput2 = {
+                    64
+            };
+
+            assertArrayEquals(output1, expectedOutput1, epsilon);
+            assertArrayEquals(output2, expectedOutput2, epsilon);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
     // Real Usage Tests
 
     @Test
@@ -629,7 +691,175 @@ public class TensorFlowModelIntegrationTest {
         }
     }
 
+    @Test
+    public void testCatsVsDogsTrainWithPlaceholder() {
+        try {
+            // Prepare Model
 
-    // TODO: Placeholder Tests
+            ModelBundle bundle = bundleForFile("cats-vs-dogs-train-with-placeholder.tiobundle");
+            assertNotNull(bundle);
+
+            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            // Prepare Input
+
+            InputStream stream = testContext.getAssets().open("cat.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+
+            float[] labels = {
+                    0
+            };
+
+            Map<String, Object> input = new HashMap<String, Object>();
+            input.put("image", bitmap);
+            input.put("labels", labels);
+
+            // Prepare Placeholders
+
+            Placeholders placeholders1 = new Placeholders();
+            placeholders1.put("placeholder_adam_learning_rate", new float[]{0.0001f});
+
+            Placeholders placeholders2 = new Placeholders();
+            placeholders2.put("placeholder_adam_learning_rate", new float[]{0.001f});
+
+            // Train Model with First Learning Rate
+
+            float[] losses1 = new float[4];
+            int epochs1 = 4;
+
+            for (int epoch = 0; epoch < epochs1; epoch++) {
+
+                Map<String,Object> output = model.trainOn(input, placeholders1);
+                assertNotNull(output);
+
+                float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
+                losses1[epoch] = loss;
+            }
+
+            // Reset the Model
+
+            model.unload();
+
+            // Train Model with Second Learning Rate
+
+            float[] losses2 = new float[4];
+            int epochs2 = 4;
+
+            for (int epoch = 0; epoch < epochs2; epoch++) {
+
+                Map<String,Object> output = model.trainOn(input, placeholders2);
+                assertNotNull(output);
+
+                float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
+                losses2[epoch] = loss;
+            }
+
+            // Compare Losses
+            // Ensures that setting the placeholder is having some effect
+            // Loss values are fairly normal here: [1.20, 1.16, 1.12, 1.08] vs [0.88, 0.59, 0.37, 0.23]
+
+            assertThat(losses1, IsNot.not(IsEqual.equalTo(losses2)));
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testCatsVsDogsTrainBatchedWithPlaceholder() {
+        try {
+            // Prepare Model
+
+            ModelBundle bundle = bundleForFile("cats-vs-dogs-train-with-placeholder.tiobundle");
+            assertNotNull(bundle);
+
+            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            // Prepare Input
+
+            InputStream stream1 = testContext.getAssets().open("cat.jpg");
+            Bitmap bitmap1 = BitmapFactory.decodeStream(stream1);
+
+            float[] labels1 = {
+                    0
+            };
+
+            Batch.Item input1 = new Batch.Item();
+            input1.put("image", bitmap1);
+            input1.put("labels", labels1);
+
+            InputStream stream2 = testContext.getAssets().open("dog.jpg");
+            Bitmap bitmap2 = BitmapFactory.decodeStream(stream2);
+
+            float[] labels2 = {
+                    1
+            };
+
+            Batch.Item input2 = new Batch.Item();
+            input2.put("image", bitmap2);
+            input2.put("labels", labels2);
+
+            String[] keys = {"image", "labels"};
+            Batch batch = new Batch(keys);
+            batch.add(input1);
+            batch.add(input2);
+
+            // Prepare Placeholders
+
+            Placeholders placeholders1 = new Placeholders();
+            placeholders1.put("placeholder_adam_learning_rate", new float[]{0.0001f});
+
+            Placeholders placeholders2 = new Placeholders();
+            placeholders2.put("placeholder_adam_learning_rate", new float[]{0.001f});
+
+            // Train Model
+
+            // Train Model with Second Learning Rate
+
+            float[] losses1 = new float[4];
+            int epochs1 = 4;
+
+            for (int epoch = 0; epoch < epochs1; epoch++) {
+
+                Map<String,Object> output = model.trainOn(batch, placeholders1);
+                assertNotNull(output);
+
+                float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
+                losses1[epoch] = loss;
+            }
+
+            // Reset the Model
+
+            model.unload();
+
+            // Train Model with Second Learning Rate
+
+            float[] losses2 = new float[4];
+            int epochs2 = 4;
+
+            for (int epoch = 0; epoch < epochs2; epoch++) {
+
+                Map<String,Object> output = model.trainOn(batch, placeholders2);
+                assertNotNull(output);
+
+                float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
+                losses2[epoch] = loss;
+            }
+
+            // Compare Losses
+            // Ensures that setting the placeholder is having some effect
+            // Loss values here are vanishingly small: [-1.25E8, -1.35E8, -1.45E8, -1.57E8] vs [-1.87 E8, -1.27E8, -3.84E8, -5.01E8]
+            // Something about the dog image, losses are vanishingly small training with the dog image alone
+
+            assertThat(losses1, IsNot.not(IsEqual.equalTo(losses2)));
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            fail();
+        }
+    }
 
 }

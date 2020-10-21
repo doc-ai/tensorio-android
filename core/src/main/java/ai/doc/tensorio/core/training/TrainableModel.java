@@ -21,11 +21,13 @@
 package ai.doc.tensorio.core.training;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.Map;
 
 import ai.doc.tensorio.core.data.Batch;
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.model.Model;
 
 public interface TrainableModel {
@@ -40,7 +42,24 @@ public interface TrainableModel {
      *                                  expected inputs
      */
 
-    public Map<String, Object> trainOn(@NonNull Map<String, Object> inputs) throws Model.ModelException, IllegalArgumentException;
+    Map<String, Object> trainOn(@NonNull Map<String, Object> inputs) throws Model.ModelException, IllegalArgumentException;
+
+    /**
+     * Perform training on a map of of objects with placeholders. Not all backends support placeholders,
+     * in which case concrete implementations should raise an exception.
+     *
+     * @param inputs A batch of items mapping layer names to arbitrary objects
+     * @param placeholders A mapping of placeholder layer names to arbitrary objects. May be nil, in
+     *                     which case calling this method should be no different from calling runOn
+     *                     without placeholders.
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws Model.ModelException Raised if the model has not yet been loaded and the attempt to
+     *                           load it fails
+     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
+     *                                  expected inputs
+     */
+
+    Map<String, Object> trainOn(@NonNull Map<String, Object> inputs, @Nullable Placeholders placeholders) throws Model.ModelException, IllegalArgumentException;
 
     /**
      * Perform training on a batch of objects
@@ -52,11 +71,28 @@ public interface TrainableModel {
      *                                  expected inputs
      */
 
-    public Map<String, Object> trainOn(@NonNull Batch batch) throws Model.ModelException, IllegalArgumentException;
+    Map<String, Object> trainOn(@NonNull Batch batch) throws Model.ModelException, IllegalArgumentException;
+
+    /**
+     * Perform training on a batch of objects with placeholders. Not all backends support placeholders,
+     * in which case concrete implementations should raise an exception.
+     *
+     * @param batch A batch of items mapping layer names to arbitrary objects
+     * @param placeholders A mapping of placeholder layer names to arbitrary objects. May be nil, in
+     *                     which case calling this method should be no different from calling runOn
+     *                     without placeholders.
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws Model.ModelException Raised if the model has not yet been loaded and the attempt to
+     *                           load it fails
+     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
+     *                                  expected inputs
+     */
+
+    Map<String, Object> trainOn(@NonNull Batch batch, Placeholders placeholders) throws Model.ModelException, IllegalArgumentException;
 
     /**
      * Exports the model checkpoints to file, used to write updated checkpoints to disk after training
      */
 
-    public void exportTo(File file);
+    void exportTo(File file);
 }
