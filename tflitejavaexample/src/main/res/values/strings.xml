@@ -19,5 +19,5 @@
   -->
 
 <resources>
-    <string name="app_name">Java Example</string>
+    <string name="app_name">TF Lite Java Example</string>
 </resources>

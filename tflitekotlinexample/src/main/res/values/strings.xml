@@ -19,5 +19,5 @@
   -->
 
 <resources>
-    <string name="app_name">Kotlin Example</string>
+    <string name="app_name">TF Lite Kotlin Example</string>
 </resources>
