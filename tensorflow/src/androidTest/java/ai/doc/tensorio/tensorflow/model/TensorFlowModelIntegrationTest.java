@@ -503,7 +503,40 @@ public class TensorFlowModelIntegrationTest {
 
     @Test
     public void testInt64Model() {
-        fail();
+        try {
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("int64io_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            long[] input = {2};
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            long[] output = (long[]) outputs.get("output");
+            assertNotNull(output);
+
+            long[] expectedOutput = {
+                    25
+            };
+
+            assertArrayEquals(output, expectedOutput);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     // String Tests

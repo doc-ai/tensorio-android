@@ -334,6 +334,19 @@ public abstract class Model {
     public abstract Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException;
 
     /**
+     * Perform inference on an array of int64s (longs) for a single input layer. Not all backends support
+     * int64 inputs and will throw an exception if this method is not supported.
+     *
+     * @param input An array of int32s
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support int32s
+     */
+
+    public abstract Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException;
+
+    /**
      * Perform inference on a ByteBuffer for a single input layer. Not all backends support
      * ByteBuffer inputs and will throw an exception if this method is not supported. ByteBuffers
      * should only be used with `string` type inputs.
@@ -404,6 +417,12 @@ public abstract class Model {
     }
 
     protected void validateInput(int[] input) throws IllegalArgumentException {
+        if (io.getInputs().size() != 1) {
+            throw InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(long[] input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
         }

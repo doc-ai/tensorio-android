@@ -261,6 +261,11 @@ public class TFLiteModel extends Model {
     }
 
     @Override
+    public Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int64 inputs are not supported by TF Lite");
+    }
+
+    @Override
     public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
         throw new IllegalArgumentException("ByteBuffer inputs are not supported by TF Lite");
     }

@@ -170,6 +170,14 @@ public class TensorFlowModel extends Model implements TrainableModel {
     }
 
     @Override
+    public Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException {
+        validateInput(input);
+        load();
+
+        return runOn(mappedInput(input));
+    }
+
+    @Override
     public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
         validateInput(input);
         load();
