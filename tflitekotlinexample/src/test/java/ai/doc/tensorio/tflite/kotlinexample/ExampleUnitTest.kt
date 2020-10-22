@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package com.docai.kotlinexample
+package ai.doc.tensorio.tflite.kotlinexample
 
 import org.junit.Test
 

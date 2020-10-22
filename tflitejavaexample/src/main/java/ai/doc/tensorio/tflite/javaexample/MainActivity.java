@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package com.docai.javaexample;
+package ai.doc.tensorio.tflite.javaexample;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

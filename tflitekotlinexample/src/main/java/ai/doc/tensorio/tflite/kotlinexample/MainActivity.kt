@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package com.docai.kotlinexample
+package ai.doc.tensorio.tflite.kotlinexample
 
 import ai.doc.tensorio.core.modelbundle.ModelBundle
 import ai.doc.tensorio.core.modelbundle.ModelBundle.ModelBundleException

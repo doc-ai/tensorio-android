@@ -1,5 +1,5 @@
 /*
- * ExampleInstrumentedTest.kt
+ * ExampleInstrumentedTest.java
  * TensorIO
  *
  * Created by Philip Dow on 7/8/2020
@@ -18,27 +18,28 @@
  * limitations under the License.
  */
 
-package com.docai.kotlinexample
+package ai.doc.tensorio.tflite.javaexample;
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.content.Context;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.junit.Assert.*
+import static org.junit.Assert.*;
 
 /**
  * Instrumented test, which will execute on an Android device.
  *
- * See [testing documentation](http://d.android.com/tools/testing).
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-@RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+@RunWith(AndroidJUnit4.class)
+public class ExampleInstrumentedTest {
     @Test
-    fun useAppContext() {
+    public void useAppContext() {
         // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.docai.tensorio.kotlinexample", appContext.packageName)
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        assertEquals("ai.doc.tensorio.tflite.javaexample", appContext.getPackageName());
     }
 }

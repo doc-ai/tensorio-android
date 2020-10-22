@@ -20,7 +20,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.docai.kotlinexample">
+    package="ai.doc.tensorio.tflite.kotlinexample">
 
     <application
         android:allowBackup="true"

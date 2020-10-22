@@ -24,7 +24,7 @@ android {
     compileSdkVersion 30
 
     defaultConfig {
-        applicationId "com.docai.tensorio.javaexample"
+        applicationId "ai.doc.tensorio.tflite.javaexample"
         minSdkVersion 22
         targetSdkVersion 30
         versionCode 1
