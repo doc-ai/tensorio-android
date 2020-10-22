@@ -21,7 +21,6 @@
 package ai.doc.tensorio.core.layerinterface;
 
 public enum DataType {
-    Unknown,
     UInt8,       // "uint8"
     Float32,     // "float32"
     Int32,       // "int32"

@@ -26,6 +26,8 @@ import java.util.Map;
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
 
+import static java.lang.Math.abs;
+
 /**
  * The description of a vector (array) input or output later.
  *
@@ -105,26 +107,30 @@ public class VectorLayerDescription extends LayerDescription {
      * Designated initializer. Creates a vector description from the properties parsed in a model.json
      * file.
      *
+     * @param shape       The layer's shape
+     * @param batched     True if the layer supports batched execution, false otherwise
      * @param labels      The indexed labels associated with the outputs of this layer. May be `nil`.
      * @param quantized   True if the values are quantized
      * @param quantizer   A function that transforms unquantized values to quantized input
      * @param dequantizer A function that transforms quantized output to unquantized values
      */
 
-    public VectorLayerDescription(int[] shape, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer) {
+    public VectorLayerDescription(int[] shape, boolean batched, String[] labels, boolean quantized, Quantizer quantizer, Dequantizer dequantizer, DataType dtype) {
         this.shape = shape;
 
         // Total Volume
         this.length = 1;
         for (int i : shape) {
-            length *= i;
+            length *= abs(i);
         }
 
+        this.batched = batched;
         this.labels = labels;
         this.labeled = labels != null && labels.length > 0;
         this.quantized = quantized;
         this.quantizer = quantizer;
         this.dequantizer = dequantizer;
+        this.dtype = dtype;
     }
 
     //region Getters and Setters
@@ -151,6 +157,11 @@ public class VectorLayerDescription extends LayerDescription {
 
     public Dequantizer getDequantizer() {
         return dequantizer;
+    }
+
+    @Override
+    public int[] getTensorShape() {
+        return getShape();
     }
 
     //endRegion

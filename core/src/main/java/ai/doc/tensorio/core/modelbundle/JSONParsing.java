@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
@@ -83,7 +84,7 @@ public abstract class JSONParsing {
 
     public static List<LayerInterface> parseIO(@Nullable ModelBundle modelBundle, @NonNull JSONArray io, Mode mode) throws JSONException, ModelBundleException, IOException {
         ArrayList<LayerInterface> interfaces = new ArrayList<>();
-        boolean isQuantized = modelBundle.isQuantized(); // Always false if modelBundle is nil
+        boolean isQuantized = modelBundle != null && modelBundle.isQuantized();
 
         for (int i = 0; i < io.length(); i++) {
             JSONObject jsonObject = io.getJSONObject(i);
@@ -129,13 +130,18 @@ public abstract class JSONParsing {
 
     public static LayerInterface parseVectorDescription(@Nullable ModelBundle modelBundle, @NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        boolean batched = shape[0] == -1;
         String name = dict.getString("name");
+
+        // Data Type
+
+        DataType dtype = DataTypeForString(dict.optString("dtype"));
 
         // Labels
 
         String[] labels = null;
 
-        if (dict.optString("labels", null) != null) {
+        if (dict.has("labels")) {
             try {
                 String contents = modelBundle.readTextFile(dict.getString("labels"));
                 contents = contents.trim();
@@ -180,10 +186,12 @@ public abstract class JSONParsing {
 
         return new LayerInterface(name, mode, new VectorLayerDescription(
                 shape,
+                batched,
                 labels,
                 quantized,
                 quantizer,
-                dequantizer)
+                dequantizer,
+                dtype)
         );
     }
 
@@ -206,10 +214,12 @@ public abstract class JSONParsing {
         // Image Volume
 
         ImageVolume imageVolume;
+        boolean batched = false;
 
         try {
             int[] shape = parseIntArray(dict.getJSONArray("shape"));
             imageVolume = ImageVolumeForShape(shape);
+            batched = shape[0] == -1;
         } catch (JSONException e) {
             throw new ModelBundleException("Expected input.shape array field in model.json, none found", e);
         }
@@ -259,6 +269,7 @@ public abstract class JSONParsing {
         return new LayerInterface(name, mode, new PixelBufferLayerDescription(
                 pixelFormat,
                 imageVolume,
+                batched,
                 normalizer,
                 denormalizer,
                 quantized)
@@ -278,32 +289,14 @@ public abstract class JSONParsing {
 
     public static LayerInterface parseStringDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
         int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        boolean batched = shape[0] == -1;
         String name = dict.getString("name");
-        String type = dict.getString("type");
 
-        // Data Type
-
-        DataType dtype = null;
-
-        switch (type) {
-            case "uint8":
-                dtype = DataType.UInt8;
-                break;
-            case "float32":
-                dtype = DataType.Float32;
-                break;
-            case "int32":
-                dtype = DataType.Int32;
-                break;
-            case "int64":
-                dtype = DataType.Int64;
-                break;
-            default:
-                throw new ModelBundleException("Expected input.dtype to be one of [uint8, float32, int32, int64], found " + type);
-        }
+        DataType dtype = DataTypeForString(dict.optString("dtype"));
 
         return new LayerInterface(name, mode, new StringLayerDescription(
                 shape,
+                batched,
                 dtype)
         );
     }
@@ -331,9 +324,8 @@ public abstract class JSONParsing {
             return null;
         }
 
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
+        if (dict.has("standard")) {
+            String standard = dict.getString("standard");
             switch (standard) {
                 case "[0,1]":
                     return Quantizer.DataQuantizerZeroToOne();
@@ -362,9 +354,8 @@ public abstract class JSONParsing {
             return null;
         }
 
-        String standard = dict.optString("standard", null);
-
-        if (standard != null) {
+        if (dict.has("standard")) {
+            String standard = dict.getString("standard");
             switch (standard) {
                 case "[0,1]":
                     return Dequantizer.DataDequantizerZeroToOne();
@@ -404,27 +395,42 @@ public abstract class JSONParsing {
      */
 
     public static ImageVolume ImageVolumeForShape(int[] shape) throws ModelBundleException {
-        if (shape.length != 3) {
-            throw new ModelBundleException("Expected shape with three elements, actual count is " + shape.length);
-        }
-        if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
-            throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
-        }
-        return new ImageVolume(shape[0], shape[1], shape[2]);
+       switch (shape.length) {
+           case 3:
+               if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
+                   throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+               }
+               return new ImageVolume(shape[0], shape[1], shape[2]);
+           case 4:
+               if ( shape[0] == -1 ) {      // Batch is first dimension
+                   if (shape[1] <= 0 || shape[2] <= 0 || shape[3] <= 0) {
+                       throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+                   }
+                   return new ImageVolume(shape[1], shape[2], shape[3]);
+               } else if ( shape[3] == -1 ) { // Batch is last dimension
+                   if (shape[0] <= 0 || shape[1] <= 0 || shape[2] <= 0) {
+                       throw new ModelBundleException("Invalid image input shape, shape elements can not be <= 0");
+                   }
+                   return new ImageVolume(shape[0], shape[1], shape[2]);
+               } else {
+                   throw new ModelBundleException("Invalid image input shape, either first or last element must be -1 for batch dimension");
+               }
+           default:
+               throw new ModelBundleException("Expected shape with three elements, actual count is " + shape.length);
+       }
     }
 
     /**
      * Returns the PixelNormalizer given an input dictionary.
      */
 
-    public static PixelNormalizer PixelNormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelNormalizer PixelNormalizerForDictionary(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
         if (dict == null) {
             return null;
         }
 
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
+        if (dict.has("standard")) {
+            String normalizerString = dict.getString("standard");
             switch (normalizerString) {
                 case "[0,1]":
                     return PixelNormalizer.PixelNormalizerZeroToOne();
@@ -448,14 +454,13 @@ public abstract class JSONParsing {
      * Returns the denormalizer for a given input dictionary.
      */
 
-    public static PixelDenormalizer PixelDenormalizerForDictionary(@Nullable JSONObject dict) throws ModelBundleException {
+    public static PixelDenormalizer PixelDenormalizerForDictionary(@Nullable JSONObject dict) throws JSONException, ModelBundleException {
         if (dict == null) {
             return null;
         }
 
-        String normalizerString = dict.optString("standard", null);
-
-        if (normalizerString != null) {
+        if (dict.has("standard")) {
+            String normalizerString = dict.getString("standard");
             switch (normalizerString) {
                 case "[0,1]":
                     return PixelDenormalizer.PixelDenormalizerZeroToOne();
@@ -475,4 +480,32 @@ public abstract class JSONParsing {
         }
     }
 
+    /**
+     * Converts a string datatype value to one of the enum values. As a practical matter if the data
+     * type is unknown because it is unspecified it should be treated as a float32 by concrete
+     * implementations and will be interpreted as such.
+     *
+     * @param type String type
+     * @return DataType
+     * @throws ModelBundleException If the string provided cannot be parsed
+     */
+
+    public static DataType DataTypeForString(@Nullable String type) throws ModelBundleException {
+        if (type == null || "".equals(type)) {
+            return DataType.Float32;
+        } else {
+            switch (type) {
+                case "uint8":
+                    return DataType.UInt8;
+                case "float32":
+                    return DataType.Float32;
+                case "int32":
+                    return DataType.Int32;
+                case "int64":
+                    return DataType.Int64;
+                default:
+                    throw new ModelBundleException("Expected input.dtype to be one of [uint8, float32, int32, int64], found " + type);
+            }
+        }
+    }
 }

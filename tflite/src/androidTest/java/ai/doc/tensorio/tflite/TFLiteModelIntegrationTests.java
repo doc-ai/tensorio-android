@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystemException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +126,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             result = (float[]) output.get("output");
-            assertTrue(result instanceof float[]);
+            assertNotNull(result);
 
             assertEquals(1, result.length);
             assertEquals(25f, result[0], epsilon);
@@ -141,7 +140,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             result = (float[]) output.get("output");
-            assertTrue(result instanceof float[]);
+            assertNotNull(result);
 
             assertEquals(1, result.length);
             assertEquals(25f, result[0], epsilon);
@@ -153,6 +152,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
         } catch (ModelBundleException | ModelException e) {
@@ -188,10 +188,10 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             result = (float[]) output.get("output");
-            assertTrue(result instanceof float[]);
+            assertNotNull(result);
 
             assertEquals(4, result.length);
-            assertTrue(Arrays.equals(expected, result));
+            assertArrayEquals(expected, result, 0.0f);
 
             // Run the model on a dictionary
 
@@ -202,10 +202,10 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             result = (float[]) output.get("output");
-            assertTrue(result instanceof float[]);
+            assertNotNull(result);
 
             assertEquals(4, result.length);
-            assertTrue(Arrays.equals(expected, result));
+            assertArrayEquals(expected, result, 0.0f);
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
 
@@ -214,6 +214,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
             // try running on input of of the wrong length, should throw IllegalArgumentException
@@ -223,6 +224,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(input);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
         } catch (ModelBundleException | ModelException e) {
@@ -260,8 +262,8 @@ public class TFLiteModelIntegrationTests {
             float[] result1 = (float[])output.get("output1");
             float[] result2 = (float[])output.get("output2");
 
-            assertTrue(result1 instanceof float[]);
-            assertTrue(result2 instanceof float[]);
+            assertNotNull(result1);
+            assertNotNull(result2);
 
             assertEquals(1, result1.length);
             assertEquals(1, result2.length);
@@ -278,6 +280,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
             // Try running on input of of the wrong length, should throw IllegalArgumentException
@@ -289,6 +292,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
         } catch (ModelBundleException | ModelException e) {
@@ -354,6 +358,9 @@ public class TFLiteModelIntegrationTests {
             float[] result1 = (float[])output.get("output1");
             float[] result2 = (float[])output.get("output2");
 
+            assertNotNull(result1);
+            assertNotNull(result2);
+
             assertEquals(16, result1.length);
             assertEquals(16, result2.length);
 
@@ -369,6 +376,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(inputs);
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
         } catch (ModelBundleException | ModelException e) {
@@ -408,10 +416,10 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             float[] result = (float[]) output.get("output");
-            assertTrue(result instanceof float[]);
+            assertNotNull(result);
 
             assertEquals(27, result.length);
-            assertTrue(Arrays.equals(expected, result));
+            assertArrayEquals(expected, result, 0.0f);
 
             // Try running on input of of the wrong length, should throw IllegalArgumentException
 
@@ -419,6 +427,7 @@ public class TFLiteModelIntegrationTests {
                 model.runOn(new float[]{5, 6, 7, 8});
                 fail();
             } catch (IllegalArgumentException e) {
+                assertTrue(true);
             }
 
         } catch (ModelBundleException | ModelException e) {
@@ -448,7 +457,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             Paint paint = new Paint();
-            //paint.setColor(Color.RED);
+
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 
@@ -456,7 +465,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
-            assertTrue(outputBitmap instanceof Bitmap);
+            assertNotNull(outputBitmap);
 
             // Inspect pixel buffer bytes
 
@@ -495,7 +504,7 @@ public class TFLiteModelIntegrationTests {
             Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             Paint paint = new Paint();
-            //paint.setColor(Color.RED);
+
             paint.setColor(Color.rgb(89, 0, 84));
             canvas.drawRect(0F, 0F, width, height, paint);
 
@@ -503,7 +512,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             Bitmap outputBitmap = (Bitmap) output.get("image");
-            assertTrue(outputBitmap instanceof Bitmap);
+            assertNotNull(outputBitmap);
 
             // Inspect pixel buffer bytes
 
@@ -539,8 +548,8 @@ public class TFLiteModelIntegrationTests {
             Map<String,Object> output = model.runOn(bitmap);
             assertNotNull(output);
 
-            Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-            assertTrue(classification instanceof Map);
+            Map<String, Float> classification = (Map<String, Float>) output.get("classification");
+            assertNotNull(classification);
 
             List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
@@ -571,7 +580,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-            assertTrue(classification instanceof Map);
+            assertNotNull(classification);
 
             List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
@@ -606,7 +615,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-            assertTrue(classification instanceof Map);
+            assertNotNull(classification);
 
             List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);
@@ -640,7 +649,7 @@ public class TFLiteModelIntegrationTests {
             assertNotNull(output);
 
             Map<String, Float> classification = (Map<String, Float>)output.get("classification");
-            assertTrue(classification instanceof Map);
+            assertNotNull(classification);
 
             List<Map.Entry<String, Float>> top5 = ClassificationHelper.topN(classification, 5);
             Map.Entry<String, Float> top = top5.get(0);

@@ -44,8 +44,8 @@ import ai.doc.tensorio.core.utilities.ClassificationHelper;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Handler main = new Handler(Looper.getMainLooper());
-    private String TAG = "MainActivity";
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

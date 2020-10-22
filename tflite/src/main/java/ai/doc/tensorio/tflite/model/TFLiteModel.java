@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.modelbundle.AssetModelBundle;
@@ -49,6 +50,7 @@ import ai.doc.tensorio.tflite.data.BitmapConverter;
 import ai.doc.tensorio.tflite.data.StringConverter;
 import ai.doc.tensorio.tflite.data.VectorConverter;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class TFLiteModel extends Model {
 
@@ -252,6 +254,26 @@ public class TFLiteModel extends Model {
     //endRegion
 
     //region Run
+
+    @Override
+    public Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int32 inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int64 inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("ByteBuffer inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(@NonNull Map<String, Object> input, @Nullable Placeholders placeholders) throws ModelException, IllegalArgumentException {
+        throw new ModelException("Placeholders not supported by TF Lite models");
+    }
 
     @Override
     public Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException {

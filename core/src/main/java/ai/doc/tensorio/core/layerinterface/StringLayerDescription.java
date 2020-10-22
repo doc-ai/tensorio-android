@@ -20,6 +20,8 @@
 
 package ai.doc.tensorio.core.layerinterface;
 
+import static java.lang.Math.abs;
+
 /**
  * The description of a string (raw bytes) input or output layer.
  *
@@ -52,31 +54,23 @@ public class StringLayerDescription extends LayerDescription {
     private int length;
 
     /**
-     * The layer's data type
-     *
-     * @warning
-     * There are complex interactions between backends, data types, and quantization
-     * that will be addressed and validated in later releases.
-     */
-
-    private DataType dtype;
-
-    /**
      * Designated initializer. Creates a string description from the properties parsed in a model.json
      * file.
      *
      * @param shape The shape of the underlying tensor
+     * @param batched True if the layer supports batched execution, false otherwise
      * @param dtype The type of data this layer expects or produces
      * @return instancetype A read-only instance of `StringLayerDescription`
      */
 
-    public StringLayerDescription(int[] shape, DataType dtype) {
+    public StringLayerDescription(int[] shape, boolean batched, DataType dtype) {
         this.shape = shape;
+        this.batched = batched;
         this.dtype = dtype;
 
         this.length = 1;
         for (int i : shape) {
-            this.length *= i;
+            this.length *= abs(i);
         }
     }
 
@@ -88,8 +82,9 @@ public class StringLayerDescription extends LayerDescription {
         return length;
     }
 
-    public DataType getDtype() {
-        return dtype;
+    @Override
+    public int[] getTensorShape() {
+        return getShape();
     }
 
 }

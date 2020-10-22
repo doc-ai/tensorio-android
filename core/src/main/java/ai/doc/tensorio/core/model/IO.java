@@ -132,8 +132,7 @@ public class IO {
      */
 
     public IO(@NonNull List<LayerInterface> inputInterfaces, @NonNull List<LayerInterface> outputInterfaces) {
-        this.inputs = new IOList(inputInterfaces);
-        this.outputs = new IOList(outputInterfaces);
+        this(inputInterfaces, outputInterfaces, null);
     }
 
     /**
@@ -141,7 +140,8 @@ public class IO {
      */
 
     public IO(@NonNull List<LayerInterface> inputInterfaces, @NonNull List<LayerInterface> outputInterfaces, @Nullable List<LayerInterface> placeholderInterfaces) {
-        this(inputInterfaces, outputInterfaces);
+        this.inputs = new IOList(inputInterfaces);
+        this.outputs = new IOList(outputInterfaces);
         this.placeholders = new IOList(placeholderInterfaces);
     }
 

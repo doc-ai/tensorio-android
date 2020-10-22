@@ -1,5 +1,5 @@
 /*
- * TFLiteStringDataConverter.java
+ * StringConverter.java
  * TensorIO
  *
  * Created by Philip Dow on 7/27/2020
@@ -57,9 +57,6 @@ public class StringConverter implements Converter {
                 break;
             case Float32:
                 bufferLength = length * 4;
-                break;
-            case Unknown:;
-                bufferLength = length;
                 break;
         }
 
@@ -188,9 +185,6 @@ public class StringConverter implements Converter {
                 break;
             case Float32:
                 view = buffer.asFloatBuffer();
-                break;
-            case Unknown:;
-                view = buffer;
                 break;
         }
 
