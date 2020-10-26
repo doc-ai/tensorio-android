@@ -91,7 +91,7 @@ public interface TrainableModel {
     Map<String, Object> trainOn(@NonNull Batch batch, Placeholders placeholders) throws Model.ModelException, IllegalArgumentException;
 
     /**
-     * Exports the model checkpoints to file, used to write updated checkpoints to disk after training
+     * Exports the model checkpoints to a directory, used to write updated checkpoints to disk after training
      */
 
     void exportTo(File file);

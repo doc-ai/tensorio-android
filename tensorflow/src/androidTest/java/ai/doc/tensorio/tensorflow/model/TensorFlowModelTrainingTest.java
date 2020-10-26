@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import ai.doc.tensorflow.SavedModelBundle;
 import ai.doc.tensorio.core.data.Batch;
 import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.model.Model;
@@ -64,6 +65,11 @@ public class TensorFlowModelTrainingTest {
         if (!f.mkdirs()) {
             throw new FileSystemException("on create: " + f.getPath());
         }
+
+        File e = new File(testContext.getFilesDir(), "exports");
+        if (!e.mkdirs()) {
+            throw new FileSystemException("on create: " + f.getPath());
+        }
     }
 
     /** Tear down the models directory */
@@ -72,6 +78,9 @@ public class TensorFlowModelTrainingTest {
     public void tearDown() throws Exception {
         File f = new File(testContext.getFilesDir(), "models");
         deleteRecursive(f);
+
+        File e = new File(testContext.getFilesDir(), "exports");
+        deleteRecursive(e);
     }
 
     /** Create a model bundle from a file, copying the asset to models */
@@ -82,6 +91,19 @@ public class TensorFlowModelTrainingTest {
 
         AndroidAssets.copyAsset(testContext, filename, file);
         return ModelBundle.bundleWithFile(file);
+    }
+
+    /** Creates an export directory with name */
+
+    private File exportForFile(String filename) throws IOException {
+        File dir = new File(testContext.getFilesDir(), "exports");
+        File file = new File(dir, filename);
+
+        if (!file.mkdirs()) {
+            throw new FileSystemException("on create: " + file.getPath());
+        }
+
+        return file;
     }
 
     /** Delete a directory and all its contents */
@@ -398,6 +420,75 @@ public class TensorFlowModelTrainingTest {
             // Something about the dog image, losses are vanishingly small training with the dog image alone
 
             assertThat(losses1, IsNot.not(IsEqual.equalTo(losses2)));
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testExportsModel() {
+        try {
+            // Prepare Model
+
+            ModelBundle bundle = bundleForFile("cats-vs-dogs-train.tiobundle");
+            assertNotNull(bundle);
+
+            TensorFlowModel model = (TensorFlowModel) bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            // Prepare Input
+
+            InputStream stream1 = testContext.getAssets().open("cat.jpg");
+            Bitmap bitmap1 = BitmapFactory.decodeStream(stream1);
+
+            float[] labels1 = {
+                    0
+            };
+
+            Batch.Item input1 = new Batch.Item();
+            input1.put("image", bitmap1);
+            input1.put("labels", labels1);
+
+            InputStream stream2 = testContext.getAssets().open("dog.jpg");
+            Bitmap bitmap2 = BitmapFactory.decodeStream(stream2);
+
+            float[] labels2 = {
+                    1
+            };
+
+            Batch.Item input2 = new Batch.Item();
+            input2.put("image", bitmap2);
+            input2.put("labels", labels2);
+
+            String[] keys = {"image", "labels"};
+            Batch batch = new Batch(keys);
+            batch.add(input1);
+            batch.add(input2);
+
+            // Train Model
+
+            float[] losses = new float[4];
+            int epochs = 4;
+
+            for (int epoch = 0; epoch < epochs; epoch++) {
+
+                Map<String,Object> output = model.trainOn(batch);
+                assertNotNull(output);
+
+                float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
+                losses[epoch] = loss;
+            }
+
+            File exportDir = exportForFile("cats-vs-dogs");
+            model.exportTo(exportDir);
+
+            File checkpointsIndex = new File(exportDir, SavedModelBundle.CheckpointsIndex);
+            File checkpointsData = new File(exportDir, SavedModelBundle.CheckpointsData);
+
+            assertTrue(checkpointsIndex.exists());
+            assertTrue(checkpointsData.exists());
 
         } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
             fail();

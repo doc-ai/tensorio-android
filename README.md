@@ -418,4 +418,31 @@ for (int epoch = 0; epoch < epochs; epoch++) {
 model.unload();
 ```
 
-Notice that the batch is built up from batch items, which are just maps of key-value pairs. Once again the loss value from each epoch of training is capturing and upon inspection you should see the loss decreasing.
+Notice that the batch is built up from batch items, which are just maps of key-value pairs. Once again the loss value from each epoch of training is captured and upon inspection you should see the loss decreasing.
+
+**Exporting the Updated Model**
+
+When you are finished training you will probably want to export the updated model weights for use in some manner. Before calling `model.unload()` simply export the weights to some File path:
+
+```java
+File exportDir = exportForFile("cats-vs-dogs");
+model.exportTo(exportDir);
+```
+
+Provide an existing directory for the export, here we are creating one up in the `exportForFile` call that you can find in the tests, and we pass the directory to the `exportTo` function. That's it. For TensorFlow models you will find a checkpoint created in that directory composed of two files:
+
+```
+checkpoint.index
+checkpoint.data-00000-of-00001
+```
+
+These two files can be treated like the variables of an exported SavedModel in TensorFlow python and used as such. Given the file structure of an exported model:
+
+```
+saved_model.pb
+variables/
+  variables.index
+  variables.data-00000-of-00001
+```
+
+Simply replace the two variables file with the corresponding checkpoint files produced by the on-device export and load the model as you normally would.

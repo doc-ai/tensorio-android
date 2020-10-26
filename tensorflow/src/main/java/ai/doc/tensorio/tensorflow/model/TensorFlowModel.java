@@ -655,10 +655,10 @@ public class TensorFlowModel extends Model implements TrainableModel {
         return inputBuffer.get();
     }
 
-    /** Exports the model checkpoints to file, used to write updated checkpoints to disk after training */
+    /** Exports the model checkpoints to a directory, used to write updated checkpoints to disk after training */
 
     public void exportTo(File file) {
-        // TODO: Implement
+        interpreter.export(file);
     }
 
     //endRegion
