@@ -2,21 +2,34 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "30.0.1"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         minSdkVersion 22
-        targetSdkVersion 29
-        versionCode 13
-        versionName "0.9.11"
+        targetSdkVersion 30
+        versionCode 14
+        versionName "0.9.12"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
+    sourceSets {
+        androidTest {
+            java {
+                // See #171 and net-runner-android/#83
+                exclude '**/ModelBundleValidatorTest.java'
+            }
+        }
+    }
+
     buildTypes {
         release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -42,27 +55,24 @@ android {
 }
 
 repositories {
-    maven {
-        url 'https://google.bintray.com/tensorflow'
-    }
+    maven { url 'https://google.bintray.com/tensorflow' }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation project(':core')
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
     // TensorFlow dependency
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
     implementation 'org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly'
 
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'org.json:json:20190722'
+    testImplementation 'junit:junit:4.13.1'
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

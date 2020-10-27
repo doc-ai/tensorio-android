@@ -2,15 +2,27 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "30.0.1"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         minSdkVersion 22
-        targetSdkVersion 29
-        versionCode 13
-        versionName "0.9.11"
+        targetSdkVersion 30
+        versionCode 14
+        versionName "0.9.12"
+
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    sourceSets {
+        main {
+            java {
+                // See #171 and net-runner-android/#83
+                exclude '**/ModelBundleValidator.java'
+                exclude '**/AssetModelBundleValidator.java'
+                exclude '**/FileModelBundleValidator.java'
+            }
+        }
     }
 
     buildTypes {
@@ -18,8 +30,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug{}
-        innerTest{}
+        debug{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
 
     compileOptions {
@@ -34,26 +48,30 @@ android {
         pickFirst 'draftv3/schema'
         pickFirst 'META-INF/LICENSE'
         pickFirst 'META-INF/LGPL-3.0.txt'
+
+        pickFirst 'javax/annotation/Nonnegative.java'
     }
 }
 
-
+ repositories {
+     maven { url 'https://jitpack.io' }
+}
 
 dependencies {
-    implementation 'org.jetbrains:annotations:15.0'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
-
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    // JSON Schema validator library dependencies
-    implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
-    implementation 'io.apisense:rhino-android:1.0'
+    // See #171 and net-runner-android/#83
+//    implementation ('com.github.everit-org:json-schema:1.12.1') {
+//        exclude group: 'com.google.code.findbugs', module: 'annotations'
+//        exclude group: "com.vaadin.external.google", module:"android-json"
+//    }
 
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'org.json:json:20190722'
+    testImplementation 'junit:junit:4.13.1'
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

@@ -39,14 +39,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.model.Model;
+import ai.doc.tensorio.core.modelbundle.AssetModelBundle;
+import ai.doc.tensorio.core.modelbundle.FileModelBundle;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.tflite.data.BitmapConverter;
 import ai.doc.tensorio.tflite.data.StringConverter;
 import ai.doc.tensorio.tflite.data.VectorConverter;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class TFLiteModel extends Model {
 
@@ -250,6 +254,26 @@ public class TFLiteModel extends Model {
     //endRegion
 
     //region Run
+
+    @Override
+    public Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int32 inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("Int64 inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException {
+        throw new IllegalArgumentException("ByteBuffer inputs are not supported by TF Lite");
+    }
+
+    @Override
+    public Map<String, Object> runOn(@NonNull Map<String, Object> input, @Nullable Placeholders placeholders) throws ModelException, IllegalArgumentException {
+        throw new ModelException("Placeholders not supported by TF Lite models");
+    }
 
     @Override
     public Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException {
@@ -551,31 +575,28 @@ public class TFLiteModel extends Model {
 
     private MappedByteBuffer loadModelFile() throws IOException {
 
-        // So barf
-        switch (getBundle().getSource()) {
-            case Asset: {
-                AssetFileDescriptor fileDescriptor = getBundle().getContext().getAssets().openFd(getBundle().getModelFilename());
-                FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-                FileChannel fileChannel = inputStream.getChannel();
+        if (getBundle() instanceof AssetModelBundle) {
+            AssetModelBundle bundle = (AssetModelBundle) getBundle();
+            AssetFileDescriptor fileDescriptor = bundle.getContext().getAssets().openFd(bundle.getModelFilename());
+            FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+            FileChannel fileChannel = inputStream.getChannel();
 
-                long startOffset = fileDescriptor.getStartOffset();
-                long length = fileDescriptor.getDeclaredLength();
+            long startOffset = fileDescriptor.getStartOffset();
+            long length = fileDescriptor.getDeclaredLength();
 
-                return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
-            }
-            case File: {
-                FileInputStream inputStream = new FileInputStream(getBundle().getModelFile());
-                FileChannel fileChannel = inputStream.getChannel();
+            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
+        } else if (getBundle() instanceof FileModelBundle) {
+            FileModelBundle bundle = (FileModelBundle) getBundle();
+            FileInputStream inputStream = new FileInputStream(bundle.getModelFile());
+            FileChannel fileChannel = inputStream.getChannel();
 
-                long startOffset = 0;
-                long length = fileChannel.size();
+            long startOffset = 0;
+            long length = fileChannel.size();
 
-                return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
-            }
-            default:
-                throw new FileNotFoundException();
+            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, length);
+        } else {
+            throw new FileNotFoundException();
         }
-
     }
 
     //endRegion

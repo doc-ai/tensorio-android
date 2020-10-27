@@ -1,4 +1,6 @@
+include ':tensorflowjavaexample'
+include ':tensorflow'
 include ':tflite'
-include ':kotlinexample'
-include ':javaexample'
+include ':tflitekotlinexample'
+include ':tflitejavaexample'
 include ':core'

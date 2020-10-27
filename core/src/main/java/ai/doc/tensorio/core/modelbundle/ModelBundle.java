@@ -22,6 +22,7 @@ package ai.doc.tensorio.core.modelbundle;
 
 import android.content.Context;
 
+import ai.doc.tensorio.core.model.Backend;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.core.model.Modes;
@@ -29,10 +30,9 @@ import ai.doc.tensorio.core.model.Options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import ai.doc.tensorio.core.utilities.AndroidAssets;
-import ai.doc.tensorio.core.utilities.FileIO;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -52,13 +52,12 @@ import java.util.List;
  * A model bundle folder must contain at least a model.json file, which contains information
  * about the model. Some information is required, such as the identifier and name field,
  * while other information may be added as needed by your use case.
+ *
+ * This is an abstract class. Use one of the static methods @see bundleWithAsset or
+ * @see bundleWithFile to get a concrete instance from a package asset or File.
  */
 
-// TODO: Split into two classes, one for File, one for Asset
-
-public class ModelBundle {
-
-    private static final String TF_LITE_MODEL_CLASS_NAME = "ai.doc.tensorio.tflite.model.TFLiteModel";
+public abstract class ModelBundle {
 
     public static class ModelBundleException extends Exception {
         public ModelBundleException(@NonNull String message, @NonNull Throwable cause) {
@@ -69,15 +68,6 @@ public class ModelBundle {
             super(message);
         }
     }
-
-    /** Source is an asset from a context or a file. Barf */
-
-    public enum Source {
-        Asset,
-        File
-    };
-
-    private Source source;
 
     /**
      * The name of the file inside a TensorIO bundle that contains the model spec, currently 'model.json'.
@@ -104,60 +94,46 @@ public class ModelBundle {
     public static final String TIO_BUNDLE_EXTENSION = ".tiobundle";
 
     /**
-     * The application or activity context
+     * Creates and returns a new ModelBundle from an asset
+     *
+     * @param context The application or activity context
+     * @param filename The filename of the model bundle in the assets, including subdirectories
+     * @return An @see AssetModelBundle
+     * @throws ModelBundleException On any problem reading the ModelBundle
      */
 
-    private final Context context;
+    public static ModelBundle bundleWithAsset(@NonNull Context context, @NonNull String filename) throws ModelBundleException {
+        return new AssetModelBundle(context, filename);
+    }
+
+    /**
+     * Creates and returns a new ModelBundle from a File
+     * @param f The File to the model bundle
+     * @return An @see FileModelBundle
+     * @throws ModelBundleException On any problem reading the ModelBundle
+     */
+
+    public static ModelBundle bundleWithFile(@NonNull File f) throws ModelBundleException {
+        return new FileModelBundle(f);
+    }
 
     /**
      * The deserialized information contained in the model.json file.
      */
 
-    private JSONObject info;
-
-    /**
-     * The filename of the model bundle folder for a context.assets source. See also modelFilename
-     */
-
-    private @Nullable String filename;
-
-    /**
-     * The File corresponding to the model bundle folder when using a fully qualified path. See also modelFile
-     */
-
-    private @Nullable File file;
-
-    /**
-     * The file path to the actual underlying model contained in this bundle when using a
-     * context.source model bundle. See also filename.
-     *
-     * Currently, only tflite models are supported. If `placeholder` is `true` this property
-     * returns `null`.
-     */
-
-    private @Nullable String modelFilename;
-
-    /**
-     * The File corresponding to the actual underlying model contained in this bundle when using a
-     * context.source model bundle. See also file.
-     *
-     * Currently, only tflite models are supported. If `placeholder` is `true` this property
-     * returns `null`.
-     */
-
-    private @Nullable File modelFile;
+    protected JSONObject info;
 
     /**
      * A string uniquely identifying the model represented by this bundle.
      */
 
-    private String identifier;
+    protected String identifier;
 
     /**
      * Human readable name of the model represented by this bundle
      */
 
-    private String name;
+    protected String name;
 
     /**
      * The version of the model represented by this bundle.
@@ -165,25 +141,25 @@ public class ModelBundle {
      * A model's unique identifier may remain the same as the version is incremented.
      */
 
-    private String version;
+    protected String version;
 
     /**
      * Additional information about the model represented by this bundle.
      */
 
-    private String details;
+    protected String details;
 
     /**
      * The authors of the model represented by this bundle.
      */
 
-    private String author;
+    protected String author;
 
     /**
      * The license of the model represented by this bundle.
      */
 
-    private String license;
+    protected String license;
 
     /**
      * A boolean value indicating if this is a placeholder bundle.
@@ -192,31 +168,31 @@ public class ModelBundle {
      * Placeholders bundles are used to collect labeled data for models that haven't been trained yet.
      */
 
-    private boolean placeholder;
+    protected boolean placeholder;
 
     /**
      * A boolean value indicating if the model represented by this bundle is quantized or not.
      */
 
-    private boolean quantized;
+    protected boolean quantized;
 
     /**
      * A string indicating the kind of model this is, e.g. "image.classification.imagenet"
      */
 
-    private String type;
+    protected String type;
 
     /**
      * Options associated with the model represented by this bundle.
      */
 
-    private Options options;
+    protected Options options;
 
     /**
      * Modes associated with the model, e.g. whether it has support for prediction, training, and evaluation
      */
 
-    private Modes modes;
+    protected Modes modes;
 
     /**
      * Contains the descriptions of the model's inputs, outputs, and placeholders
@@ -233,83 +209,29 @@ public class ModelBundle {
      * @endcode
      */
 
-    private IO io;
+    protected IO io;
+
+    /**
+     * The ops to execute when training a model, may be null. Not all backends support training
+     */
+
+    protected @Nullable String[] trainingOps = null;
 
     /**
      * The class name of the @see Model that should be used to implement this network.
      */
 
-    private String modelClassName;
-
-
-
-    // TODO: Must also be able to initialize from a File that is not in context.getAssets
+    protected String modelClassName;
 
     /**
-     * One of two designated initializers, responsible for parsing a bundle's model.json and especially
-     * for setting up the description of a model's inputs and outputs.
+     * Initializes the bundle with a JSON representation of the model.json file. Concrete subclasses
+     * should call this method after they have read the JSON file.
      *
-     * @param f The File pointing to this model bundle with a fully qualified filepath
-     * @throws ModelBundleException On any failure to read the model bundle
+     * @param bundle A JSON representation of the modle.json file
+     * @throws ModelBundleException On any problem parsing the JSON Object
      */
 
-    public ModelBundle(@NonNull File f) throws ModelBundleException {
-        this.source = Source.File;
-
-        this.file = f;
-
-        this.context = null;
-        this.filename = filename;
-        this.modelFilename = null;
-
-        initBundle();
-    }
-
-    /**
-     * One of two designated initializers, responsible for parsing a bundle's model.json and especially
-     * for setting up the description of a model's inputs and outputs.
-     *
-     * @param context The application or activity context
-     * @param filename Filename or path to the model bundle folder as a context.assets source
-     * @throws ModelBundleException On any failure to read the model bundle
-     */
-
-    public ModelBundle(@NonNull Context context, @NonNull String filename) throws ModelBundleException {
-        this.source = Source.Asset;
-
-        this.context = context;
-        this.filename = filename;
-
-        this.file = null;
-        this.modelFile = null;
-
-        initBundle();
-    }
-
-    private void initBundle() throws ModelBundleException {
-        String json = null;
-        JSONObject bundle;
-
-        try {
-            // Barf
-            switch (source) {
-                case Asset:
-                    json = AndroidAssets.readTextFile(context, filename + "/" + TFMODEL_INFO_FILE);
-                    break;
-                case File:
-                    json = FileIO.readTextFile(new File(file, TFMODEL_INFO_FILE));
-                    break;
-            }
-        } catch (IOException e) {
-            throw new ModelBundleException("Error reading model file", e);
-        }
-
-        try {
-            bundle = new JSONObject(json);
-        } catch (JSONException e) {
-            throw new ModelBundleException("Error parsing model file as JSON", e);
-        }
-
+    protected void initBundle(JSONObject bundle) throws ModelBundleException {
         this.info = bundle;
 
         // Parse basic top level properties
@@ -345,7 +267,7 @@ public class ModelBundle {
 
             this.quantized = modelJsonObject.getBoolean("quantized");
             this.type = modelJsonObject.optString("type", "unknown");
-            this.modelClassName = modelJsonObject.optString("class", TF_LITE_MODEL_CLASS_NAME);
+            this.modelClassName = modelJsonObject.optString("class", Backend.classNameForBackend(Backend.availableBackend()));
             this.placeholder = modelJsonObject.optBoolean("placeholder", false);
 
             if (modelJsonObject.has("modes")) {
@@ -353,24 +275,6 @@ public class ModelBundle {
             } else {
                 this.modes = new Modes();
             }
-
-            // Determine model file filename
-
-            if (!this.placeholder) {
-                String n = modelJsonObject.getString("file");
-                // So barf
-                switch (source) {
-                    case Asset:
-                        this.modelFilename = filename + "/" + n;
-                        this.modelFile = null;
-                        break;
-                    case File:
-                        this.modelFile = new File(file, n);
-                        this.modelFilename = null;
-                        break;
-                }
-            }
-
         } catch (JSONException e) {
             throw new ModelBundleException("Incomplete JSON model file", e);
         }
@@ -401,7 +305,6 @@ public class ModelBundle {
         List<LayerInterface> placeholders = null;
 
         if ( bundle.has("placeholders") ) {
-
             try {
                 placeholders = JSONParsing.parseIO(this, bundle.getJSONArray("placeholders"), LayerInterface.Mode.Placeholder);
             } catch (JSONException e) {
@@ -409,37 +312,27 @@ public class ModelBundle {
             } catch (IOException e) {
                 throw new ModelBundleException("Error reading labels file", e);
             }
-
         }
 
         this.io = new IO(inputs, outputs, placeholders);
+
+        // Parse Training Ops, may be null
+
+        if (bundle.has("train")) {
+            try {
+                JSONArray array = bundle.getJSONObject("train").getJSONArray("ops");
+                String[] ops = new String[array.length()];
+                for (int i = 0; i < array.length(); i++) {
+                    ops[i] = array.getString(i);
+                }
+                trainingOps = ops;
+            } catch (JSONException e) {
+                throw new ModelBundleException("Error parsing train field", e);
+            }
+        }
     }
 
     //region Getters and Setters
-
-    public Source getSource() {
-        return source;
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    public @Nullable String getFilename() {
-        return filename;
-    }
-
-    public @Nullable String getModelFilename() {
-        return modelFilename;
-    }
-
-    public @Nullable File getFile() {
-        return file;
-    }
-
-    public @Nullable File getModelFile() {
-        return modelFile;
-    }
 
     public JSONObject getInfo() {
         return info;
@@ -493,6 +386,10 @@ public class ModelBundle {
         return io;
     }
 
+    public String[] getTrainingOps() {
+        return trainingOps;
+    }
+
     //endregion
 
     /**
@@ -508,52 +405,13 @@ public class ModelBundle {
     }
 
     /**
-     * Returns the path to an asset in the bundle, used for a context.asset source
+     * Reads a text file from the model bundle's assets directory and returns its contents
      *
-     * @param assetName Asset’s filename, including extension
-     * @return The relative path to the file
+     * @param filename The filename within the model bundle's assets directory
+     * @return The String contents of the file
+     * @throws IOException On any error reading the file
      */
 
-    public String pathToAsset(String assetName) {
-        return filename + "/" + TFMODEL_ASSETS_DIRECTORY + "/" + assetName;
-    }
-
-    /**
-     * Returns the File to an asset in the bundle, used for a File source
-     *
-     * @param assetName Asset’s filename, including extension
-     * @return The file for the asset
-     */
-
-    public File fileToAsset(String assetName) {
-        return new File(new File(file, TFMODEL_ASSETS_DIRECTORY), assetName);
-    }
-
-    @NonNull @Override
-    public String toString() {
-        String fname = getSource() == Source.Asset
-                ? ", filename='" + filename + '\''
-                : ", file='" + file.getPath() + '\'';
-        String modelfname = getSource() == Source.Asset
-                ? ", filename='" + modelFilename + '\''
-                : ", file='" + modelFile.getPath() + '\'';
-
-        return "ModelBundle{" +
-                "info='" + info + '\'' +
-                fname +
-                ", identifier='" + identifier + '\'' +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", details='" + details + '\'' +
-                ", author='" + author + '\'' +
-                ", license='" + license + '\'' +
-                ", placeholder=" + placeholder +
-                ", quantized=" + quantized +
-                ", type='" + type + '\'' +
-                ", options=" + options +
-                modelfname +
-                ", modelClassName='" + modelClassName + '\'' +
-                '}';
-    }
+    public abstract String readTextFile(String filename) throws IOException;
 
 }

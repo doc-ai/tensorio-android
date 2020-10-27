@@ -20,14 +20,15 @@
 
 package ai.doc.tensorio.core.model;
 
-import com.google.common.collect.Sets;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
+import ai.doc.tensorio.core.layerinterface.DataType;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.layerinterface.VectorLayerDescription;
 
@@ -48,47 +49,59 @@ public class IOTest {
     public void setUp() throws Exception {
         this.fooIn =  new LayerInterface("foo", LayerInterface.Mode.Input, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
         this.barIn =  new LayerInterface("bar", LayerInterface.Mode.Input, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
 
         this.fooOut =  new LayerInterface("foo", LayerInterface.Mode.Output, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
         this.barOut =  new LayerInterface("bar", LayerInterface.Mode.Output, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
 
         this.fooPlaceholder =  new LayerInterface("foo", LayerInterface.Mode.Placeholder, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
         this.barPlaceholder =  new LayerInterface("bar", LayerInterface.Mode.Placeholder, new VectorLayerDescription(
                 new int[]{1},
+                false,
                 null,
                 false,
                 null,
-                null
+                null,
+                DataType.Float32
         ));
     }
 
@@ -137,10 +150,11 @@ public class IOTest {
     @Test
     public void testModelIOReturnsAllKeys() {
         IO io = new IO(Arrays.asList(this.fooIn, this.barIn), Arrays.asList(this.fooOut, this.barOut), Arrays.asList(this.fooPlaceholder, this.barPlaceholder));
+        Set keys = new HashSet<String>(Arrays.asList(new String[]{"foo", "bar"}));
 
-        assertEquals(io.getInputs().keys(), Sets.newHashSet("foo", "bar"));
-        assertEquals(io.getOutputs().keys(), Sets.newHashSet("foo", "bar"));
-        assertEquals(io.getPlaceholders().keys(), Sets.newHashSet("foo", "bar"));
+        assertEquals(io.getInputs().keys(), keys);
+        assertEquals(io.getOutputs().keys(), keys);
+        assertEquals(io.getPlaceholders().keys(), keys);
     }
 
     @Test

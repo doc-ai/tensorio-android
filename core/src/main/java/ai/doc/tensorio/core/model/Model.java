@@ -22,9 +22,13 @@ package ai.doc.tensorio.core.model;
 
 import android.graphics.Bitmap;
 
+import ai.doc.tensorio.core.data.Batch;
+import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
@@ -294,46 +298,111 @@ public abstract class Model {
 
     /**
      * Perform inference on an array of floats for a single input layer.
+     *
      * @param input an array of floats
      * @return results of running the model mapped from the output layer names to the values
-     * @throws ModelException
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support float32s
      */
 
-    public abstract Map<String, Object> runOn(float[] input) throws ModelException;
+    public abstract Map<String, Object> runOn(float[] input) throws ModelException, IllegalArgumentException;
 
     /**
-     * Perform inference on an array of bytes for a single input layer.
+     * Perform inference on an array of bytes (uint8) for a single input layer.
+     *
      * @param input an array of bytes
      * @return results of running the model mapped from the output layer names to the values
-     * @throws ModelException
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support bytes
      */
 
-    public abstract Map<String, Object> runOn(byte[] input) throws ModelException;
+    public abstract Map<String, Object> runOn(byte[] input) throws ModelException, IllegalArgumentException;
+
+    /**
+     * Perform inference on an array of int32s for a single input layer. Not all backends support
+     * int32 inputs and will throw an exception if this method is not supported.
+     *
+     * @param input An array of int32s
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support int32s
+     */
+
+    public abstract Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException;
+
+    /**
+     * Perform inference on an array of int64s (longs) for a single input layer. Not all backends support
+     * int64 inputs and will throw an exception if this method is not supported.
+     *
+     * @param input An array of int32s
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support int32s
+     */
+
+    public abstract Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException;
+
+    /**
+     * Perform inference on a ByteBuffer for a single input layer. Not all backends support
+     * ByteBuffer inputs and will throw an exception if this method is not supported. ByteBuffers
+     * should only be used with `string` type inputs.
+     *
+     * @param input A ByteBuffer that will be sent directly to the model with no additional preprocessing
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support ByteBuffers
+     */
+
+    public abstract Map<String, Object> runOn(ByteBuffer input) throws ModelException, IllegalArgumentException;
 
     /**
      * Perform inference on a Bitmap for a single input layer.
+     *
      * @param input A Bitmap
      * @return results of running the model mapped from the output layer names to the values
-     * @throws ModelException
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     * or if the backend does not support Bitmaps
      */
 
-    public abstract Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException;
+    public abstract Map<String, Object> runOn(@NonNull Bitmap input) throws ModelException, IllegalArgumentException;
 
     /**
-     * Perform inference on an map of bytes
+     * Perform inference on an map of objects
+     *
      * @param input A mapping of layer names to arbitrary objects
      * @return results of running the model mapped from the output layer names to the values
-     * @throws ModelException Raised if the model has not yet been loaded and the attempt to
-     *                           load it fails
-     * @throws IllegalArgumentException Raised if the input to the model does not conform to the
-     *                                  expected inputs
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
      */
 
     public abstract Map<String, Object> runOn(@NonNull Map<String, Object> input) throws ModelException, IllegalArgumentException;
 
+    /**
+     * Perform inference on an map of objects with placeholders. Not all backends support placeholders,
+     * in which case concrete implementations should raise an exception.
+     *
+     * @param input A mapping of layer names to arbitrary objects
+     * @param placeholders A mapping of placeholder layer names to arbitrary objects. May be nil, in
+     *                     which case calling this method should be no different from calling runOn
+     *                     without placeholders.
+     * @return results of running the model mapped from the output layer names to the values
+     * @throws ModelException If the model has not yet been loaded and the attempt to load it fails
+     * @throws IllegalArgumentException If the input to the model does not conform to the expected inputs
+     */
+
+    public abstract Map<String, Object> runOn(@NonNull Map<String, Object> input, @Nullable Placeholders placeholders) throws ModelException, IllegalArgumentException;
+
     //endRegion
 
     //region Input Validation
+
+    // TODO: Write unit tests for these methods
 
     protected void validateInput(float[] input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
@@ -347,6 +416,24 @@ public abstract class Model {
         }
     }
 
+    protected void validateInput(int[] input) throws IllegalArgumentException {
+        if (io.getInputs().size() != 1) {
+            throw InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(long[] input) throws IllegalArgumentException {
+        if (io.getInputs().size() != 1) {
+            throw InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
+    protected void validateInput(@NonNull ByteBuffer input) throws IllegalArgumentException {
+        if (io.getInputs().size() != 1) {
+            throw InputCountMismatchException(1, io.getInputs().size());
+        }
+    }
+
     protected void validateInput(@NonNull Bitmap input) throws IllegalArgumentException {
         if (io.getInputs().size() != 1) {
             throw InputCountMismatchException(1, io.getInputs().size());
@@ -355,16 +442,54 @@ public abstract class Model {
 
     protected void validateInput(@NonNull Map<String, Object> input) throws IllegalArgumentException {
         int expectedSize = io.getInputs().size();
-        int actualSize = input.size();
+        int receivedSize = input.size();
 
-        if (expectedSize != actualSize) {
-            throw InputCountMismatchException(actualSize, expectedSize);
+        if (expectedSize != receivedSize) {
+            throw InputCountMismatchException(expectedSize, receivedSize);
         }
 
         if ( !input.keySet().equals(io.getInputs().keys()) ) {
             for (LayerInterface layer : io.getInputs().all()) {
                 if ( !input.containsKey(layer.getName()) ) {
                     throw MissingInput(layer.getName());
+                }
+            }
+        }
+    }
+
+    protected void validateInput(@NonNull Batch batch) throws IllegalArgumentException {
+        int expectedSize = io.getInputs().size();
+        int receivedSize = batch.getKeys().length;
+
+        if (expectedSize != receivedSize) {
+            throw InputCountMismatchException(expectedSize, receivedSize);
+        }
+
+        if ( !batch.getKeyset().equals(io.getInputs().keys()) ) {
+            for (LayerInterface layer : io.getInputs().all()) {
+                if ( !batch.getKeyset().contains(layer.getName()) ) {
+                    throw MissingInput(layer.getName());
+                }
+            }
+        }
+    }
+
+    protected void validatePlaceholders(@Nullable Placeholders placeholders) throws IllegalArgumentException {
+        int expectedSize = io.getPlaceholders().size();
+        int receivedSize = placeholders == null ? 0 : placeholders.size();
+
+        if (expectedSize != receivedSize) {
+            throw PlaceholdersCountMismatchException(expectedSize, receivedSize);
+        }
+
+        if (placeholders == null) {
+            return;
+        }
+
+        if ( !placeholders.keySet().equals(io.getPlaceholders().keys()) ) {
+            for (LayerInterface layer : io.getPlaceholders().all()) {
+                if ( !placeholders.containsKey(layer.getName()) ) {
+                    throw MissingPlaceholder(layer.getName());
                 }
             }
         }
@@ -397,12 +522,20 @@ public abstract class Model {
 
     //region Exceptions
 
-    private static IllegalArgumentException InputCountMismatchException(int actual, int expected) {
-        return new IllegalArgumentException("The model has " + expected + " input layers but received " + actual + " inputs");
+    private static IllegalArgumentException InputCountMismatchException(int expected, int received) {
+        return new IllegalArgumentException("The model has " + expected + " input layers but received " + received + " inputs");
     }
 
     private static IllegalArgumentException MissingInput(@NonNull String name) {
         return new IllegalArgumentException("The model received no input for layer \"" + name + "\"");
+    }
+
+    private static IllegalArgumentException PlaceholdersCountMismatchException(int expected, int received) {
+        return new IllegalArgumentException("The model has " + expected + " placeholders but received " + received + " placeholders");
+    }
+
+    private static IllegalArgumentException MissingPlaceholder(@NonNull String name) {
+        return new IllegalArgumentException("The model received no placeholder for layer \"" + name + "\"");
     }
 
     // endRegion
