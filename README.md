@@ -7,7 +7,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/doc-ai/tensorio-android.svg)](https://github.com/doc-ai/tensorio-android/issues)
 -->
 
-Tensor/IO is a Java wrapper for machine learning. This Android library wraps an underlying machine larning framework via the JNI and abstracts the work of copying bytes into and out of tensors, allowing you to interact with native types such as numbers, arrays, hashmaps, and pixel buffers instead. Interfaces to your model are described in a declarative manner, and Tensor/IO handles the heavy lifting of transforming and preprocessing the data you give it to run on the underlying models.
+Tensor/IO for Android is a Java and Kotlin compatible wrapper for machine learning. The library wraps an underlying machine learning framework via the JNI and abstracts the work of copying bytes into and out of tensors, allowing you to interact with native types such as numbers, arrays, hashmaps, and bitmaps instead. Interfaces to your model are described in a declarative manner, and Tensor/IO handles the heavy lifting of transforming and preprocessing the data you give it to run on the underlying model.
 
 With Tensor/IO you can perform inference in just a few lines of code:
 
@@ -64,7 +64,7 @@ val label = top5.get(0).key
 
 Tensor/IO currently supports inference with TensorFlow Lite and inference and training with TensorFlow. This implementation is part of the [Tensor/IO project](https://doc-ai.github.io/tensorio/) with support for machine learning on iOS, Android, and React Native.
 
-For full TensorFlow V2 support, Tensor/IO uses [tensorio-tensorflow-android](https://github.com/doc-ai/tensorio-tensorflow-android), our wrapper library that provides a JNI interface to TensorFlow to our [custom build of tensorflow](https://github.com/doc-ai/tensorflow/tree/r2.0.doc.ai-android).
+For full TensorFlow V2 support, Tensor/IO uses [tensorio-tensorflow-android](https://github.com/doc-ai/tensorio-tensorflow-android), our wrapper library that provides a JNI interface to our [custom build of tensorflow](https://github.com/doc-ai/tensorflow/tree/r2.0.doc.ai-android).
 
 Work is in progress to support inference with PyTorch Mobile as well.
 
@@ -77,7 +77,7 @@ Instead, Tensor/IO relies on a JSON description of the model that you provide. D
 
 The built-in class for working with TensorFlow Lite (TF Lite) models, `TFLiteModel`, includes support for multiple input and output layers; single-valued, vectored, matrix, and image data; pixel normalization and denormalization; and quantization and dequantization of data. In case you require a completely custom interface to a model you may specify your own class in the JSON description, and Tensor/IO will use it in place of the default class.
 
-Although Tensor/IO supports both full TensorFlow and TF Lite models, this README will refer to TFLite throughout. Except for small differences in support of data types (`uint8_t`, `float32_t`, `int32_t`, `int64_t`, etc), the interface is the same.
+Although Tensor/IO supports both full TensorFlow and TF Lite models, this README will refer to TFLite throughout. Except for small differences in support of data types (`uint8_t`, `float32_t`, `int32_t`, `int64_t`, etc), the interface is the same, with the addition of training for TensorFlow models (see below).
 
 
 <a name="example"></a>
@@ -318,7 +318,7 @@ Note that TensorFlow models must be read from file paths and not from within the
 
 Tensor/IO TensorFlow supports training of models on device with the underlying TensorFlow library. At doc.ai we use this capabaility in support of our federated machine learning efforts.
 
-Training a model is no different than running inference with it. You will prepare your inputs to the model, train on those inputs for some number of epochs, and read the output of the model when finished, which will typically be the final value of some loss function.
+Training a model is no different than running inference with it. You will prepare your inputs to the model, train on those inputs for some number of epochs, and read the output of the model when finished. Training inputs to your model will typically be both inputs and their labels while the output will typically be the value of some loss function.
 
 **Training with TensorFlow**
 
@@ -355,15 +355,13 @@ for (int epoch = 0; epoch < epochs; epoch++) {
     float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
     losses[epoch] = loss;
 }
-
-model.unload();
 ```
 
 In this example the loss value from each epoch is captured in an array and upon inspection you should see the loss value decreasing. Note that we use a utility method `bundleForFile` here which first copies the model from the app's Assets directory to a file directory for use.
 
 **Batched Training**
 
-Training on a single item at a time will usualy not be want you want to do, so a facility for training on batches of data is provided. Your models must support batched training, which means the first dimension of your input tensors will have a value of `-1`, and its actual value will be set during the call to training based on the size of the batch provided.
+Training on a single item at a time will usualy not be want you want to do, so a facility for training on batches of data is provided. Your models must support batched training, which means the first dimension of your input tensors will have a value of `-1`. That dimension's its actual value will be set during the call to training based on the size of the batch provided.
 
 ```java
 // Prepare Model
@@ -414,13 +412,11 @@ for (int epoch = 0; epoch < epochs; epoch++) {
     float loss = ((float[]) Objects.requireNonNull(output.get("sigmoid_cross_entropy_loss/value")))[0];
     losses[epoch] = loss;
 }
-
-model.unload();
 ```
 
 Notice that the batch is built up from batch items, which are just maps of key-value pairs. Once again the loss value from each epoch of training is captured and upon inspection you should see the loss decreasing.
 
-**Exporting the Updated Model**
+### Exporting Model Updates
 
 When you are finished training you will probably want to export the updated model weights for use in some manner. Before calling `model.unload()` simply export the weights to some File path:
 
