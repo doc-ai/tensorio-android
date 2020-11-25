@@ -1,3 +1,5 @@
+include ':pytorchjavaexample'
+include ':pytorch'
 include ':tensorflowjavaexample'
 include ':tensorflow'
 include ':tflite'

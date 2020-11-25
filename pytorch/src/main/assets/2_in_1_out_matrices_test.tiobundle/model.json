@@ -1,0 +1,32 @@
+{
+	"name": "2 in 1 out matrices test",
+	"details": "Simple model with two matrix input nodes and one matrix output",
+	"id": "2_in_1_out_matrices_test",
+	"version": "1",
+	"author": "doc.ai",
+	"license": "",
+	"model": {
+		"file": "model.pt",
+		"class": "ai.doc.tensorio.pytorch.model.PytorchModel",
+		"quantized": false
+	},
+	"inputs": [
+		{
+			"name": "input1",
+			"type": "array",
+			"shape": [4,4]
+		},
+		{
+			"name": "input2",
+			"type": "array",
+			"shape": [4,4]
+		}
+	],
+	"outputs": [
+		{
+			"name": "output",
+			"type": "array",
+			"shape": [4,4]
+		}
+	]
+}
