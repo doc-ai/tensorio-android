@@ -169,12 +169,26 @@ public class PytorchModel extends Model {
 
     @Override
     public Map<String, Object> runOn(int[] input) throws ModelException, IllegalArgumentException {
-        throw new IllegalArgumentException("Int32 inputs are not supported by Pytorch");
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
     }
 
     @Override
     public Map<String, Object> runOn(long[] input) throws ModelException, IllegalArgumentException {
-        throw new IllegalArgumentException("Int64 inputs are not supported by Pytorch");
+        validateInput(input);
+        load();
+
+        if (hasMultipleInputsOrOutputs()) {
+            return runMultipleInputMultipleOutput(mappedInput(input));
+        } else {
+            return runSingleInputSingleOutput(input);
+        }
     }
 
     @Override

@@ -103,6 +103,66 @@ public class PytorchModelIntegrationTests {
     }
 
     @Test
+    public void test1In1OutIntegerModel() {
+        try {
+            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_integer_test.tiobundle");
+            assertNotNull(bundle);
+
+            PytorchModel model = (PytorchModel)bundle.newModel();
+            assertNotNull(model);
+            model.load();
+
+            // Ensure inputs and outputs return correct count
+
+            assertEquals(1, model.getIO().getInputs().size());
+            assertEquals(1, model.getIO().getOutputs().size());
+
+            Map<String, Object> output;
+            int[] result;
+
+            // Run the model on a number
+
+            int[] input = new int[]{2};
+
+            output = model.runOn(input);
+            assertNotNull(output);
+
+            result = (int[]) output.get("output");
+            assertTrue(result instanceof int[]);
+
+            assertEquals(1, result.length);
+            assertEquals(11f, result[0], epsilon);
+
+            // Run the model on a dictionary
+
+            Map<String, Object> input_dict = new HashMap<>();
+            input_dict.put("input", new int[]{2});
+
+            output = model.runOn(input_dict);
+            assertNotNull(output);
+
+            result = (int[]) output.get("output");
+            assertTrue(result instanceof int[]);
+
+            assertEquals(1, result.length);
+            assertEquals(11f, result[0], epsilon);
+
+            // try running on input of of the wrong length, should throw IllegalArgumentException
+
+            try {
+                input = new int[]{1, 2, 3, 4, 5};
+                model.runOn(input);
+                fail();
+            } catch (IllegalArgumentException e) {
+            }
+
+        } catch (ModelBundleException | ModelException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
     public void test1In1OutNumberModel() {
         try {
             ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_number_test.tiobundle");
@@ -161,6 +221,7 @@ public class PytorchModelIntegrationTests {
             fail();
         }
     }
+
 
     @Test
     public void test1x1VectorsModel() {
