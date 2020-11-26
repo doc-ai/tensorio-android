@@ -7,7 +7,7 @@
   "license": "Apache License. Version 2.0 http://www.apache.org/licenses/LICENSE-2.0",
   "model": {
     "file": "model.pt",
-    "class": "ai.doc.tensorio.pytorch.model.PytorchModel",
+    "backend": "pytorch",
     "quantized": false
   },
   "inputs": [
