@@ -7,7 +7,6 @@
 	"license": "",
 	"model": {
 		"file": "model.pt",
-		"class": "ai.doc.tensorio.pytorch.model.PytorchModel",
 		"quantized": false
 	},
 	"inputs": [
