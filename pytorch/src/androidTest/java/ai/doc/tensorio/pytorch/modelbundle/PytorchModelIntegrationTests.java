@@ -1,8 +1,8 @@
 /*
- * TFLiteModelIntegrationTests.java
+ * PytorchModelIntegrationTests.java
  * TensorIO
  *
- * Created by Philip Dow on 7/6/2020
+ * Created by Sam Leroux on 12/15/2020
  * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 package ai.doc.tensorio.pytorch.modelbundle;
 
