@@ -31,6 +31,9 @@ import java.nio.ByteBuffer;
 import ai.doc.tensorio.core.layerinterface.LayerDescription;
 
 public class StringConverter implements Converter {
+
+    // TODO: Implement. Strings are really just byte arrays, it just happens to be the terminology TensorFlow uses for byte arrays
+
     @Override
     public Tensor toTensor(@NonNull Object o, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
         return null;

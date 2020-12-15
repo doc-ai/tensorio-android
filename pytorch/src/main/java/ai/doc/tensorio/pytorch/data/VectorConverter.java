@@ -77,8 +77,6 @@ public class VectorConverter implements Converter {
         buffer.order(ByteOrder.nativeOrder());
 
         return buffer;
-
-
     }
 
     @Override
@@ -88,7 +86,6 @@ public class VectorConverter implements Converter {
 
         int[] shape = ((VectorLayerDescription)description).getShape();
         long[] longShape = Arrays.stream(shape).asLongStream().toArray();
-
 
         if (o instanceof byte[]) {
             buffer =  toByteBuffer((byte[])o, description, cache);
@@ -110,7 +107,6 @@ public class VectorConverter implements Converter {
         else {
             throw BadInputException();
         }
-
 
         return t;
     }
@@ -265,7 +261,6 @@ public class VectorConverter implements Converter {
         return buffer;
     }
 
-
     @Override
     public Object fromTensor(@NonNull Tensor t, @NonNull LayerDescription description) {
         // Acquire needed properties from layer description
@@ -309,6 +304,4 @@ public class VectorConverter implements Converter {
     private static IllegalArgumentException MissingQuantizeException() {
         return new IllegalArgumentException("Float[] given as input to quantized model without quantizer, expected byte[] or quantizer != null");
     }
-
-
 }

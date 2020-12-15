@@ -83,7 +83,6 @@ public class BitmapConverter implements ai.doc.tensorio.core.data.Converter, Con
         }
     }
 
-
     /**
      * Converts a Bitmap to a byte buffer. Resizes the Bitmap if necessary using `createScaledBitmap`.
      *
@@ -254,8 +253,6 @@ public class BitmapConverter implements ai.doc.tensorio.core.data.Converter, Con
     private static IllegalArgumentException BadInputException() {
         return new IllegalArgumentException("Expected Bitmap input to the converter");
     }
-
-
 
     @Override
     public Object fromTensor(@NonNull Tensor t, @NonNull LayerDescription description) {
