@@ -66,7 +66,7 @@ public class PytorchModelIntegrationTests {
 
    @Before
     public void setUp() throws Exception {
-        File f = new File(appContext.getFilesDir(), "models");
+        File f = new File(testContext.getFilesDir(), "models");
         if (!f.mkdirs()) {
             throw new FileSystemException("on create: " + f.getPath());
         }
@@ -76,7 +76,7 @@ public class PytorchModelIntegrationTests {
 
     @After
     public void tearDown() throws Exception {
-        File f = new File(appContext.getFilesDir(), "models");
+        File f = new File(testContext.getFilesDir(), "models");
         deleteRecursive(f);
     }
 
@@ -105,7 +105,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test1In1OutIntegerModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_integer_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_integer_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel)bundle.newModel();
@@ -165,7 +165,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test1In1OutNumberModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_number_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_number_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel)bundle.newModel();
@@ -226,7 +226,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test1x1VectorsModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_vectors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -296,7 +296,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test2x2VectorsModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "2_in_2_out_vectors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "2_in_2_out_vectors_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -362,7 +362,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test2x2MatricesModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "2_in_2_out_matrices_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "2_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -442,7 +442,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test2x1MatricesModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "2_in_1_out_matrices_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "2_in_1_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -512,7 +512,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test1x2MatricesModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_2_out_matrices_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_2_out_matrices_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -587,7 +587,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void test3x3MatricesModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_tensors_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_tensors_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -637,7 +637,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void testPixelBufferIdentityModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_pixelbuffer_identity_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -684,7 +684,7 @@ public class PytorchModelIntegrationTests {
     @Test
     public void testPixelBufferNormalizationTransformationModel() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "1_in_1_out_pixelbuffer_normalization_test.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
@@ -733,14 +733,14 @@ public class PytorchModelIntegrationTests {
     @Test
     public void testMobileNetClassificationModel_asset() {
         try {
-            ModelBundle bundle = ModelBundle.bundleWithAsset(appContext, "mobilenet_v2_1.4_224.tiobundle");
+            ModelBundle bundle = ModelBundle.bundleWithAsset(testContext, "mobilenet_v2_1.4_224.tiobundle");
             assertNotNull(bundle);
 
             PytorchModel model = (PytorchModel) bundle.newModel();
             assertNotNull(model);
             model.load();
 
-            InputStream stream = appContext.getAssets().open("example-image.jpg");
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
             Map<String, Object> output = model.runOn(bitmap);
@@ -806,7 +806,7 @@ public class PytorchModelIntegrationTests {
             assertNotNull(model);
             model.load();
 
-            InputStream stream = appContext.getAssets().open("example-image.jpg");
+            InputStream stream = testContext.getAssets().open("example-image.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
             Map<String, Object> output = model.runOn(bitmap);
