@@ -7,14 +7,12 @@
 	"license": "",
 	"model": {
 		"file": "model.pt",
-		"class": "ai.doc.tensorio.pytorch.model.PytorchModel",
 		"quantized": false
 	},
 	"inputs": [
 		{
 			"name": "input",
 			"type": "array",
-			"dtype": "int32",
 			"shape": [1]
 		}
 	],
@@ -22,7 +20,6 @@
 		{
 			"name": "output",
 			"type": "array",
-			"dtype": "int32",
 			"shape": [1]
 		}
 	]

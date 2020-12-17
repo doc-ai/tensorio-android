@@ -1,25 +1,42 @@
+/*
+ * PytorchModel.java
+ * TensorIO
+ *
+ * Created by Sam Leroux on 12/15/2020
+ * Copyright (c) 2020 - Present doc.ai (http://doc.ai)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 package ai.doc.tensorio.pytorch.model;
 
-import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 
 import org.pytorch.IValue;
 import org.pytorch.Module;
 import org.pytorch.Tensor;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +71,6 @@ public class PytorchModel extends Model {
     final private VectorConverter vectorConverter = new VectorConverter();
     final private StringConverter stringConverter = new StringConverter();
 
-
     /**
      * The designated initializer for conforming classes.
      * <p>
@@ -66,6 +82,7 @@ public class PytorchModel extends Model {
      * @param bundle `ModelBundle` containing information about the model and its path
      * @return instancetype An instance of the conforming class, may be `null`.
      */
+
     public PytorchModel(@NonNull ModelBundle bundle) {
         super(bundle);
     }
@@ -89,7 +106,6 @@ public class PytorchModel extends Model {
         }
 
         super.load();
-
     }
 
     @Override
@@ -265,8 +281,6 @@ public class PytorchModel extends Model {
         return input.get(getIO().getInputs().get(0).getName());
     }
 
-
-
     /**
      * Actually performs inference on a single input with a single output
      *
@@ -282,10 +296,8 @@ public class PytorchModel extends Model {
 
         LayerInterface inputLayer = getIO().getInputs().get(0);
 
-        // Prepare input tensor
+        // Prepare tensors
         Tensor inputTensor = prepareInputTensor(input, inputLayer);
-
-
         IValue outputTensor = pytorchModule.forward(IValue.from(inputTensor));
 
         // Convert output buffers to user land objects
@@ -342,8 +354,6 @@ public class PytorchModel extends Model {
             outputMap.put(0, temp);
         }
 
-
-
         return captureOutputs(outputMap);
     }
 
@@ -357,6 +367,7 @@ public class PytorchModel extends Model {
      * @throws IllegalArgumentException raised if the input cannot be transformed to the format
      *                                  expected by the model
      */
+
     private Tensor prepareInputTensor(Object input, LayerInterface inputLayer) throws IllegalArgumentException {
         final AtomicReference<Tensor> inputBuffer = new AtomicReference<>();
         final ByteBuffer cachedBuffer = cacheBuffers ? bufferCache.get(inputLayer) : null;
@@ -446,13 +457,11 @@ public class PytorchModel extends Model {
         if (getBundle() instanceof AssetModelBundle) {
             AssetModelBundle bundle = (AssetModelBundle) getBundle();
             InputStream inputStream = bundle.getContext().getAssets().open(bundle.getModelFilename());
-
-
             File file = new File(bundle.getContext().getFilesDir(), bundle.getFilename());
+
             if (file.exists() && file.length() > 0) {
                 filename = file.getAbsolutePath();
             } else {
-
                 try (OutputStream os = new FileOutputStream(file)) {
                     byte[] buffer = new byte[4 * 1024];
                     int read;
