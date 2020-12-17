@@ -19,7 +19,7 @@
  */
 
 
-package ai.doc.tensorio.pytorch.modelbundle;
+package ai.doc.tensorio.pytorch;
 
 import android.content.Context;
 import android.graphics.Bitmap;
