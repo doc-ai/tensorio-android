@@ -8,13 +8,16 @@ import androidx.annotation.Nullable;
 public class Backend {
 
     private static final String TF_LITE_BACKEND =       "tflite";
+    private static final String PYTORCH_BACKEND = "pytorch";
     private static final String TENSORFLOW_BACKEND =    "tensorflow";
 
     private static final String TF_LITE_MODEL_CLASS_NAME =      "ai.doc.tensorio.tflite.model.TFLiteModel";
+    private static final String PYTORCH_MODEL_CLASS_NAME = "ai.doc.tensorio.pytorch.model.PytorchModel";
     private static final String TENSORFLOW_MODEL_CLASS_NAME =   "ai.doc.tensorio.tensorflow.model.TensorFlowModel";
 
     private static final String[] classnames = {
             TF_LITE_MODEL_CLASS_NAME,
+            PYTORCH_MODEL_CLASS_NAME,
             TENSORFLOW_MODEL_CLASS_NAME
     };
 
@@ -31,6 +34,7 @@ public class Backend {
         if (classNameToBackend == null) {
             classNameToBackend = new HashMap<>();
             classNameToBackend.put(TF_LITE_MODEL_CLASS_NAME, TF_LITE_BACKEND);
+            classNameToBackend.put(PYTORCH_MODEL_CLASS_NAME, PYTORCH_BACKEND);
             classNameToBackend.put(TENSORFLOW_MODEL_CLASS_NAME, TENSORFLOW_BACKEND);
         }
 
@@ -55,6 +59,7 @@ public class Backend {
         if (backendToClassNames == null) {
             backendToClassNames = new HashMap<>();
             backendToClassNames.put(TF_LITE_BACKEND, TF_LITE_MODEL_CLASS_NAME);
+            backendToClassNames.put(PYTORCH_BACKEND, PYTORCH_MODEL_CLASS_NAME);
             backendToClassNames.put(TENSORFLOW_BACKEND, TENSORFLOW_MODEL_CLASS_NAME);
         }
 
