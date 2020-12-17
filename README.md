@@ -60,13 +60,11 @@ val top5 = ClassificationHelper.topN(classification, 5, 0.1f)
 val label = top5.get(0).key
 ```
 
-### TF Lite and TensorFlow
+### TF Lite, TensorFlow, and PyTorch
 
-Tensor/IO currently supports inference with TensorFlow Lite and inference and training with TensorFlow. This implementation is part of the [Tensor/IO project](https://doc-ai.github.io/tensorio/) with support for machine learning on iOS, Android, and React Native.
+Tensor/IO currently supports inference with TensorFlow Lite, inference with PyTorch, and inference and training with TensorFlow. This implementation is part of the [Tensor/IO project](https://doc-ai.github.io/tensorio/) with support for machine learning on iOS, Android, and React Native.
 
 For full TensorFlow V2 support, Tensor/IO uses [tensorio-tensorflow-android](https://github.com/doc-ai/tensorio-tensorflow-android), our wrapper library that provides a JNI interface to our [custom build of tensorflow](https://github.com/doc-ai/tensorflow/tree/r2.0.doc.ai-android).
-
-Work is in progress to support inference with PyTorch Mobile as well.
 
 <a name="overview"></a>
 ## Overview
@@ -78,7 +76,6 @@ Instead, Tensor/IO relies on a JSON description of the model that you provide. D
 The built-in class for working with TensorFlow Lite (TF Lite) models, `TFLiteModel`, includes support for multiple input and output layers; single-valued, vectored, matrix, and image data; pixel normalization and denormalization; and quantization and dequantization of data. In case you require a completely custom interface to a model you may specify your own class in the JSON description, and Tensor/IO will use it in place of the default class.
 
 Although Tensor/IO supports both full TensorFlow and TF Lite models, this README will refer to TFLite throughout. Except for small differences in support of data types (`uint8_t`, `float32_t`, `int32_t`, `int64_t`, etc), the interface is the same, with the addition of training for TensorFlow models (see below).
-
 
 <a name="example"></a>
 ## Example
@@ -109,7 +106,7 @@ dependencies {
 <a name="installation"></a>
 ## Installation
 
-Tensor/IO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.9.13
+Tensor/IO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.9.14
 
 ### TF Lite
 
@@ -123,8 +120,8 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.doc-ai.tensorio-android:core:0.9.13'
-  implementation 'com.github.doc-ai.tensorio-android:tflite:0.9.13'
+  implementation 'com.github.doc-ai.tensorio-android:core:0.9.14'
+  implementation 'com.github.doc-ai.tensorio-android:tflite:0.9.14'
   ...
 }
 ```
@@ -161,8 +158,26 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.doc-ai.tensorio-android:core:0.9.13'
-  implementation 'com.github.doc-ai.tensorio-android:tensorflow:0.9.13'
+  implementation 'com.github.doc-ai.tensorio-android:core:0.9.14'
+  implementation 'com.github.doc-ai.tensorio-android:tensorflow:0.9.14'
+  ...
+}
+```
+
+### PyTorch
+
+The PyTorch dependency requirements are like the TensorFlow ones:
+
+```gradle
+allprojects {
+  repositories {
+    maven { url 'https://jitpack.io' }
+  }
+}
+
+dependencies {
+  implementation 'com.github.doc-ai.tensorio-android:core:0.9.14'
+  implementation 'com.github.doc-ai.tensorio-android:pytorch:0.9.14'
   ...
 }
 ```
@@ -172,12 +187,10 @@ dependencies {
 
 [doc.ai](https://doc.ai/)
 
-
 <a name="license"></a>
 ## License
 
 Tensor/IO is available under the Apache 2 license. See the LICENSE file for more info.
-
 
 <a name="usage"></a>
 ## Usage
