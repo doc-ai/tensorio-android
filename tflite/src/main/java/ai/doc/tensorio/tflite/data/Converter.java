@@ -42,7 +42,7 @@ public interface Converter {
      * @return ByteBuffer ready to be filled with input or output data.
      */
 
-    public ByteBuffer createBackingBuffer(@NonNull LayerDescription description);
+    ByteBuffer createBackingBuffer(@NonNull LayerDescription description);
 
     /**
      * Converts an Object to a ByteBuffer, used to prepare data for a writing into a model.
@@ -56,7 +56,7 @@ public interface Converter {
      *                                  types or is the wrong length
      */
 
-    public ByteBuffer toByteBuffer(@NonNull Object o, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException;
+    ByteBuffer toByteBuffer(@NonNull Object o, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException;
 
     /**
      * Converts a ByteBuffer to an object, used to read data from a model.
@@ -66,5 +66,5 @@ public interface Converter {
      * @return One of a number of native types such as an array of floats or a Bitmap
      */
 
-    public Object fromByteBuffer(@NonNull ByteBuffer buffer, @NonNull LayerDescription description);
+    Object fromByteBuffer(@NonNull ByteBuffer buffer, @NonNull LayerDescription description);
 }
