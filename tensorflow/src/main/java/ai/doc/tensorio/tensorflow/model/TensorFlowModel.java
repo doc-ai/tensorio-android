@@ -228,7 +228,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object input = Objects.requireNonNull(inputs.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -249,7 +249,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -270,7 +270,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             outputTensors[i] = tensor;
         }
 
@@ -456,7 +456,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object input = Objects.requireNonNull(inputs.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -477,7 +477,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -498,7 +498,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             outputTensors[i] = tensor;
         }
 
@@ -560,7 +560,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object[] input = Objects.requireNonNull(batch.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -583,7 +583,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -604,7 +604,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, name);
+            Tensor tensor = new Tensor(dtype, shape, false, name);
             outputTensors[i] = tensor;
         }
 
