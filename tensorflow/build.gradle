@@ -9,7 +9,7 @@ android {
         minSdkVersion 22
         targetSdkVersion 30
         versionCode 16
-        versionName "0.9.14"
+        versionName "0.10.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -51,7 +51,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    implementation 'com.github.doc-ai:tensorio-tensorflow-android:0.6.0'
+    implementation 'com.github.doc-ai:tensorio-tensorflow-android:0.7.0'
 
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
