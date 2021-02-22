@@ -123,6 +123,44 @@ public class TensorFlowModelIntegrationTest {
     // Single Valued Tests
 
     @Test
+    public void testScalarModel() {
+        try {
+            // Prepare Model
+
+            ModelBundle tioBundle = bundleForFile("scalar_test.tiobundle");
+            assertNotNull(tioBundle);
+
+            Model model = tioBundle.newModel();
+            assertNotNull(tioBundle);
+            model.load();
+
+            // Prepare Inputs
+
+            float[] input = {2};
+
+            // Run Model
+
+            Map<String, Object> outputs = model.runOn(input);
+            assertNotNull(outputs);
+
+            // Check Output
+
+            float[] output = (float[]) outputs.get("output");
+            assertNotNull(output);
+
+            float[] expectedOutput = {
+                    25
+            };
+
+            assertArrayEquals(output, expectedOutput, epsilon);
+
+        } catch (ModelBundle.ModelBundleException | Model.ModelException | IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
     public void test1x1NumberModel() {
         try {
             // Prepare Model

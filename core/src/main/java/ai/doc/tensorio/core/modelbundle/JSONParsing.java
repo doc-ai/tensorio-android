@@ -35,7 +35,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
@@ -44,6 +43,7 @@ import ai.doc.tensorio.core.data.PixelNormalizer;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
 import ai.doc.tensorio.core.layerinterface.PixelBufferLayerDescription;
 import ai.doc.tensorio.core.layerinterface.VectorLayerDescription;
+import ai.doc.tensorio.core.layerinterface.ScalarLayerDescription;
 
 import static ai.doc.tensorio.core.layerinterface.LayerInterface.*;
 
@@ -66,6 +66,12 @@ public abstract class JSONParsing {
      */
 
     private static final String TENSOR_TYPE_STRING = "string";
+
+    /**
+     * Key identifying a scalar (single-valued) layer
+     */
+
+    private static final String TENSOR_TYPE_SCALAR = "scalar";
 
     /**
      * Enumerates through the JSON description of a model's inputs or outputs and constructs a
@@ -103,6 +109,9 @@ public abstract class JSONParsing {
                 case TENSOR_TYPE_STRING:
                     layerInterface = parseStringDescription(jsonObject, mode, isQuantized);
                     break;
+                case TENSOR_TYPE_SCALAR:
+                    layerInterface = parseScalarDescription(jsonObject, mode, isQuantized);
+                    break;
                 default:
                     throw new ModelBundleException("Unsupported input layer type: " + type);
             }
@@ -111,6 +120,70 @@ public abstract class JSONParsing {
         }
 
         return interfaces;
+    }
+
+    /**
+     * Parses the JSON description of a scalar input or output.
+     *
+     * Handles a vector, matrix, or other multidimensional array (tensor), described as a
+     * one dimensional unrolled vector with an optional labels entry.
+     *
+     * @param dict The JSON description in `JSONObject` format.
+     * @param mode One of the LayerInterface.mode values
+     * @param quantized `true` if the layer expects or returns quantized bytes, `false` otherwise.
+     *
+     * @return LayerInterface An interface that describes this vector input or output.
+     */
+
+    public static LayerInterface parseScalarDescription(@NonNull JSONObject dict, Mode mode, boolean quantized) throws JSONException, ModelBundleException, IOException {
+        int[] shape = parseIntArray(dict.getJSONArray("shape"));
+        boolean batched = shape[0] == -1;
+        String name = dict.getString("name");
+
+        // Data Type
+
+        DataType dtype = DataTypeForString(dict.optString("dtype"));
+
+        // Quantization
+
+        Quantizer quantizer = null;
+
+        switch (mode) {
+            case Input:
+            case Placeholder:
+                if ( dict.has("quantize") ) {
+                    quantizer = DataQuantizerForDict(dict.getJSONObject("quantize"));
+                }
+                break;
+            case Output:
+                break;
+        }
+
+        // Dequantization
+
+        Dequantizer dequantizer = null;
+
+        switch (mode) {
+            case Output:
+                if ( dict.has("dequantize") ) {
+                    dequantizer = DataDequantizerForDict(dict.getJSONObject("dequantize"));
+                }
+                break;
+            case Input:
+            case Placeholder:
+                break;
+        }
+
+        // Interface
+
+        return new LayerInterface(name, mode, new ScalarLayerDescription(
+                shape,
+                batched,
+                quantized,
+                quantizer,
+                dequantizer,
+                dtype)
+        );
     }
 
     /**

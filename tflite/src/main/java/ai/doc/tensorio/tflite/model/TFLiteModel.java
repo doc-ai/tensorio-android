@@ -49,6 +49,7 @@ import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.tflite.data.BitmapConverter;
 import ai.doc.tensorio.tflite.data.StringConverter;
 import ai.doc.tensorio.tflite.data.VectorConverter;
+import ai.doc.tensorio.tflite.data.ScalarConverter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -83,6 +84,7 @@ public class TFLiteModel extends Model {
     final private VectorConverter vectorConverter = new VectorConverter();
     final private BitmapConverter bitmapConverter = new BitmapConverter();
     final private StringConverter stringConverter = new StringConverter();
+    final private ScalarConverter scalarConverter = new ScalarConverter();
 
     // Backend Options Getters and Setters
 
@@ -247,6 +249,8 @@ public class TFLiteModel extends Model {
                 bufferCache.put(layer, bitmapConverter.createBackingBuffer(pixelLayer));
             }, (stringLayer) -> {
                 bufferCache.put(layer, stringConverter.createBackingBuffer(stringLayer));
+            }, (scalarLayer) -> {
+                bufferCache.put(layer, scalarConverter.createBackingBuffer(scalarLayer));
             });
         }
     }
@@ -468,6 +472,9 @@ public class TFLiteModel extends Model {
         }, (stringLayer) -> {
             ByteBuffer buffer = stringConverter.toByteBuffer(input, stringLayer, cachedBuffer);
             inputBuffer.set(buffer);
+        }, (scalarLayer) -> {
+            ByteBuffer buffer = scalarConverter.toByteBuffer(input, scalarLayer, cachedBuffer);
+            inputBuffer.set(buffer);
         });
         
         return inputBuffer.get();
@@ -498,6 +505,9 @@ public class TFLiteModel extends Model {
             outputBuffer.set(buffer);
         }, (stringLayer) -> {
             ByteBuffer buffer = stringConverter.createBackingBuffer(stringLayer);
+            outputBuffer.set(buffer);
+        }, (scalarLayer) -> {
+            ByteBuffer buffer = scalarConverter.createBackingBuffer(scalarLayer);
             outputBuffer.set(buffer);
         });
 
@@ -559,6 +569,9 @@ public class TFLiteModel extends Model {
             output.set(o);
         }, (stringLayer) -> {
             Object o = stringConverter.fromByteBuffer(buffer, stringLayer);
+            output.set(o);
+        }, (scalarLayer) -> {
+            Object o = scalarConverter.fromByteBuffer(buffer, scalarLayer);
             output.set(o);
         });
 

@@ -99,6 +99,8 @@ public class ModelBundleIntegrationTests {
                 Assert.assertNull(pixelLayer.getDenormalizer());
             }, (stringLayer) -> {
                 Assert.fail();
+            }, (scalarLayer) -> {
+                Assert.fail();
             });
 
             // Outputs
@@ -123,6 +125,8 @@ public class ModelBundleIntegrationTests {
             }, (pixelLayer) -> {
                 Assert.fail();
             }, (stringLayer) -> {
+                Assert.fail();
+            }, (scalarLayer) -> {
                 Assert.fail();
             });
 
@@ -172,6 +176,8 @@ public class ModelBundleIntegrationTests {
                 Assert.assertNull(pixelLayer.getDenormalizer());
             }, (stringLayer) -> {
                 Assert.fail();
+            }, (scalarLayer) -> {
+                Assert.fail();
             });
 
             // Outputs
@@ -196,6 +202,8 @@ public class ModelBundleIntegrationTests {
             }, (pixelLayer) -> {
                 Assert.fail();
             }, (stringLayer) -> {
+                Assert.fail();
+            }, (scalarLayer) -> {
                 Assert.fail();
             });
 

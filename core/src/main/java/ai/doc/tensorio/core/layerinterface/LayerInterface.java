@@ -46,7 +46,8 @@ public class LayerInterface {
     public enum Type {
         PixelBuffer,
         Vector,
-        String
+        String,
+        Scalar
     }
 
     /**
@@ -86,6 +87,21 @@ public class LayerInterface {
      */
 
     private LayerDescription layerDescription;
+
+    /**
+     * Initializes a @see LayerInterface with a scalar layer description.
+     *
+     * @param name The name of the layer
+     * @param mode The mode of the layer
+     * @param description A vector layer description
+     */
+
+    public LayerInterface(String name, Mode mode, ScalarLayerDescription description) {
+        this.name = name;
+        this.mode = mode;
+        this.layerDescription = description;
+        this.type = Type.Scalar;
+    }
 
     /**
      * Initializes a @see LayerInterface with a pixel buffer layer description.
@@ -170,6 +186,8 @@ public class LayerInterface {
      *         // your code
      *     }, (stringLayer) -> {
      *         // your code
+     *     }, (scalarLayer) -> {
+     *         // your code
      *     });
      * </code>
      *
@@ -181,7 +199,8 @@ public class LayerInterface {
     public void doCase(
             Consumer<VectorLayerDescription> vectorLayer,
             Consumer<PixelBufferLayerDescription> pixelLayer,
-            Consumer<StringLayerDescription> stringLayer) {
+            Consumer<StringLayerDescription> stringLayer,
+            Consumer<ScalarLayerDescription> scalarLayer) {
         switch (this.type) {
             case Vector:
                 vectorLayer.accept((VectorLayerDescription)this.layerDescription);
@@ -191,6 +210,9 @@ public class LayerInterface {
                 break;
             case String:
                 stringLayer.accept((StringLayerDescription)this.layerDescription);
+                break;
+            case Scalar:
+                scalarLayer.accept((ScalarLayerDescription)this.layerDescription);
                 break;
         }
     }
