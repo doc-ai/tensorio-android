@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import ai.doc.tensorio.core.data.Placeholders;
 import ai.doc.tensorio.core.layerinterface.LayerInterface;
+import ai.doc.tensorio.core.layerinterface.ScalarLayerDescription;
 import ai.doc.tensorio.core.model.IO;
 import ai.doc.tensorio.core.model.Model;
 import ai.doc.tensorio.core.modelbundle.AssetModelBundle;
@@ -53,6 +54,7 @@ import ai.doc.tensorio.core.modelbundle.ModelBundle;
 import ai.doc.tensorio.pytorch.data.BitmapConverter;
 import ai.doc.tensorio.pytorch.data.StringConverter;
 import ai.doc.tensorio.pytorch.data.VectorConverter;
+import ai.doc.tensorio.pytorch.data.ScalarConverter;
 
 public class PytorchModel extends Model {
 
@@ -70,6 +72,7 @@ public class PytorchModel extends Model {
     final private BitmapConverter bitmapConverter = new BitmapConverter();
     final private VectorConverter vectorConverter = new VectorConverter();
     final private StringConverter stringConverter = new StringConverter();
+    final private ScalarConverter scalarConverter = new ScalarConverter();
 
     /**
      * The designated initializer for conforming classes.
@@ -151,6 +154,8 @@ public class PytorchModel extends Model {
                 bufferCache.put(layer, bitmapConverter.createBackingBuffer(pixelLayer));
             }, (stringLayer) -> {
                 bufferCache.put(layer, stringConverter.createBackingBuffer(stringLayer));
+            }, (scalarLayer) -> {
+                bufferCache.put(layer, scalarConverter.createBackingBuffer(scalarLayer));
             });
         }
     }
@@ -381,6 +386,9 @@ public class PytorchModel extends Model {
         }, (stringLayer) -> {
             Tensor tensor = stringConverter.toTensor(input, stringLayer, cachedBuffer);
             inputBuffer.set(tensor);
+        }, (scalarLayer) -> {
+            Tensor tensor = scalarConverter.toTensor(input, scalarLayer, cachedBuffer);
+            inputBuffer.set(tensor);
         });
 
         return inputBuffer.get();
@@ -441,6 +449,9 @@ public class PytorchModel extends Model {
             output.set(o);
         }, (stringLayer) -> {
             Object o = stringConverter.fromTensor(tensor.toTensor(), stringLayer);
+            output.set(o);
+        }, (scalarLayer) -> {
+            Object o = scalarConverter.fromTensor(tensor.toTensor(), scalarLayer);
             output.set(o);
         });
 

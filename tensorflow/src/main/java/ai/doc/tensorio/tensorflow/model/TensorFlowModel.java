@@ -53,6 +53,7 @@ import ai.doc.tensorio.tensorflow.BuildConfig;
 import ai.doc.tensorio.tensorflow.data.BitmapConverter;
 import ai.doc.tensorio.tensorflow.data.StringConverter;
 import ai.doc.tensorio.tensorflow.data.VectorConverter;
+import ai.doc.tensorio.tensorflow.data.ScalarConverter;
 
 public class TensorFlowModel extends Model implements TrainableModel {
 
@@ -70,6 +71,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
     final private VectorConverter vectorConverter = new VectorConverter();
     final private BitmapConverter bitmapConverter = new BitmapConverter();
     final private StringConverter stringConverter = new StringConverter();
+    final private ScalarConverter scalarConverter = new ScalarConverter();
 
     public TensorFlowModel(@NonNull ModelBundle bundle) {
         super(bundle);
@@ -136,6 +138,8 @@ public class TensorFlowModel extends Model implements TrainableModel {
                 bufferCache.put(layer, bitmapConverter.createBackingBuffer(pixelLayer, 1));
             }, (stringLayer) -> {
                 bufferCache.put(layer, stringConverter.createBackingBuffer(stringLayer, 1));
+            }, (scalarLayer) -> {
+                bufferCache.put(layer, scalarConverter.createBackingBuffer(scalarLayer, 1));
             });
         }
     }
@@ -220,6 +224,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = inputLayer.getName();
             int[] shape = inputLayer.getTensorShape();
             DataType dtype = tensorDataType(inputLayer.getDtype());
+            boolean isScalar = inputLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -228,7 +233,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object input = Objects.requireNonNull(inputs.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -241,6 +246,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = placeholderLayer.getName();
             int[] shape = placeholderLayer.getTensorShape();
             DataType dtype = tensorDataType(placeholderLayer.getDtype());
+            boolean isScalar = placeholderLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -249,7 +255,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -264,13 +270,14 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = outputLayer.getName();
             int[] shape = outputLayer.getTensorShape();
             DataType dtype = tensorDataType(outputLayer.getDtype());
+            boolean isScalar = outputLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             outputTensors[i] = tensor;
         }
 
@@ -322,6 +329,9 @@ public class TensorFlowModel extends Model implements TrainableModel {
             inputBuffer.set(buffer);
         }, (stringLayer) -> {
             ByteBuffer buffer = stringConverter.toByteBuffer(input, stringLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        }, (scalarLayer) -> {
+            ByteBuffer buffer = scalarConverter.toByteBuffer(input, scalarLayer, cachedBuffer);
             inputBuffer.set(buffer);
         });
 
@@ -403,6 +413,9 @@ public class TensorFlowModel extends Model implements TrainableModel {
         }, (stringLayer) -> {
             Object o = stringConverter.fromByteBuffer(buffer, stringLayer);
             output.set(o);
+        }, (scalarLayer) -> {
+            Object o = scalarConverter.fromByteBuffer(buffer, scalarLayer);
+            output.set(o);
         });
 
         return output.get();
@@ -448,6 +461,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = inputLayer.getName();
             int[] shape = inputLayer.getTensorShape();
             DataType dtype = tensorDataType(inputLayer.getDtype());
+            boolean isScalar = inputLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -456,7 +470,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object input = Objects.requireNonNull(inputs.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -469,6 +483,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = placeholderLayer.getName();
             int[] shape = placeholderLayer.getTensorShape();
             DataType dtype = tensorDataType(placeholderLayer.getDtype());
+            boolean isScalar = placeholderLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
@@ -477,7 +492,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -492,13 +507,14 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = outputLayer.getName();
             int[] shape = outputLayer.getTensorShape();
             DataType dtype = tensorDataType(outputLayer.getDtype());
+            boolean isScalar = outputLayer.getType() == LayerInterface.Type.Scalar;
 
             // Batch size of 1
             if (shape[0] == -1) {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             outputTensors[i] = tensor;
         }
 
@@ -552,6 +568,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = inputLayer.getName();
             int[] shape = inputLayer.getTensorShape();
             DataType dtype = tensorDataType(inputLayer.getDtype());
+            boolean isScalar = inputLayer.getType() == LayerInterface.Type.Scalar;
 
             // TODO: If model is not batched, this is an error, validate beforehand
             if (shape[0] == -1) {
@@ -560,7 +577,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object[] input = Objects.requireNonNull(batch.get(name));
             ByteBuffer inputBuffer = prepareInputBuffer(input, inputLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(inputBuffer);
             inputTensors[i] = tensor;
         }
@@ -573,6 +590,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = placeholderLayer.getName();
             int[] shape = placeholderLayer.getTensorShape();
             DataType dtype = tensorDataType(placeholderLayer.getDtype());
+            boolean isScalar = placeholderLayer.getType() == LayerInterface.Type.Scalar;
 
             // Placeholders should not have a batch dimension
             // Batch size of 1
@@ -583,7 +601,7 @@ public class TensorFlowModel extends Model implements TrainableModel {
 
             Object placeholder = Objects.requireNonNull(placeholders.get(name));
             ByteBuffer placeholderBuffer = prepareInputBuffer(placeholder, placeholderLayer);
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             tensor.setBytes(placeholderBuffer);
             inputTensors[inputList.size()+i] = tensor;
         }
@@ -598,13 +616,14 @@ public class TensorFlowModel extends Model implements TrainableModel {
             String name = outputLayer.getName();
             int[] shape = outputLayer.getTensorShape();
             DataType dtype = tensorDataType(outputLayer.getDtype());
+            boolean isScalar = outputLayer.getType() == LayerInterface.Type.Scalar;
 
             // TODO: No support for batched training output, loss function must return single value
             if (shape[0] == -1) {
                 shape[0] = 1;
             }
 
-            Tensor tensor = new Tensor(dtype, shape, false, name);
+            Tensor tensor = new Tensor(dtype, shape, isScalar, name);
             outputTensors[i] = tensor;
         }
 
@@ -649,6 +668,9 @@ public class TensorFlowModel extends Model implements TrainableModel {
             inputBuffer.set(buffer);
         }, (stringLayer) -> {
             ByteBuffer buffer = stringConverter.toByteBuffer(column, stringLayer, cachedBuffer);
+            inputBuffer.set(buffer);
+        }, (scalarLayer) -> {
+            ByteBuffer buffer = scalarConverter.toByteBuffer(column, scalarLayer, cachedBuffer);
             inputBuffer.set(buffer);
         });
 
