@@ -26,9 +26,12 @@ import androidx.annotation.NonNull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 import ai.doc.tensorio.core.data.Dequantizer;
 import ai.doc.tensorio.core.data.Quantizer;
+import ai.doc.tensorio.core.layerinterface.DataType;
 import ai.doc.tensorio.core.layerinterface.LayerDescription;
 import ai.doc.tensorio.core.layerinterface.VectorLayerDescription;
 
@@ -36,19 +39,37 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
 
     @Override
     public ByteBuffer createBackingBuffer(@NonNull LayerDescription description) {
-        ByteBuffer buffer;
-
         boolean quantized = ((VectorLayerDescription)description).isQuantized();
         int length = ((VectorLayerDescription)description).getLength();
+        DataType dtype = description.getDtype();
 
-        if (quantized) {
-            // Layer expects bytes
-            buffer = ByteBuffer.allocateDirect(length);
-        } else {
-            // Layer expects floats
-            buffer = ByteBuffer.allocateDirect(length*4);
+        // Compute buffer length
+
+        int bufferLength = 0;
+
+        switch (dtype) {
+            case UInt8:
+                bufferLength = length;
+                break;
+            case Int32:
+                bufferLength = length * 4;
+                break;
+            case Int64:
+                bufferLength = length * 8;
+                break;
+            case Float32:
+                bufferLength = length * 4;
+                break;
         }
 
+        if (quantized) {
+            // Override for a quantized layer
+            bufferLength = length;
+        }
+
+        // Create buffer
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferLength);
         buffer.order(ByteOrder.nativeOrder());
 
         return buffer;
@@ -60,6 +81,10 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
             return toByteBuffer((byte[])o, description, cache);
         } else if (o instanceof float[]) {
             return toByteBuffer((float[])o, description, cache);
+        } else if (o instanceof int[]) {
+            return toByteBuffer((int[]) o, description, cache);
+        } else if (o instanceof long[]) {
+            return toByteBuffer((long[]) o, description, cache);
         } else {
             throw BadInputException();
         }
@@ -95,6 +120,76 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
         // Write the bytes
 
         buffer.put(bytes);
+
+        return buffer;
+    }
+
+    /**
+     * Writes an array of int32s to a ByteBuffer and returns it, using the cache if one is provided.
+     *
+     * @param ints array of int32s to write to ByteBuffer
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return ByteBuffer ready for use with a TensorFlow model
+     */
+
+    public ByteBuffer toByteBuffer(@NonNull int[] ints, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
+
+        VectorLayerDescription vectorLayerDescription = (VectorLayerDescription) description;
+        int length = vectorLayerDescription.getLength();
+
+        // Validate input
+
+        if (ints.length != length) {
+            throw BadLengthException(ints.length, length);
+        }
+
+        // Write the ints
+
+        IntBuffer i = buffer.asIntBuffer();
+        i.put(ints);
+
+        return buffer;
+    }
+
+    /**
+     * Writes an array of int64s (long) to a ByteBuffer and returns it, using the cache if one is provided.
+     *
+     * @param longs array of int64s to write to ByteBuffer
+     * @param description A description of the layer with instructions on how to make the conversion
+     * @param cache A pre-existing byte buffer to use, which will be returned if not null. If a cache
+     *              is provided it will be rewound before being used.
+     * @return ByteBuffer ready for use with a TensorFlow model
+     */
+
+    public ByteBuffer toByteBuffer(@NonNull long[] longs, @NonNull LayerDescription description, @Nullable ByteBuffer cache) throws IllegalArgumentException {
+        // Create a buffer if no reusable cache is provided
+
+        ByteBuffer buffer = (cache != null) ? cache : createBackingBuffer(description);
+        buffer.rewind();
+
+        // Acquire needed properties from layer description
+
+        VectorLayerDescription vectorLayerDescription = (VectorLayerDescription) description;
+        int length = vectorLayerDescription.getLength();
+
+        // Validate input
+
+        if (longs.length != length) {
+            throw BadLengthException(longs.length, length);
+        }
+
+        // Write the longs
+
+        LongBuffer i = buffer.asLongBuffer();
+        i.put(longs);
 
         return buffer;
     }
@@ -157,6 +252,7 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
         Dequantizer dequantizer = vectorLayerDescription.getDequantizer();
         boolean quantized = vectorLayerDescription.isQuantized();
         int length = vectorLayerDescription.getLength();
+        DataType dtype = description.getDtype();
 
         // Prepare buffer for reading
 
@@ -172,7 +268,16 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
                 result[i] = dequantizer.dequantize((int) ( buffer.get() & 0xFF ) );
             }
             return result;
+        } else if (dtype == DataType.Int32) {
+            int[] result = new int[length];
+            buffer.asIntBuffer().get(result);
+            return result;
+        } else if (dtype == DataType.Int64) {
+            long[] result = new long[length];
+            buffer.asLongBuffer().get(result);
+            return result;
         } else {
+            // DataType.Float32 or DataType.Unknown
             float[] result = new float[length];
             buffer.asFloatBuffer().get(result);
             return result;
@@ -182,7 +287,7 @@ public class VectorConverter implements ai.doc.tensorio.core.data.Converter, Con
     //region Exceptions
 
     private static IllegalArgumentException BadInputException() {
-        return new IllegalArgumentException("Expected float[] or byte[] as input to the converter");
+        return new IllegalArgumentException("Expected float[], byte[], int[], or long[] as input to the converter");
     }
 
     private static IllegalArgumentException BadLengthException(int given, int expected) {
