@@ -106,7 +106,7 @@ dependencies {
 <a name="installation"></a>
 ## Installation
 
-Tensor/IO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.10.0
+Tensor/IO for Android is available via [github repo](https://github.com/doc-ai/tensorio-android) using JitPack. For instructions on how to add dependencies using Jitpack to your build.gradle file follow https://jitpack.io/#doc-ai/tensorio-android/0.12.0
 
 ### TF Lite
 
@@ -120,8 +120,8 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.doc-ai.tensorio-android:core:0.10.0'
-  implementation 'com.github.doc-ai.tensorio-android:tflite:0.10.0'
+  implementation 'com.github.doc-ai.tensorio-android:core:0.12.0'
+  implementation 'com.github.doc-ai.tensorio-android:tflite:0.12.0'
   ...
 }
 ```
@@ -158,8 +158,8 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.doc-ai.tensorio-android:core:0.10.0'
-  implementation 'com.github.doc-ai.tensorio-android:tensorflow:0.10.0'
+  implementation 'com.github.doc-ai.tensorio-android:core:0.12.0'
+  implementation 'com.github.doc-ai.tensorio-android:tensorflow:0.12.0'
   ...
 }
 ```
@@ -176,8 +176,8 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.doc-ai.tensorio-android:core:0.10.0'
-  implementation 'com.github.doc-ai.tensorio-android:pytorch:0.10.0'
+  implementation 'com.github.doc-ai.tensorio-android:core:0.12.0'
+  implementation 'com.github.doc-ai.tensorio-android:pytorch:0.12.0'
   ...
 }
 ```
